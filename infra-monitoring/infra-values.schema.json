@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "opentelemetry-collector": {
+      "$ref": "https://raw.githubusercontent.com/open-telemetry/opentelemetry-helm-charts/refs/tags/opentelemetry-collector-0.111.0/charts/opentelemetry-collector/values.schema.json"
+    },
+    "opentelemetry-collector-internal": {
+      "$ref": "https://raw.githubusercontent.com/open-telemetry/opentelemetry-helm-charts/refs/tags/opentelemetry-collector-0.111.0/charts/opentelemetry-collector/values.schema.json"
+    },
+    "prometheus": {
+      "$ref": "https://raw.githubusercontent.com/prometheus-community/helm-charts/refs/tags/prometheus-26.0.1/charts/prometheus/values.schema.json"
+    },
+    "alertmanager": {
+      "$ref": "https://raw.githubusercontent.com/prometheus-community/helm-charts/refs/tags/alertmanager-1.13.1/charts/alertmanager/values.schema.json"
+    }
+  }
+}

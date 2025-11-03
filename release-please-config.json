@@ -1,0 +1,79 @@
+{
+    "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+    "changelog-sections": [
+      {
+        "section": "🎉 Features",
+        "type": "feat"
+      },
+      {
+        "section": "🐛 Bug Fixes",
+        "type": "fix"
+      },
+      {
+        "section": "⚡ Performance Improvements",
+        "type": "perf"
+      },
+      {
+        "section": "🔗 Dependencies",
+        "type": "deps"
+      },
+      {
+        "section": "📝 Documentation",
+        "type": "docs"
+      },
+      {
+        "section": "🏗️ Build System",
+        "type": "build"
+      },
+      {
+        "section": "🔧 Miscellaneous Chores",
+        "type": "chore"
+      },
+      {
+        "section": "⏪ Reverts",
+        "type": "revert"
+      },
+      {
+        "section": "✅ Tests",
+        "type": "test"
+      },
+      {
+        "section": "💄 Style",
+        "type": "style"
+      },
+      {
+        "section": "♻️ Code Refactoring",
+        "type": "refactor"
+      }
+    ],
+    "draft-pull-request": false,
+    "include-v-in-tag": true,
+    "separate-pull-requests": true,
+    "packages": {
+      "core-stack": {
+        "release-type": "helm",
+        "package-name": "core-stack",
+        "extra-files": ["README.md"]
+      },
+      "infra-jenkins": {
+        "release-type": "helm",
+        "package-name": "infra-jenkins",
+        "extra-files": ["README.md"]
+      },
+      "infra-monitoring": {
+        "release-type": "helm",
+        "package-name": "infra-monitoring",
+        "extra-files": ["README.md"]
+      },
+      "infra-opa-la": {
+        "release-type": "helm",
+        "package-name": "infra-opa-la",
+        "extra-files": ["README.md"]
+      },
+      "infra-sftpgo-stack": {
+        "release-type": "helm",
+        "package-name": "infra-sftpgo-stack",
+        "extra-files": ["README.md"]
+      }
+    }
+}

@@ -1,0 +1,24 @@
+{{- if .Values.clusterRole.create }}
+# ClusterRole with minimum required permissions for scaling
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "resource-scaler.fullname" . }}
+rules:
+# Permission to read namespaces (for connectivity check)
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get", "list"]
+# Permission to list and get deployments and statefulsets across namespaces
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets"]
+  verbs: ["get", "list", "update", "patch"]
+# Permission to access the scale subresource
+- apiGroups: ["apps"]
+  resources: ["deployments/scale", "statefulsets/scale"]
+  verbs: ["get", "update", "patch"]
+# Permission to manage annotations (for previous-size annotation)
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets"]
+  verbs: ["patch"]
+{{- end }}

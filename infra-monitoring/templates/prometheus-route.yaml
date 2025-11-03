@@ -1,0 +1,24 @@
+{{- if and .Values.prometheus.enabled .Values.prometheus.route.enabled -}}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: prometheus-route
+spec:
+  {{- if .Values.prometheus.route.host }}
+  host: {{ .Values.prometheus.route.host }}
+  {{- end }}
+  path: {{ .Values.prometheus.route.path | default "/" }}
+  to:
+    kind: Service
+    name: {{ .Values.prometheus.server.fullnameOverride | quote }}
+  {{- if .Values.prometheus.route.tls.enabled }}
+  tls:
+    termination: {{ .Values.prometheus.route.tls.termination | quote }}
+    insecureEdgeTerminationPolicy: {{ .Values.prometheus.route.tls.insecureEdgeTerminationPolicy | quote }}
+    {{- if .Values.prometheus.route.tls.useCerts }}
+    certificate: {{ .Values.prometheus.route.tls.certificate | quote }}
+    key: {{ .Values.prometheus.route.tls.key | quote }}
+    caCertificate: {{ .Values.prometheus.route.tls.caCertificate | quote }}
+    {{- end }}
+  {{- end -}}
+{{- end -}}

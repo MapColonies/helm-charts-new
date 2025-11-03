@@ -1,0 +1,23 @@
+namespaces: []
+
+constraints:
+  k8sRequiredLabels:
+    enabled: true
+    enforcementAction: warn
+    labels:
+      - "app.kubernetes.io/name"
+      - "app.kubernetes.io/instance"
+      - "app.kubernetes.io/version"
+      - "app.kubernetes.io/managed-by"
+      - "mapcolonies.io/part-of"
+      - "mapcolonies.io/owner"
+      - "mapcolonies.io/environment"
+      - "mapcolonies.io/component"
+
+  k8sRequiredAnnotations:
+    enabled: true
+    enforcementAction: warn
+    annotations:
+      - "prometheus.io/path"
+      - "prometheus.io/port"
+      - "prometheus.io/scrape"

@@ -1,0 +1,8 @@
+apiVersion: v2
+name: sftpgo-node-exporter
+description: Node exporter for SFTPGo deployment
+version: 1.0.0
+dependencies:
+  - name: mclabels
+    version: 1.0.1
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/infra

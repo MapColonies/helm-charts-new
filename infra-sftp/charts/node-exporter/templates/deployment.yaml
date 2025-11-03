@@ -1,0 +1,56 @@
+{{- $releaseName := .Release.Name -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{ include "mclabels.labels" . | nindent 4 }}
+  name: {{ $releaseName }}-node-exporter
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: node-exporter
+  template:
+    metadata:
+      labels:
+        {{ include "mclabels.labels" . | nindent 8 }}
+        app: node-exporter
+      annotations:
+        {{ include "mclabels.annotations" . | nindent 8 }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: node-exporter
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+        args:
+          {{- with .Values.extraArgs }}
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+        env:
+          {{- with .Values.envVars }}
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+        ports:
+        - containerPort: {{ .Values.port }}
+        resources:
+          requests:
+            memory: {{ .Values.resources.requests.memory }}
+            cpu: {{ .Values.resources.requests.cpu }}
+          limits:
+            memory: {{ .Values.resources.limits.memory }}
+            cpu: {{ .Values.resources.limits.cpu }}
+        {{- with .Values.volumeMounts }}
+        volumeMounts:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

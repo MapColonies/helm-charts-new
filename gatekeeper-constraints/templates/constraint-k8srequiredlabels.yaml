@@ -1,0 +1,21 @@
+{{- if .Values.constraints.k8sRequiredLabels.enabled }}
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredLabels
+metadata:
+  name: require-pod-labels
+spec:
+  enforcementAction: {{ .Values.constraints.k8sRequiredLabels.enforcementAction | quote }}
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    {{- if .Values.namespaces }}
+    namespaces:
+      {{ toYaml .Values.namespaces | nindent 6 }}
+    {{- end }}
+  parameters:
+    labels:
+{{- with .Values.constraints.k8sRequiredLabels.labels }}
+{{ toYaml . | nindent 6 }}
+{{- end }}
+{{- end }}

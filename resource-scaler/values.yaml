@@ -1,0 +1,35 @@
+mclabels:
+  owner: "infra"
+  partOf: "scaler"
+  component: "infrastructure"
+
+image:
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  name: scaling-sa
+  create: true
+
+clusterRole:
+  create: true
+
+# Scale down configuration
+scaleDown:
+  enabled: true
+  # In UTC time. In OpenShift we use Israel timezone (UTC+3), so if we want to run in 22:00, we need to schedule it to 19:00
+  schedule: "0 19 * * 0-4" 
+
+# Scale up configuration  
+scaleUp:
+  enabled: true
+  # In UTC time. In OpenShift we use Israel timezone (UTC+3), so if we want to run in 07:00, we need to schedule it to 04:00
+  schedule: "0 4 * * 0-4" 
+
+slack:
+  enabled: true
+  webhookUrl: "<SLACK_WEBHOOK_URL>" # TODO: Provide your own Slack webhook URL here or use a Kubernetes secret.
+  secretName: slack-secret
+  secretKey: webhook-url-key
+
+extraArgs:
+  - "--all"

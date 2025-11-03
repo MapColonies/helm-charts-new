@@ -1,0 +1,21 @@
+{{- if .Values.constraints.k8sRequiredAnnotations.enabled }}
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredAnnotations
+metadata:
+  name: require-pod-annotations
+spec:
+  enforcementAction: {{ .Values.constraints.k8sRequiredAnnotations.enforcementAction | quote }}
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    {{- if .Values.namespaces }}
+    namespaces:
+      {{ toYaml .Values.namespaces | nindent 6 }}
+    {{- end }}
+  parameters:
+    annotations:
+{{- with .Values.constraints.k8sRequiredAnnotations.annotations }}
+{{ toYaml . | nindent 6 }}
+{{- end }}
+{{- end }}

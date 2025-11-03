@@ -1,0 +1,64 @@
+name: Build and Push Helm Chart
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  push-helm-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Derive domain, chart name and chart version from release
+        id: chart_metadata
+        env:
+          # The release tag that triggered this workflow, e.g. "infra-jenkins-v5.8.63"
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+
+          # Expect tag format: <chart-name>-v<version>
+          [[ "$TAG_NAME" =~ ^([a-zA-Z0-9._-]+)-v?([0-9][0-9A-Za-z.+-]*)$ ]]
+          CHART_NAME="${BASH_REMATCH[1]}"
+          CHART_VERSION="${BASH_REMATCH[2]}"
+
+          # Extract domain from Chart.yaml annotations
+          DOMAIN=$(yq e -r '.annotations.domain' "$CHART_NAME/Chart.yaml")
+
+          # Expose values to later steps
+          {
+            echo "chart_name=$CHART_NAME"
+            echo "version=$CHART_VERSION"
+            echo "domain=$DOMAIN"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Push Chart to ACR
+        uses: appany/helm-oci-chart-releaser@v0.5.0
+        with:
+          name: ${{ steps.chart_metadata.outputs.chart_name }}
+          repository: helm/${{ steps.chart_metadata.outputs.domain }}
+          tag: ${{ steps.chart_metadata.outputs.version }}
+          path: ./${{ steps.chart_metadata.outputs.chart_name }}
+          registry: ${{ secrets.ACR_URL }}
+          registry_username: ${{ secrets.ACR_PUSH_USER }}
+          registry_password: ${{ secrets.ACR_PUSH_TOKEN }}
+          update_dependencies: 'true' # Defaults to false
+
+      - name: Update Helm Package in artifacts.json
+        uses: MapColonies/shared-workflows/actions/update-artifacts-file@update-artifacts-file-v1
+        with:
+          domain: ${{ steps.chart_metadata.outputs.domain }}
+          type: helm
+          artifact_name: ${{ steps.chart_metadata.outputs.chart_name }}
+          artifact_tag: ${{ steps.chart_metadata.outputs.version }}
+          registry: ${{ secrets.ACR_URL }}
+          github_token: ${{ secrets.GH_PAT }}

@@ -1,0 +1,24 @@
+{{- if and .Values.grafana.enabled .Values.grafana.mapcoloniesRoute.enabled -}}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: grafana-route
+spec:
+  {{- if .Values.grafana.mapcoloniesRoute.host }}
+  host: {{ .Values.grafana.mapcoloniesRoute.host }}
+  {{- end }}
+  path: {{ .Values.grafana.mapcoloniesRoute.path | default "/" }}
+  to:
+    kind: Service
+    name: {{ .Values.grafana.fullnameOverride | quote }}
+  {{- if .Values.grafana.mapcoloniesRoute.tls.enabled }}
+  tls:
+    termination: {{ .Values.grafana.mapcoloniesRoute.tls.termination | quote }}
+    insecureEdgeTerminationPolicy: {{ .Values.grafana.mapcoloniesRoute.tls.insecureEdgeTerminationPolicy | quote }}
+    {{- if .Values.grafana.mapcoloniesRoute.tls.useCerts }}
+    certificate: {{ .Values.grafana.mapcoloniesRoute.tls.certificate | quote }}
+    key: {{ .Values.grafana.mapcoloniesRoute.tls.key | quote }}
+    caCertificate: {{ .Values.grafana.mapcoloniesRoute.tls.caCertificate | quote }}
+    {{- end }}
+  {{- end -}}
+{{- end -}}

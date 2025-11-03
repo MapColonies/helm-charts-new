@@ -1,0 +1,73 @@
+route:
+  enabled: true
+  timeout:
+    enabled: false
+    duration: 5m
+  path: ""
+  host: ""
+  tls:
+    enabled: true
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+    useCerts: false
+    certificate: ""
+    key: ""
+    caCertificate: ""
+
+
+secret:
+  username: admin
+  password: mapcolonies
+
+sftpgo:
+  image:
+    tag: v2.5-openshift
+
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "10000"
+  
+  podLabels:
+    mapcolonies.io/owner: infra
+    mapcolonies.io/component: infrastructure
+    mapcolonies.io/part-of: storage
+
+  envVars:
+    - name: SFTPGO_DEFAULT_ADMIN_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: sftp-admin-credentials
+          key: username
+    - name: SFTPGO_DEFAULT_ADMIN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: sftp-admin-credentials
+          key: password
+  
+  autoscaling:
+    enabled: true
+    minRepliacs: 1
+    maxReplicas: 5
+    metrics:
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+sftpgo-node-exporter:
+  resources:
+    requests:
+      memory: "25Mi"
+      cpu: "10m"
+    limits:
+      memory: "100Mi"
+      cpu: "40m"
+
+  envVars:
+    - name: PARENT_DIR
+      value: /mnt
+
+  extraArgs:
+    - --collector.textfile.directory=/var/lib/node_exporter/textfile_collector
