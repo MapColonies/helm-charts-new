@@ -1,7 +1,3 @@
-# Default values for openshift-route.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
 enabled: false
 host: ""
 service: ""
