@@ -11,6 +11,5 @@ Common labels
 {{- define "openshift-route.labels" -}}
 helm.sh/chart: {{ include "openshift-route.chart" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-app.kubernetes.io/name: {{ include "openshift-route.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
