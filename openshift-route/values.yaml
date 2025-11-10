@@ -1,12 +1,11 @@
 enabled: false
 host: ""
 service: ""
-port: ""
 tls:
   enabled: false
   termination: "edge"
   insecureEdgeTerminationPolicy: "Redirect"
+  useCerts: false
   caCertificate: ""
   certificate: ""
   key: ""
-  destinationCACertificate: ""
