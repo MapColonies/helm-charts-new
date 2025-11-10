@@ -6,7 +6,9 @@ metadata:
   labels:
     {{- include "openshift-route.labels" . | nindent 4 }}
 spec:
+  {{- if .Values.host }}
   host: {{ .Values.host }}
+  {{- end }}
   to:
     kind: Service
     name: {{ .Values.service }}
