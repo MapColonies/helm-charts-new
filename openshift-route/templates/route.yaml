@@ -11,7 +11,7 @@ spec:
   {{- end }}
   to:
     kind: Service
-    name: {{ .Values.service }}
+    name: {{ required "A valid .Values.service is required!" .Values.service }}
   {{- if .Values.tls.enabled }}
   tls:
     termination: {{ .Values.tls.termination }}
