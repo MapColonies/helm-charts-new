@@ -40,8 +40,6 @@ spec:
     {{- end }}
   port:
     targetPort: {{ .service.port }}
-  {{- if .alternateBackends }}
-  {{- end }}
   {{- if .tls }}
   {{- if .tls.enabled }}
   tls:

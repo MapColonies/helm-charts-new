@@ -58,10 +58,6 @@
             "type": "object",
             "description": "Timeout configuration for the route",
             "properties": {
-              "enabled": {
-                "type": "boolean",
-                "description": "Enable custom timeouts for this route"
-              },
               "duration": {
                 "type": "string",
                 "description": "Timeout duration (e.g., '60s', '5m')",
