@@ -19,7 +19,7 @@ jobs:
       - name: List changed charts
         id: list-changed
         run: |
-          changed=$(ct list-changed --target-branch "${{ github.base_ref }}" --chart-dirs .)
+          changed=$(ct list-changed --target-branch "${{ github.base_ref }}" --chart-dirs ..)
           echo "changed-charts=$changed" >> "$GITHUB_OUTPUT"
 
       - name: Validate annotation on changed charts
