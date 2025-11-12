@@ -1,0 +1,50 @@
+# Default values for routes chart
+# This chart creates multiple OpenShift Route objects
+
+routes:
+  # Example route configuration
+  - name: example-route
+    # Required: Target service configuration
+    service:
+      name: example-service
+      port: 8080
+
+    timeout:
+      enabled: false
+      duration: 1m
+    
+    host: ""
+    path: ""
+    
+    # TLS configuration (enabled by default with edge termination)
+    tls:
+      enabled: true
+      termination: edge  # edge, passthrough, or reencrypt
+      insecureEdgeTerminationPolicy: Redirect  # Redirect, Allow, or None
+      # Optional certificate configuration
+      # certificate: |
+      #   -----BEGIN CERTIFICATE-----
+      #   ...
+      #   -----END CERTIFICATE-----
+      # key: |
+      #   -----BEGIN PRIVATE KEY-----
+      #   ...
+      #   -----END PRIVATE KEY-----
+      # caCertificate: |
+      #   -----BEGIN CERTIFICATE-----
+      #   ...
+      #   -----END CERTIFICATE-----
+        
+    annotations: {}
+    labels: {}
+
+# Global settings for all routes
+global:
+  # Prefix for all route names
+  namePrefix: ""
+  
+  # Common annotations to apply to all routes
+  commonAnnotations: {}
+  
+  # Common labels to apply to all routes
+  commonLabels: {}

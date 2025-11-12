@@ -1,0 +1,159 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OpenShift Routes Helm Chart Values",
+  "type": "object",
+  "required": ["routes"],
+  "properties": {
+    "routes": {
+      "type": "array",
+      "description": "Array of OpenShift Route configurations",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "service"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the route"
+          },
+          "service": {
+            "type": "object",
+            "description": "Target service configuration",
+            "required": ["name", "port"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the target service"
+              },
+              "port": {
+                "oneOf": [
+                  {"type": "integer", "minimum": 1, "maximum": 65535},
+                  {"type": "string"}
+                ],
+                "description": "Target port on the service (number or named port)"
+              },
+              "weight": {
+                "type": "integer",
+                "description": "Weight for load balancing",
+                "minimum": 0,
+                "maximum": 256,
+                "default": 100
+              }
+            }
+          },
+          "host": {
+            "type": "string",
+            "description": "Host for the route"
+          },
+          "path": {
+            "type": "string",
+            "description": "Path for the route (optional)",
+            "pattern": "^(/.*)?$"
+          },
+          "rewriteTarget": {
+            "type": "string",
+            "description": "HAProxy rewrite target annotation"
+          },
+          "timeout": {
+            "type": "object",
+            "description": "Timeout configuration for the route",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "description": "Enable custom timeouts for this route"
+              },
+              "duration": {
+                "type": "string",
+                "description": "Timeout duration (e.g., '60s', '5m')",
+                "pattern": "^[0-9]+(us|ms|s|m|h|d)$"
+              }
+            }
+          },
+          "tls": {
+            "type": "object",
+            "description": "TLS configuration for the route",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "description": "Enable TLS for this route",
+                "default": true
+              },
+              "termination": {
+                "type": "string",
+                "description": "TLS termination type",
+                "enum": ["edge", "passthrough", "reencrypt"],
+                "default": "edge"
+              },
+              "insecureEdgeTerminationPolicy": {
+                "type": "string",
+                "description": "Policy for HTTP traffic",
+                "enum": ["Redirect", "Allow", "None"],
+                "default": "Redirect"
+              },
+              "useCerts": {
+                "type": "boolean",
+                "description": "Whether to use custom certificates",
+                "default": false
+              },
+              "certificate": {
+                "type": "string",
+                "description": "PEM-encoded certificate"
+              },
+              "key": {
+                "type": "string",
+                "description": "PEM-encoded private key"
+              },
+              "caCertificate": {
+                "type": "string",
+                "description": "PEM-encoded CA certificate"
+              }
+            }
+          },
+          "wildcardPolicy": {
+            "type": "string",
+            "description": "Wildcard policy for the route",
+            "enum": ["None", "Subdomain"]
+          },
+          "annotations": {
+            "type": "object",
+            "description": "Custom annotations for this route",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "labels": {
+            "type": "object",
+            "description": "Custom labels for this route",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "global": {
+      "type": "object",
+      "description": "Global settings for all routes",
+      "properties": {
+        "namePrefix": {
+          "type": "string",
+          "description": "Prefix for all route names (uses release name if empty)"
+        },
+        "commonAnnotations": {
+          "type": "object",
+          "description": "Common annotations to apply to all routes",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "commonLabels": {
+          "type": "object",
+          "description": "Common labels to apply to all routes",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
