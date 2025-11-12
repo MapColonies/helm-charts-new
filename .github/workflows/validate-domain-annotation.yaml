@@ -1,0 +1,50 @@
+name: Validate Helm Chart Annotations
+
+on:
+  pull_request:
+
+jobs:
+  validate-annotation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+        with:
+          # We need the full history to diff against the base branch
+          fetch-depth: 0 
+        
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2
+
+      - name: List changed charts
+        id: list-changed
+        run: |
+          changed=$(ct list-changed --target-branch "${{ github.base_ref }}" --chart-dirs .)
+          echo "changed-charts=$changed" >> "$GITHUB_OUTPUT"
+
+      - name: Validate annotation on changed charts
+        # This step only runs if the previous step found changed charts
+        if: steps.list-changed.outputs.changed-charts != ''
+        run: |
+          set -e # Exit immediately on failure
+          
+          all_valid=true
+          echo "Checking charts: ${{ steps.list-changed.outputs.changed-charts }}"
+
+          # Loop over the space-separated list of charts from the 'list-changed' step
+          for chart in ${{ steps.list-changed.outputs.changed-charts }}; do
+            chart_file="$chart/Chart.yaml"
+            echo "--- Validating $chart_file ---"
+            
+            # Use yq -e to check for the key. It exits 1 if not found.
+            if yq -e ".annotations.domain" "$chart_file" > /dev/null; then
+              echo "✔ SUCCESS: Found annotation in $chart_file"
+            else
+              echo "✖ FAILURE: Annotation 'domain' is missing or empty in $chart_file"
+              all_valid=false
+            fi
+          done
+          
+          if [[ "$all_valid" == "false" ]]; then
+            exit 1
+          fi
