@@ -68,3 +68,4 @@ dependencies:
     repository: oci://acrarolibotnonprod.azurecr.io/helm
     version: "1.1.1"
     condition: alloy.enabled
+# BLA

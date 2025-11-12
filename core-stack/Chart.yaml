@@ -21,3 +21,4 @@ dependencies:
     version: 21.3.0
     repository: https://charts.bitnami.com/bitnami
     condition: elasticsearch.enabled
+# BLA

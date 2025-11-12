@@ -17,3 +17,4 @@ dependencies:
   - name: mclabels
     version: 1.0.0
     repository: oci://acrarolibotnonprod.azurecr.io/helm/infra
+# BLA

@@ -10,3 +10,4 @@ dependencies:
   - name: sftpgo-node-exporter
     version: 1.0.0
     repository: file://charts/node-exporter
+# BLA
