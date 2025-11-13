@@ -41,7 +41,6 @@ spec:
   port:
     targetPort: {{ .service.port }}
   {{- if .tls }}
-  {{- if .tls.enabled }}
   tls:
     termination: {{ .tls.termination | default "edge" }}
     insecureEdgeTerminationPolicy: {{ .tls.insecureEdgeTerminationPolicy | default "Redirect" }}
@@ -50,7 +49,6 @@ spec:
     key: {{ .tls.key }}
     caCertificate: {{ .tls.caCertificate }}
     {{- end }}
-  {{- end }}
   {{- end }}
   {{- if .wildcardPolicy }}
   wildcardPolicy: {{ .wildcardPolicy }}

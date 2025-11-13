@@ -69,11 +69,6 @@
             "type": "object",
             "description": "TLS configuration for the route",
             "properties": {
-              "enabled": {
-                "type": "boolean",
-                "description": "Enable TLS for this route",
-                "default": true
-              },
               "termination": {
                 "type": "string",
                 "description": "TLS termination type",

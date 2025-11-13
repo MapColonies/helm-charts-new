@@ -18,7 +18,6 @@ routes:
     
     # TLS configuration (enabled by default with edge termination)
     tls:
-      enabled: true
       termination: edge  # edge, passthrough, or reencrypt
       insecureEdgeTerminationPolicy: Redirect  # Redirect, Allow, or None
       # Optional certificate configuration
