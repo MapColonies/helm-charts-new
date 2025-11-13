@@ -60,11 +60,6 @@
         "package-name": "infra-jenkins",
         "extra-files": ["README.md"]
       },
-      "infra-monitoring": {
-        "release-type": "helm",
-        "package-name": "infra-monitoring",
-        "extra-files": ["README.md"]
-      },
       "infra-opa-la": {
         "release-type": "helm",
         "package-name": "infra-opa-la",
