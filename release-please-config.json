@@ -59,7 +59,7 @@
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
-      "infra-sftpgo": {
+      "sftpgo": {
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
