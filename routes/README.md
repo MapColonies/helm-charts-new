@@ -91,12 +91,14 @@ helm install my-routes ./openshift-routes -f values.yaml
 
 To use this chart as a dependency in another chart, add it to your `Chart.yaml`:
 
+<!-- x-release-please-start-version -->
 ```yaml
 dependencies:
   - name: openshift-routes
-    version: "0.1.0"
+    version: "1.0.0"
     repository: "file://../routes"
 ```
+<!-- x-release-please-end-version -->
 
 Then update dependencies:
 
