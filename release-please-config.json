@@ -44,6 +44,11 @@
       {
         "section": "♻️ Code Refactoring",
         "type": "refactor"
+      },
+      {
+        "section": "Helm Chart Updates",
+        "type": "helm",
+        "hidden": false
       }
     ],
     "draft-pull-request": false,
@@ -52,22 +57,22 @@
     "packages": {
       "core-stack": {
         "release-type": "helm",
-        "package-name": "core-stack",
         "extra-files": ["README.md"]
       },
-      "infra-jenkins": {
+      "infra-sftpgo": {
         "release-type": "helm",
-        "package-name": "infra-jenkins",
         "extra-files": ["README.md"]
       },
-      "infra-opa-la": {
+      "routes": {
         "release-type": "helm",
-        "package-name": "infra-opa-la",
         "extra-files": ["README.md"]
       },
-      "infra-sftpgo-stack": {
+      "gatekeeper": {
         "release-type": "helm",
-        "package-name": "infra-sftpgo-stack",
+        "extra-files": ["README.md"]
+      },
+      "resource-scaler": {
+        "release-type": "helm",
         "extra-files": ["README.md"]
       }
     }

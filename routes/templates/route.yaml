@@ -1,0 +1,56 @@
+{{- range .Values.routes }}
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ empty $.Values.global.namePrefix | ternary .name (printf "%s-%s" $.Values.global.namePrefix .name) }}
+  labels:
+    {{- include "routes.labels" $ | nindent 4 }}
+    {{- with $.Values.global.commonLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- if .rewriteTarget }}
+    haproxy.router.openshift.io/rewrite-target: {{ .rewriteTarget }}
+    {{- end }}
+    {{- if and .timeout .timeout.duration }}
+    haproxy.router.openshift.io/timeout: {{ .timeout.duration }}
+    {{- end }}
+    {{- with $.Values.global.commonAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- if .host }}
+  host: {{ .host }}
+  {{- end }}
+  {{- if .path }}
+  path: {{ .path | default "/" }}
+  {{- end }}
+  to:
+    kind: Service
+    name: {{ .service.name }}
+    {{- if .service.weight }}
+    weight: {{ .service.weight }}
+    {{- end }}
+  port:
+    targetPort: {{ .service.port }}
+  {{- if .tls }}
+  tls:
+    termination: {{ .tls.termination | default "edge" }}
+    insecureEdgeTerminationPolicy: {{ .tls.insecureEdgeTerminationPolicy | default "Redirect" }}
+    {{- if .tls.useCerts }}
+    certificate: {{ .tls.certificate }}
+    key: {{ .tls.key }}
+    caCertificate: {{ .tls.caCertificate }}
+    {{- end }}
+  {{- end }}
+  {{- if .wildcardPolicy }}
+  wildcardPolicy: {{ .wildcardPolicy }}
+  {{- end }}
+{{- end }}
