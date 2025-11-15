@@ -3,7 +3,7 @@ name: infra-core-stack
 description: A Helm chart for deploying MinIO, Redis, and PostgreSQL
 annotations:
   domain: infra
-version: 0.1.0
+version: 1.0.0
 dependencies:
   - name: minio
     version: 14.7.0
