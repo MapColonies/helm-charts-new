@@ -11,7 +11,7 @@ jobs:
       charts: ${{ steps.set-matrix.outputs.charts }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Find Chart.yaml files
         id: set-matrix
         run: |
@@ -29,7 +29,7 @@ jobs:
         chart: ${{ fromJSON(needs.discover_charts.outputs.charts) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Validate domain for ${{ matrix.chart }}
         uses: MapColonies/shared-workflows/actions/validate-domain@validate-domain-v1.0.0
