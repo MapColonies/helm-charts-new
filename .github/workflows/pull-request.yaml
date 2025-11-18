@@ -1,0 +1,37 @@
+name: pull request
+
+on:
+  pull_request:
+
+jobs:
+  discover_charts:
+    name: Discover Helm charts
+    runs-on: ubuntu-latest
+    outputs:
+      charts: ${{ steps.set-matrix.outputs.charts }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Find Chart.yaml files
+        id: set-matrix
+        run: |
+          # Find top-level charts (depth 2)
+          files=$(find . -maxdepth 2 -type f -name 'Chart.yaml' -print | grep -v '/charts/' | jq -R -s -c 'split("\n")[:-1]')
+          echo "Discovered charts: $files"
+          echo "charts=$files" >> "$GITHUB_OUTPUT"
+
+  validate_domain:
+    name: Validate chart domain
+    needs: discover_charts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chart: ${{ fromJSON(needs.discover_charts.outputs.charts) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      
+      - name: Validate domain for ${{ matrix.chart }}
+        uses: MapColonies/shared-workflows/actions/validate-domain@validate-domain-v1.0.0
+        with:
+          chart-file: ${{ matrix.chart }}
