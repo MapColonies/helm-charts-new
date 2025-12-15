@@ -15,8 +15,9 @@ jobs:
       - name: Find Chart.yaml files
         id: set-matrix
         run: |
-          # Find top-level charts (depth 2)
-          files=$(find . -maxdepth 2 -type f -name 'Chart.yaml' -print | grep -v '/charts/' | jq -R -s -c 'split("\n")[:-1]')
+          # Find charts under the top-level charts/ directory (only immediate children)
+          # This avoids picking up nested subcharts like <chart>/charts/*/Chart.yaml
+          files=$(find ./charts -mindepth 2 -maxdepth 2 -type f -name 'Chart.yaml' -print | jq -R -s -c 'split("\n")[:-1]')
           echo "Discovered charts: $files"
           echo "charts=$files" >> "$GITHUB_OUTPUT"
 

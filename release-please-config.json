@@ -55,23 +55,23 @@
     "include-v-in-tag": true,
     "separate-pull-requests": true,
     "packages": {
-      "core-stack": {
+      "charts/core-stack": {
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
-      "sftpgo": {
+      "charts/sftpgo": {
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
-      "routes": {
+      "charts/routes": {
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
-      "gatekeeper": {
+      "charts/gatekeeper": {
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
-      "resource-scaler": {
+      "charts/resource-scaler": {
         "release-type": "helm",
         "extra-files": ["README.md"]
       }
