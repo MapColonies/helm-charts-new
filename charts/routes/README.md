@@ -84,7 +84,7 @@ routes:
 ### Standalone Deployment
 
 ```bash
-helm install my-routes ./charts/openshift-routes -f values.yaml
+helm install my-routes ./openshift-routes -f values.yaml
 ```
 
 ### As a Dependency
