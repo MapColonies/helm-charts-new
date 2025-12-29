@@ -29,7 +29,7 @@ jobs:
           CHART_VERSION="${BASH_REMATCH[2]}"
 
           # Extract domain from Chart.yaml annotations
-          DOMAIN=$(yq e -r '.annotations.domain' "$CHART_NAME/Chart.yaml")
+          DOMAIN=$(yq e -r '.annotations.domain' "charts/$CHART_NAME/Chart.yaml")
 
           # Expose values to later steps
           {
@@ -47,7 +47,7 @@ jobs:
           name: ${{ steps.chart_metadata.outputs.chart_name }}
           repository: helm/${{ steps.chart_metadata.outputs.domain }}
           tag: ${{ steps.chart_metadata.outputs.version }}
-          path: ./${{ steps.chart_metadata.outputs.chart_name }}
+          path: ./charts/${{ steps.chart_metadata.outputs.chart_name }}
           registry: ${{ secrets.ACR_URL }}
           registry_username: ${{ secrets.ACR_PUSH_USER }}
           registry_password: ${{ secrets.ACR_PUSH_TOKEN }}
