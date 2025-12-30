@@ -59,7 +59,7 @@
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
-      "charts/sftpgo": {
+      "charts/sftpgo-stack": {
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
