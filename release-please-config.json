@@ -63,11 +63,11 @@
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
-      "charts/routes": {
+      "charts/openshift-routes": {
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
-      "charts/gatekeeper": {
+      "charts/gatekeeper-constraints": {
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
