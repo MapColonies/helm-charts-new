@@ -19,7 +19,7 @@
           "service": {
             "type": "object",
             "description": "Target service configuration",
-            "required": ["name", "port"],
+            "required": ["name"],
             "properties": {
               "name": {
                 "type": "string",
