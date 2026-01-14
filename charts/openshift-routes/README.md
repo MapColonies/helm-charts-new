@@ -68,7 +68,7 @@ routes:
 |-----|-------------|---------|
 | `routes[].name` | Route name (required) | — |
 | `routes[].service.name` | Target service name (required) | — |
-| `routes[].service.port` | Target service port (required) | — |
+| `routes[].service.port` | Target service port | — |
 | `routes[].host` | Route hostname | "" |
 | `routes[].path` | Route path | "" |
 | `routes[].tls.termination` | TLS termination type (`edge`, `passthrough`, `reencrypt`) | `edge` |

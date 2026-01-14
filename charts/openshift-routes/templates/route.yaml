@@ -38,16 +38,18 @@ spec:
     {{- if .service.weight }}
     weight: {{ .service.weight }}
     {{- end }}
+  {{- if .service.port }}
   port:
     targetPort: {{ .service.port }}
+  {{- end }}
   {{- if .tls }}
   tls:
     termination: {{ .tls.termination | default "edge" }}
     insecureEdgeTerminationPolicy: {{ .tls.insecureEdgeTerminationPolicy | default "Redirect" }}
     {{- if .tls.useCerts }}
-    certificate: {{ .tls.certificate }}
-    key: {{ .tls.key }}
-    caCertificate: {{ .tls.caCertificate }}
+    certificate: {{ .tls.certificate | quote }}
+    key: {{ .tls.key | quote }}
+    caCertificate: {{ .tls.caCertificate | quote }}
     {{- end }}
   {{- end }}
   {{- if .wildcardPolicy }}
