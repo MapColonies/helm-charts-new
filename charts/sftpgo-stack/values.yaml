@@ -13,6 +13,10 @@ route:
     certificate: ""
     key: ""
     caCertificate: ""
+  annotations:
+      haproxy.router.openshift.io/balance: source
+      haproxy.router.openshift.io/disable_cookies: 'false'
+      haproxy.router.openshift.io/timeout: 1h
 
 
 secret:
@@ -21,7 +25,7 @@ secret:
 
 sftpgo:
   image:
-    tag: v2.5-openshift
+    tag: v2.7-openshift
 
   podAnnotations:
     prometheus.io/scrape: "true"
@@ -43,6 +47,14 @@ sftpgo:
         secretKeyRef:
           name: sftp-admin-credentials
           key: password
+    - name: SFTPGO_HTTPD_PROXY_HEADERS
+      value: 'true'
+    - name: SFTPGO_HTTPD_COOKIE_SECURE
+      value: 'true'
+    - name: SFTPGO_HTTPD_COOKIE_SAMESITE
+      value: lax
+    - name: SFTPGO_HTTPD_ENABLED
+      value: 'true'
   
   autoscaling:
     enabled: true
@@ -55,6 +67,15 @@ sftpgo:
         target:
           type: Utilization
           averageUtilization: 80
+  
+  service:
+    type: LoadBalancer
+    annotations:
+      service.beta.kubernetes.io/azure-load-balancer-internal: 'true'
+      service.beta.kubernetes.io/azure-load-balancer-internal-subnet: master-subnet
+    ports:
+      sftp:
+        port: 2022        
 
 sftpgo-node-exporter:
   resources:
