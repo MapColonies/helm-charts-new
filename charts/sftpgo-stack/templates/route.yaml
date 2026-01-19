@@ -4,11 +4,12 @@ apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: {{ $releaseName }}
+  {{- with .Values.route.annotations }}
   annotations:
-    haproxy.router.openshift.io/rewrite-target: /
-    {{- if .Values.route.timeout.enabled }}
-    haproxy.router.openshift.io/timeout: {{ .Values.route.timeout.duration }}
+    {{- range $key, $value := . }}
+    {{ $key }}: {{ $value | quote }}
     {{- end }}
+  {{- end }}
 spec:
   path:  {{ .Values.route.path | default "/" }}
   {{- if .Values.route.host }}
