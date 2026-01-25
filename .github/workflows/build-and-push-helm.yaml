@@ -41,6 +41,32 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v4
 
+      - name: Build sub-chart dependencies
+        env:
+          CHART_NAME: ${{ steps.chart_metadata.outputs.chart_name }}
+        run: |
+          set -euo pipefail
+          
+          CHART_PATH="./charts/$CHART_NAME"
+          
+          # Find all sub-charts with dependencies and build them
+          if [[ -d "$CHART_PATH/charts" ]]; then
+            echo "Checking for sub-charts with dependencies..."
+            find "$CHART_PATH/charts" -name "Chart.yaml" -type f 2>/dev/null | while read -r subchart; do
+              subchart_dir=$(dirname "$subchart")
+              subchart_name=$(basename "$subchart_dir")
+              
+              if grep -q 'dependencies:' "$subchart"; then
+                echo "Building dependencies for sub-chart: $subchart_name"
+                helm dependency build "$subchart_dir"
+              else
+                echo "No dependencies for sub-chart: $subchart_name"
+              fi
+            done
+          else
+            echo "No sub-charts directory found, skipping sub-chart dependency build"
+          fi
+
       - name: Push Chart to ACR
         uses: appany/helm-oci-chart-releaser@v0.5.0
         with:
