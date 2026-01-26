@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/MapColonies/helm-charts-test/compare/sftpgo-stack-v1.0.0...sftpgo-stack-v1.1.0) (2026-01-26)
+
+
+### 🎉 Features
+
+* **global:** enhance sub-chart dependency build process and update service configuration ([#23](https://github.com/MapColonies/helm-charts-test/issues/23)) ([99f8f4f](https://github.com/MapColonies/helm-charts-test/commit/99f8f4f1a58ea41f6fa20288e953c18baa032218))
+
 ## 1.0.0 (2026-01-19)
 
 
