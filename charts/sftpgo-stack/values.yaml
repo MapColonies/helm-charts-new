@@ -69,14 +69,20 @@ sftpgo:
           averageUtilization: 80
   
   service:
-    type: LoadBalancer
-    annotations:
-      service.beta.kubernetes.io/azure-load-balancer-internal: 'true'
-      service.beta.kubernetes.io/azure-load-balancer-internal-subnet: master-subnet
-    ports:
-      sftp:
-        port: 2022        
+    type: ClusterIP    
 
+  services: 
+    lb:
+      type: LoadBalancer
+      ports: # Define extra ports if needed for LoadBalancer service
+        sftp: 
+          port: 2022
+        webdav:
+          port: 5005
+
+  webdavd:
+    enabled: true
+    
 sftpgo-node-exporter:
   resources:
     requests:
