@@ -18,3 +18,18 @@ cert-exporter:
       limits:
         cpu: 200m
         memory: 128Mi
+
+  rbac:
+    serviceAccount:
+      create: false
+      name: monitoring
+
+    clusterRole:
+      create: false
+    
+    clusterRoleBinding:
+      create: false
+
+  dashboards:
+    certManagerDashboard:
+      create: false
