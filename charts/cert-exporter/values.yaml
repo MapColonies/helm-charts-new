@@ -1,0 +1,35 @@
+cert-exporter:
+  certManager:
+    # MapColonies standard labels
+    additionalPodLabels:
+      mapcolonies.io/component: infrastructure
+      mapcolonies.io/owner: infra
+      mapcolonies.io/part-of: monitoring
+      mapcolonies.io/alloy-api-logs: "false"
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8080"
+      prometheus.io/path: "/metrics"
+    # Default resources (can be overridden in site-values)
+    resources:
+      requests:
+        cpu: 200m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 128Mi
+
+  rbac:
+    serviceAccount:
+      create: false
+      name: monitoring
+
+    clusterRole:
+      create: false
+    
+    clusterRoleBinding:
+      create: false
+
+  dashboards:
+    certManagerDashboard:
+      create: false
