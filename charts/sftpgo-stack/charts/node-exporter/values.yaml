@@ -22,7 +22,6 @@ volumes: []
 
 image:
   repository: quay.io/prometheus/node-exporter
-  tag: v1.8.2
   imagePullPolicy: IfNotPresent
 
 imagePullSecrets: []

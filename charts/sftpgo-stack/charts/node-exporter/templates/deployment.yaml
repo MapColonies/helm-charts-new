@@ -1,4 +1,5 @@
 {{- $releaseName := .Release.Name -}}
+{{- $imageTag := include "sftpgo-node-exporter.tag" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -27,7 +28,7 @@ spec:
       {{- end }}
       containers:
       - name: node-exporter
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.repository }}:{{ $imageTag }}"
         imagePullPolicy: {{ .Values.image.imagePullPolicy }}
         args:
           {{- with .Values.extraArgs }}
