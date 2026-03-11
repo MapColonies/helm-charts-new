@@ -1,0 +1,125 @@
+postgres:
+  enabled: true
+
+  type: postgis
+
+  version:
+    postgresql: "15"
+    postgis: "3.3"
+
+  cluster:
+    instances: 1
+    # Not supported by CNPG operator yet, but will be used when supported
+    enablePDB: null
+
+    additionalLabels:
+      mapcolonies.io/environment: prod
+      mapcolonies.io/component: "infrastructure"
+      mapcolonies.io/part-of: "data"
+      mapcolonies.io/owner: "infra"
+      mapcolonies.io/alloy-api-logs: "true"
+
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9187"
+
+    resources:
+      requests:
+        cpu: "8"
+        memory: "25Gi"
+      limits:
+        cpu: "8"
+        memory: "25Gi"
+
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: false
+      prometheusRule:
+        enabled: false
+
+    storage:
+      size: 128Gi
+      storageClass: managed-premium
+
+    walStorage:
+      enabled: true
+      size: 4Gi
+      storageClass: managed-premium
+
+    enableSuperuserAccess: true
+    superuserSecret: cnpg-superuser-postgres
+    
+    # Superuser secret data
+    superuserSecretData:
+      username: ""
+      password: ""
+    
+    initdb:
+      database: postgres
+      owner: postgres
+      secret:
+        name: cnpg-superuser-postgres
+      postInitApplicationSQL:
+        # Match extensions which are installed on Azure Database for PostgreSQL - Flexible Server
+        - CREATE EXTENSION IF NOT EXISTS btree_gist;
+        - CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+        - CREATE EXTENSION IF NOT EXISTS pgcrypto;
+        - CREATE EXTENSION IF NOT EXISTS hstore;
+        - CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+        # Keep default chart extenstions
+        # https://github.com/cloudnative-pg/charts/blob/cluster-v0.5.0/charts/cluster/templates/_bootstrap.tpl#L16C1-L19C63
+        - CREATE EXTENSION IF NOT EXISTS postgis;
+        - CREATE EXTENSION IF NOT EXISTS postgis_topology;
+        - CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
+        - CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder;
+
+    postgresql:
+      parameters:
+        # Match parameters which are set on Azure Database for PostgreSQL - Flexible Server
+        max_connections: "600"
+        max_parallel_maintenance_workers: "64"
+        work_mem: "8192kB"
+        timezone: "Asia/Jerusalem"
+      # By default, CNPG prefers SSL. This explicitly allows non-SSL password auth
+      # Security (require_secure_transport: false) to match Azure Database for PostgreSQL - Flexible Server configuration
+      pg_hba:
+        - host all all all scram-sha-256
+
+  backups:
+    enabled: true
+    provider: azure
+    destinationPath: "https://infrastoragelibot.blob.core.windows.net/postgres-backups/infra-services"
+    
+    azure:
+      storageAccount: infrastoragelibot
+      containerName: postgres-backups
+      # Set to non-empty value to use storage key instead of SAS token
+      # The actual key comes from the manually created secret
+      storageKey: "provided-via-secret"
+    
+    secret:
+      # Set to false to tell the cluster chart not to create the secret
+      create: false
+      # Set to true to create the secret from this chart's template
+      createFromTemplate: true
+      name: cnpg-azure-backup-creds
+      data:
+        storageAccount: ""
+        storageKey: ""
+    
+    wal:
+      compression: gzip
+      maxParallel: 8
+    
+    data:
+      compression: gzip
+      jobs: 2
+    
+    retentionPolicy: "30d"
+    
+    scheduledBackups:
+      - name: daily-backup
+        schedule: "0 2 * * *"
+        backupOwnerReference: self
+        method: barmanObjectStore
