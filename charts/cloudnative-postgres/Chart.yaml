@@ -1,0 +1,16 @@
+apiVersion: v2
+name: cloudnative-postgres
+description: A Helm chart for Kubernetes
+type: application
+version: 0.5.0
+annotations:
+  domain: infra
+dependencies:
+  - name: cluster
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/infra/postgres
+    version: 0.5.0
+    condition: postgres.enabled
+    alias: postgres
+  - name: mclabels
+    version: 1.0.1
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/infra

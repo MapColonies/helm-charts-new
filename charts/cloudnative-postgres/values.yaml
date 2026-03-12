@@ -1,0 +1,72 @@
+mclabels:
+  owner: "infra"
+  partOf: "postgres"
+  component: "infrastructure"
+
+postgres:
+  enabled: true
+
+  type: postgis
+
+  version:
+    postgresql: "15"
+    postgis: "3.3"
+
+  cluster:
+    instances: 1
+    # Not supported by CNPG operator yet, but will be used when supported
+    enablePDB: null
+
+    additionalLabels:
+      mapcolonies.io/environment: prod
+      mapcolonies.io/component: "infrastructure"
+      mapcolonies.io/part-of: "data"
+      mapcolonies.io/owner: "infra"
+      mapcolonies.io/alloy-api-logs: "true"
+
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9187"
+
+
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: false
+      prometheusRule:
+        enabled: false
+
+    
+    # Superuser secret data
+    superuserSecretData:
+      username: ""
+      password: ""
+    
+    initdb:
+      postInitApplicationSQL:
+        # Match extensions which are installed on Azure Database for PostgreSQL - Flexible Server
+        - CREATE EXTENSION IF NOT EXISTS btree_gist;
+        - CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+        - CREATE EXTENSION IF NOT EXISTS pgcrypto;
+        - CREATE EXTENSION IF NOT EXISTS hstore;
+        - CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+        # Keep default chart extenstions
+        # https://github.com/cloudnative-pg/charts/blob/cluster-v0.5.0/charts/cluster/templates/_bootstrap.tpl#L16C1-L19C63
+        - CREATE EXTENSION IF NOT EXISTS postgis;
+        - CREATE EXTENSION IF NOT EXISTS postgis_topology;
+        - CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
+        - CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder;
+
+    postgresql:
+      parameters:
+        # Match parameters which are set on Azure Database for PostgreSQL - Flexible Server
+        max_connections: "600"
+        max_parallel_maintenance_workers: "4"
+        work_mem: "8192kB"
+        timezone: "Asia/Jerusalem"
+        shared_buffers: "2048MB"
+      # By default, CNPG prefers SSL. This explicitly allows non-SSL password auth
+      # Security (require_secure_transport: false) to match Azure Database for PostgreSQL - Flexible Server configuration
+      pg_hba:
+        - host all all all scram-sha-256
+  
