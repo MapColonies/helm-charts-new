@@ -4,6 +4,7 @@ metadata:
   name: {{ .Release.Name }}-primary-lb
   labels:
     cnpg.io/cluster: {{ .Release.Name }}
+    {{ include "mclabels.labels" . | nindent 4 }}
   annotations:
     service.beta.kubernetes.io/azure-load-balancer-internal: "true"
 spec:

@@ -81,6 +81,7 @@ postgres:
         max_parallel_maintenance_workers: "64"
         work_mem: "8192kB"
         timezone: "Asia/Jerusalem"
+        shared_buffers: "2048MB"
       # By default, CNPG prefers SSL. This explicitly allows non-SSL password auth
       # Security (require_secure_transport: false) to match Azure Database for PostgreSQL - Flexible Server configuration
       pg_hba:

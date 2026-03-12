@@ -11,3 +11,6 @@ dependencies:
     version: 0.5.0
     condition: postgres.enabled
     alias: postgres
+  - name: mclabels
+    version: 1.0.1
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/infra
