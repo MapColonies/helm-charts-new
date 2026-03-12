@@ -23,13 +23,6 @@ postgres:
       prometheus.io/scrape: "true"
       prometheus.io/port: "9187"
 
-    resources:
-      requests:
-        cpu: "8"
-        memory: "25Gi"
-      limits:
-        cpu: "8"
-        memory: "25Gi"
 
     monitoring:
       enabled: true
@@ -38,17 +31,6 @@ postgres:
       prometheusRule:
         enabled: false
 
-    storage:
-      size: 128Gi
-      storageClass: managed-premium
-
-    walStorage:
-      enabled: true
-      size: 4Gi
-      storageClass: managed-premium
-
-    enableSuperuserAccess: true
-    superuserSecret: cnpg-superuser-postgres
     
     # Superuser secret data
     superuserSecretData:
@@ -56,10 +38,6 @@ postgres:
       password: ""
     
     initdb:
-      database: postgres
-      owner: postgres
-      secret:
-        name: cnpg-superuser-postgres
       postInitApplicationSQL:
         # Match extensions which are installed on Azure Database for PostgreSQL - Flexible Server
         - CREATE EXTENSION IF NOT EXISTS btree_gist;
@@ -86,41 +64,4 @@ postgres:
       # Security (require_secure_transport: false) to match Azure Database for PostgreSQL - Flexible Server configuration
       pg_hba:
         - host all all all scram-sha-256
-
-  backups:
-    enabled: true
-    provider: azure
-    destinationPath: "https://infrastoragelibot.blob.core.windows.net/postgres-backups/infra-services"
-    
-    azure:
-      storageAccount: infrastoragelibot
-      containerName: postgres-backups
-      # Set to non-empty value to use storage key instead of SAS token
-      # The actual key comes from the manually created secret
-      storageKey: "provided-via-secret"
-    
-    secret:
-      # Set to false to tell the cluster chart not to create the secret
-      create: false
-      # Set to true to create the secret from this chart's template
-      createFromTemplate: true
-      name: cnpg-azure-backup-creds
-      data:
-        storageAccount: ""
-        storageKey: ""
-    
-    wal:
-      compression: gzip
-      maxParallel: 8
-    
-    data:
-      compression: gzip
-      jobs: 2
-    
-    retentionPolicy: "30d"
-    
-    scheduledBackups:
-      - name: daily-backup
-        schedule: "0 2 * * *"
-        backupOwnerReference: self
-        method: barmanObjectStore
+  
