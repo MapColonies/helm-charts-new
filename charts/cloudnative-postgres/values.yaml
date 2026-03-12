@@ -61,7 +61,7 @@ postgres:
       parameters:
         # Match parameters which are set on Azure Database for PostgreSQL - Flexible Server
         max_connections: "600"
-        max_parallel_maintenance_workers: "64"
+        max_parallel_maintenance_workers: "4"
         work_mem: "8192kB"
         timezone: "Asia/Jerusalem"
         shared_buffers: "2048MB"
