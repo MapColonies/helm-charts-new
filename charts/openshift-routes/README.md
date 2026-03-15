@@ -95,7 +95,7 @@ To use this chart as a dependency in another chart, add it to your `Chart.yaml`:
 ```yaml
 dependencies:
   - name: openshift-routes
-    version: "1.0.0"
+    version: "1.0.1"
     repository: "file://../routes"
 ```
 <!-- x-release-please-end-version -->
