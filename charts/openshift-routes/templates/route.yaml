@@ -42,16 +42,14 @@ spec:
   port:
     targetPort: {{ .service.port }}
   {{- end }}
-  {{- if .tls }}
   tls:
-    termination: {{ .tls.termination | default "edge" }}
-    insecureEdgeTerminationPolicy: {{ .tls.insecureEdgeTerminationPolicy | default "Redirect" }}
-    {{- if .tls.useCerts }}
+    termination: {{ dig "tls" "termination" "edge" . }}
+    insecureEdgeTerminationPolicy: {{ dig "tls" "insecureEdgeTerminationPolicy" "Redirect" . }}
+    {{- if and .tls .tls.useCerts }}
     certificate: {{ .tls.certificate | quote }}
     key: {{ .tls.key | quote }}
     caCertificate: {{ .tls.caCertificate | quote }}
     {{- end }}
-  {{- end }}
   {{- if .wildcardPolicy }}
   wildcardPolicy: {{ .wildcardPolicy }}
   {{- end }}
