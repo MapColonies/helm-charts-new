@@ -17,7 +17,7 @@ spec:
   {{- end }}
   to:
     kind: Service
-    name: {{ $releaseName }}-sftpgo
+    name: {{ default $releaseName .Values.route.service.name }}
   {{- if .Values.route.tls.enabled }}
   tls:
     termination: {{ .Values.route.tls.termination | quote }}
