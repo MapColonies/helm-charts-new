@@ -1,6 +1,8 @@
 apiVersion: v2
 name: grafana
 description: A Helm chart for Grafana
+annotations:
+  domain: infra
 type: application
 version: 10.7.0
 appVersion: "12.3.1"
