@@ -8,6 +8,7 @@ annotations:
   domain: infra
 dependencies:
   - name: keycloak
+    # This chart source is bitnami so I had to push it to our ACR
     repository: oci://acrarolibotnonprod.azurecr.io/helm/infra
     version: 24.7.7
   - name: openshift-routes
