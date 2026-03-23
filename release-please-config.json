@@ -78,6 +78,10 @@
       "charts/grafana": {
         "release-type": "helm",
         "extra-files": ["README.md"]
+      },
+      "charts/hoppscotch": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
       }
     }
 }

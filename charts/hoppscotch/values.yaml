@@ -1,0 +1,30 @@
+hoppscotch:
+  deploymentMode: aio
+  aio:
+    image:
+      repository:  infra/hoppscotch
+      tag: "2026.2.0-openshift"
+
+    # Default is port 80 - in Openshift this will fail (port > 1024)
+    containerPorts:
+      http: 8081
+
+    service:
+      ports:
+        http: 8081  
+    
+    podLabels:
+      mapcolonies.io/component: "infrastructure"
+      mapcolonies.io/part-of: "web-tools"
+      mapcolonies.io/owner: "infra"
+      mapcolonies.io/alloy-api-logs: "true"
+    
+    extraEnvVars:
+      - name: WEBAPP_SERVER_SIGNING_KEY
+        value: "iHGTouutIOYvgVEHouHHnMVlgd1pKrfOY6QMeap5npInfKxlyYNB6ZoAu0yUVqmpSYmO263mWe/OlYbf3kCNCg=="
+        # Default is port 80 - in Openshift this will fail (port > 1024)
+      - name: HOPP_AIO_ALTERNATE_PORT
+        value: "8081"
+        # Random 32 characters
+      - name: DATA_ENCRYPTION_KEY
+        value: "83370848585760606137314229988577"

@@ -1,0 +1,16 @@
+apiVersion: v2
+name: hoppscotch
+description: A wrapper hoppscotch Helm chart for adding openshift routes template
+type: application
+version: 1.0.0
+appVersion: 2026.2.0
+annotations:
+  domain: infra
+dependencies:
+  - name: hoppscotch
+    # This chart version can't be accessed through oci so it was pushed to our registry
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/hoppscotch
+    version: 0.3.4
+  - name: openshift-routes
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/common
+    version: 1.0.2
