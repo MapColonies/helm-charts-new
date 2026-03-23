@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/MapColonies/helm-charts-test/compare/openshift-routes-v1.0.1...openshift-routes-v1.0.2) (2026-03-23)
+
+
+### 🐛 Bug Fixes
+
+* **openshift-routes:** remove the example route ([#32](https://github.com/MapColonies/helm-charts-test/issues/32)) ([d0330d2](https://github.com/MapColonies/helm-charts-test/commit/d0330d221acb11183668cdb289693004c21649fa))
+
 ## [1.0.1](https://github.com/MapColonies/helm-charts-test/compare/openshift-routes-v1.0.0...openshift-routes-v1.0.1) (2026-03-15)
 
 
