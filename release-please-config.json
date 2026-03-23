@@ -74,6 +74,10 @@
       "charts/resource-scaler": {
         "release-type": "helm",
         "extra-files": ["README.md"]
+      },
+      "charts/keycloak": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
       }
     }
 }
