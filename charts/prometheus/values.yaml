@@ -1,5 +1,4 @@
 prometheus:
-  enabled: true
   fullnameOverride: infra-prometheus
 
   scrapeConfigs:
@@ -21,6 +20,12 @@ prometheus:
       enabled: false
     kubernetes-pods-slow:
       enabled: false
+
+
+  commonMetaLabels:
+    mapcolonies.io/component: "infrastructure"
+    mapcolonies.io/part-of: "monitoring"
+    mapcolonies.io/owner: "infra"
 
 
 ## Prometheus config map reloader ###
