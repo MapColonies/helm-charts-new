@@ -1,0 +1,12 @@
+apiVersion: v2
+name: jenkins
+description: A Helm chart for Grafana
+annotations:
+  domain: infra
+type: application
+version: 1.0.0
+appVersion: 2.504.3
+dependencies:
+  - name: jenkins
+    version: 5.8.63
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/infra
