@@ -12,3 +12,6 @@ dependencies:
   - name: sftpgo-node-exporter
     version: 1.0.0
     repository: file://charts/node-exporter
+  - name: openshift-routes
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/common
+    version: 1.0.2
