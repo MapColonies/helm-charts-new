@@ -1,0 +1,56 @@
+###### tempo-distributed ######
+tempo-distributed:
+  reportingEnabled: false
+
+  memcachedExporter:
+    enabled: true
+
+  memcached:
+    image:
+      repository: infra/memcached
+    podLabels:
+      mapcolonies.io/component: "infrastructure"
+      mapcolonies.io/part-of: "monitoring"
+      mapcolonies.io/owner: "infra"
+    podAnnotations:
+      prometheus.io/port: "9150"
+
+  tempo:
+    image:
+      repository: infra/grafana/tempo
+    podLabels:
+      mapcolonies.io/component: "infrastructure"
+      mapcolonies.io/part-of: "monitoring"
+      mapcolonies.io/owner: "infra"
+      mapcolonies.io/alloy-api-logs: "true"
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "3200"
+
+  serviceAccount:
+    create: false
+    name: monitoring
+
+  gateway:
+    enabled: true
+    image:
+      repository: infra/nginxinc/nginx-unprivileged
+    service:
+      annotations:
+        mapcolonies.io/component: "infrastructure"
+        mapcolonies.io/part-of: "monitoring"
+        mapcolonies.io/owner: "infra"
+    podAnnotations:
+      prometheus.io/scrape: "false"
+
+  traces:
+    otlp:
+      http:
+        enabled: true
+      grpc:
+        enabled: true
+
+  distributor:
+    config:
+      log_received_spans:
+        enabled: true
