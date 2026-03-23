@@ -1,0 +1,33 @@
+grafana:
+  enabled: true
+  image:
+    repository: "grafana/grafana"
+
+  extraLabels:
+    mapcolonies.io/component: "infrastructure"
+    mapcolonies.io/part-of: "monitoring"
+    mapcolonies.io/owner: "infra"
+  podLabels:
+    mapcolonies.io/alloy-api-logs: "true"
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "3000"
+
+  resources:
+    limits:
+      cpu: 400m
+      memory: 1024Mi
+    requests:
+      cpu: 100m
+      memory: 300Mi
+  adminUser: libotadmin
+  adminPassword: libot!23
+  rbac:
+    create: false
+  serviceAccount:
+    create: false
+    name: monitoring
+  
+  grafana.ini:
+    metrics:
+      enabled: "true"

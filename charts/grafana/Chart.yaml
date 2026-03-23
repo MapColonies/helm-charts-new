@@ -1,0 +1,13 @@
+apiVersion: v2
+name: grafana
+description: A Helm chart for Grafana
+type: application
+version: 10.7.0
+appVersion: "12.3.1"
+dependencies:
+  - name: grafana
+    version: 10.7.0
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/infra/grafana
+  - name: openshift-routes
+    version: 1.0.1
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/common
