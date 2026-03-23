@@ -1,8 +1,4 @@
 grafana:
-  enabled: true
-  image:
-    repository: "grafana/grafana"
-
   extraLabels:
     mapcolonies.io/component: "infrastructure"
     mapcolonies.io/part-of: "monitoring"
@@ -13,36 +9,12 @@ grafana:
     prometheus.io/scrape: "true"
     prometheus.io/port: "3000"
 
-  resources:
-    limits:
-      cpu: 400m
-      memory: 1024Mi
-    requests:
-      cpu: 100m
-      memory: 300Mi
   rbac:
     create: false
   serviceAccount:
     create: false
     name: monitoring
 
-  datasources:
-    datasources.yaml:
-      apiVersion: 1
-      datasources:
-        - name: Prometheus
-          uid: prometheus
-          type: prometheus
-          url: 'http://infra-prometheus-server:9090'
-          editable: true
-          isDefault: true
-        - name: Tempo
-          uid: tempo
-          type: tempo
-          url: 'http://infra-tempo-gateway'
-          editable: true
-          isDefault: false
-            
   grafana.ini:
     metrics:
       enabled: "true"
