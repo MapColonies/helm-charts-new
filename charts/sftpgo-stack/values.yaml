@@ -1,7 +1,3 @@
-secret:
-  username: admin
-  password: mapcolonies
-
 sftpgo:
   image:
     tag: v2.7-openshift
