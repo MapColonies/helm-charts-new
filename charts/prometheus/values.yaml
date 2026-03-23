@@ -1,0 +1,84 @@
+prometheus:
+  enabled: true
+  fullnameOverride: infra-prometheus
+
+  scrapeConfigs:
+    prometheus:
+      enabled: false
+    kubernetes-api-servers:
+      enabled: false
+    kubernetes-nodes:
+      enabled: false
+    kubernetes-nodes-cadvisor:
+      enabled: false
+    kubernetes-service-endpoints:
+      enabled: false
+    kubernetes-service-endpoints-slow:
+      enabled: false
+    prometheus-pushgateway:
+      enabled: false
+    kubernetes-pods:
+      enabled: false
+    kubernetes-pods-slow:
+      enabled: false
+
+
+## Prometheus config map reloader ###
+  configmapReload:
+    prometheus:
+      resources:
+        limits:
+          cpu: 400m
+          memory: 128Mi
+        requests:
+          cpu: 100m
+          memory: 128Mi
+## End of prometheus config map reloader ###  
+
+
+  serviceAccounts:
+    server:
+      create: false
+      name: monitoring
+
+  alertmanager:
+    enabled: false
+  kube-state-metrics:
+    enabled: false
+  prometheus-node-exporter:
+    enabled: false
+  prometheus-pushgateway:
+    enabled: false
+  rbac:
+    create: false
+
+
+  server:
+    fullnameOverride: 'infra-prometheus-server'
+    podLabels:
+      mapcolonies.io/alloy-api-logs: "true"
+    global:
+      scrape_interval: 30s
+      evaluation_interval: 30s
+    extraFlags:
+      - web.enable-lifecycle
+
+    resources:
+      limits:
+        cpu: 800m
+        memory: 2048Mi
+      requests:
+        cpu: 200m
+        memory: 2048Mi
+
+    persistentVolume:
+      existingClaim: infra-prometheus-storage
+
+    service:
+      servicePort: 9090
+
+    alertmanagers:
+      - static_configs:
+        - targets:
+          # Alertmanager's default port is 9093
+          - infra-alertmanager:9093
