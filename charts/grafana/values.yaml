@@ -25,7 +25,24 @@ grafana:
   serviceAccount:
     create: false
     name: monitoring
-  
+
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          uid: prometheus
+          type: prometheus
+          url: 'http://infra-prometheus-server:9090'
+          editable: true
+          isDefault: true
+        - name: Tempo
+          uid: tempo
+          type: tempo
+          url: 'http://infra-tempo-gateway'
+          editable: true
+          isDefault: false
+            
   grafana.ini:
     metrics:
       enabled: "true"
