@@ -10,7 +10,7 @@ dependencies:
   - name: hoppscotch
     # This chart version can't be accessed through oci so it was pushed to our registry
     repository: oci://acrarolibotnonprod.azurecr.io/helm/hoppscotch
-    version: 0.3.4
+    version: 0.3.3
   - name: openshift-routes
     repository: oci://acrarolibotnonprod.azurecr.io/helm/common
     version: 1.0.2
