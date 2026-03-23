@@ -20,8 +20,6 @@ grafana:
     requests:
       cpu: 100m
       memory: 300Mi
-  adminUser: libotadmin
-  adminPassword: libot!23
   rbac:
     create: false
   serviceAccount:
