@@ -75,11 +75,29 @@
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
+      "charts/keycloak": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
+      },
       "charts/grafana": {
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
       "charts/prometheus": {
+      "charts/alertmanager": {
+      "charts/tempo": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
+      },
+      "charts/alloy": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
+      },
+      "charts/hoppscotch": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
+      },
+      "charts/pgadmin": {
         "release-type": "helm",
         "extra-files": ["README.md"]
       }

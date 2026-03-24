@@ -1,0 +1,16 @@
+apiVersion: v2
+name: keycloak
+description: A wrapper keycloak Helm chart for adding openshift routes template
+type: application
+version: 1.0.0
+appVersion: 26.3.1
+annotations:
+  domain: infra
+dependencies:
+  - name: keycloak
+    # This chart source is bitnami so I had to push it to our ACR
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/infra
+    version: 24.7.7
+  - name: openshift-routes
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/common
+    version: 1.0.2

@@ -1,0 +1,15 @@
+apiVersion: v2
+name: pgadmin
+description: A Helm chart for pgAdmin
+annotations:
+  domain: infra
+type: application
+version: 1.0.0
+appVersion: "9.11"
+dependencies:
+  - name: pgadmin4
+    version: 1.59.0
+    repository: https://helm.runix.net
+  - name: openshift-routes
+    version: 1.0.2
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/common
