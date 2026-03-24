@@ -83,6 +83,11 @@
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
+      "charts/prometheus": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
+      },
+      "charts/alertmanager": {
       "charts/tempo": {
         "release-type": "helm",
         "extra-files": ["README.md"]
@@ -100,6 +105,10 @@
         "extra-files": ["README.md"]
       },
       "charts/loki": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
+      },
+      "charts/jenkins": {
         "release-type": "helm",
         "extra-files": ["README.md"]
       }

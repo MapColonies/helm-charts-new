@@ -1,0 +1,40 @@
+jenkins:
+  controller:
+    podLabels:
+      mapcolonies.io/component: infrastructure
+      mapcolonies.io/part-of: jenkins
+      mapcolonies.io/owner: infra
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8080"
+      prometheus.io/path: "/prometheus"
+
+    image:
+      repository: "infra/jenkins/jenkins"
+
+
+    initContainerEnv:
+      - name: CACHE_DIR
+        value: "/tmp/cache"
+      - name: PLUGIN_DIR
+        # value: "/tmp/plugins"
+        # https://github.com/jenkinsci/helm-charts/issues/844#issuecomment-1699778491
+        value: "/usr/share/jenkins/ref/plugins/"
+    containerEnv:
+      - name: TZ
+        value: "Asia/Jerusalem"
+
+    javaOpts: "-Duser.timezone=Asia/Jerusalem"
+    jenkinsUrlProtocol: "https"
+
+    installLatestPlugins: false
+    installPlugins: []
+
+    JCasC:
+      configScripts:
+        welcome-message: |
+          jenkins:
+            systemMessage: Welcome to our MapColonies CI\CD server. This Jenkins is configured and managed 'as code'.
+
+  rbac:
+    readSecrets: true
