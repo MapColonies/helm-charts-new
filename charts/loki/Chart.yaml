@@ -1,0 +1,12 @@
+apiVersion: v2
+name: loki
+description: A wrapper Loki Helm chart
+type: application
+version: 1.0.0
+appVersion: 3.4.2
+annotations:
+  domain: infra
+dependencies:
+  - name: loki
+    repository: https://grafana.github.io/helm-charts
+    version: 6.28.0
