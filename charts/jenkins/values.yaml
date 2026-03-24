@@ -12,13 +12,6 @@ jenkins:
     image:
       repository: "infra/jenkins/jenkins"
 
-    resources:
-      requests:
-        cpu: "100m"
-        memory: "2500Mi"
-      limits:
-        cpu: "1"
-        memory: "4096Mi"
 
     initContainerEnv:
       - name: CACHE_DIR
