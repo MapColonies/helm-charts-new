@@ -1,0 +1,76 @@
+loki:
+  global:
+    dnsService: dns-default
+    dnsNamespace: openshift-dns
+  serviceAccount:
+      create: false
+      name: monitoring
+  deploymentMode: SimpleScalable
+  # this is only for DaemonSet mode
+  rbac:
+    pspEnabled: false
+    sccEnabled: false
+    useExistingRole: true
+    namespaced: true
+  lokiCanary:
+    enabled: false
+  test:
+    enabled: false
+
+  loki:
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "3100"
+    podLabels:
+      mapcolonies.io/component: "infrastructure"
+      mapcolonies.io/part-of: "monitoring"
+      mapcolonies.io/owner: "infra"
+      mapcolonies.io/alloy-api-logs: "true"
+
+    auth_enabled: false
+    schemaConfig:
+      configs:
+        - from: "2024-04-01"
+          store: tsdb
+          object_store: s3
+          schema: v13
+          index:
+            prefix: loki_index_
+            period: 24h
+
+    pattern_ingester:
+        enabled: true
+    ingester:
+      max_chunk_age: 15m
+      chunk_idle_period: 5m
+    server:
+      grpc_server_max_recv_msg_size: 52428800
+      grpc_server_max_send_msg_size: 52428800
+    limits_config:
+      allow_structured_metadata: true
+      retention_period: 14d
+      ingestion_rate_mb: 200
+      ingestion_burst_size_mb: 400
+      reject_old_samples: true
+      reject_old_samples_max_age: 1d
+
+    compactor:
+      working_directory: /var/loki/compactor
+      compaction_interval: 10m
+      retention_enabled: true
+      retention_delete_delay: 2h
+      retention_delete_worker_count: 150
+      delete_request_store: s3
+
+    querier:
+      max_concurrent: 4
+
+  resultsCache:
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9150"
+
+  chunksCache:
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9150"
