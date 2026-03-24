@@ -78,6 +78,10 @@
       "charts/grafana": {
         "release-type": "helm",
         "extra-files": ["README.md"]
+      },
+      "charts/pgadmin": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
       }
     }
 }
