@@ -1,0 +1,25 @@
+pgadmin4:
+  fullnameOverride: infra-pgadmin
+
+  image:
+    tag: "v9.12-openshift"
+    repository: infra/pgadmin
+
+  podLabels:
+    mapcolonies.io/component: "infrastructure"
+    mapcolonies.io/part-of: "web-tools"
+    mapcolonies.io/owner: "infra"  
+
+  # Default is port 80 - in Openshift this will fail (port > 1024)
+  containerPorts:
+    http: 5555
+
+  service:
+    targetPort: 5555
+
+  env:
+    email: pgadmin@mapcolonies.net
+    password: SuperSecret
+    variables:
+      - name: PGADMIN_LISTEN_PORT
+        value: "5555"

@@ -1,0 +1,19 @@
+hoppscotch:
+  deploymentMode: aio
+  aio:
+    image:
+      tag: "2026.2.0-openshift"
+
+    # Default is port 80 - in Openshift this will fail (port > 1024)
+    containerPorts:
+      http: 8081
+
+    service:
+      ports:
+        http: 8081
+    
+    podLabels:
+      mapcolonies.io/component: "infrastructure"
+      mapcolonies.io/part-of: "web-tools"
+      mapcolonies.io/owner: "infra"
+      mapcolonies.io/alloy-api-logs: "true"
