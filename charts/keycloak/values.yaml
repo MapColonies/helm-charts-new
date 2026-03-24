@@ -1,0 +1,17 @@
+keycloak:
+  global:
+    security:
+      allowInsecureImages: true
+  
+  serviceAccount:
+    create: false
+
+  metrics:
+    enabled: true
+
+  postgresql:
+    enabled: false
+
+  proxy: "edge"
+  
+  production: true
