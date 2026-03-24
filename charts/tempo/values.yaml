@@ -1,4 +1,8 @@
 tempo-distributed:
+  global:
+    dnsService: dns-default
+    dnsNamespace: openshift-dns
+    
   reportingEnabled: false
 
   memcachedExporter:
