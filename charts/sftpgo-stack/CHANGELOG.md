@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/MapColonies/helm-charts-test/compare/sftpgo-stack-v1.2.0...sftpgo-stack-v1.2.1) (2026-03-24)
+
+
+### ♻️ Code Refactoring
+
+* **sftpgo:** migrate to openshift-routes ([#34](https://github.com/MapColonies/helm-charts-test/issues/34)) ([906f7f2](https://github.com/MapColonies/helm-charts-test/commit/906f7f2e3bdfd0cee52c949bcf802ad2e31ac22e))
+
 ## [1.2.0](https://github.com/MapColonies/helm-charts-test/compare/sftpgo-stack-v1.1.0...sftpgo-stack-v1.2.0) (2026-03-16)
 
 
