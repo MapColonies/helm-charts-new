@@ -98,6 +98,10 @@
       "charts/pgadmin": {
         "release-type": "helm",
         "extra-files": ["README.md"]
+      },
+      "charts/loki": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
       }
     }
 }
