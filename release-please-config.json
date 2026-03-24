@@ -75,6 +75,10 @@
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
+      "charts/keycloak": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
+      },
       "charts/grafana": {
         "release-type": "helm",
         "extra-files": ["README.md"]
