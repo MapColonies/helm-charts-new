@@ -1,0 +1,31 @@
+alertmanager:
+  fullnameOverride: infra-alertmanager
+  serviceAccount:
+    create: false
+    name: monitoring
+
+  podLabels:
+    mapcolonies.io/component: "infrastructure"
+    mapcolonies.io/part-of: "monitoring"
+    mapcolonies.io/owner: "infra"
+    mapcolonies.io/alloy-api-logs: "true"
+
+  service:
+    labels:
+      mapcolonies.io/component: "infrastructure"
+      mapcolonies.io/part-of: "monitoring"
+      mapcolonies.io/owner: "infra"
+
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9093"
+
+
+  ## Alertmanager config map reloader ###
+  configmapReload:
+    enabled: true
+  ## End of alertmanager config map reloader ###
+
+
+  config:
+    global: {}
