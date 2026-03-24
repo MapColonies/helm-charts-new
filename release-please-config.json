@@ -84,6 +84,9 @@
         "extra-files": ["README.md"]
       },
       "charts/prometheus": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
+      },
       "charts/alertmanager": {
       "charts/tempo": {
         "release-type": "helm",

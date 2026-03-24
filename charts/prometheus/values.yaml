@@ -59,9 +59,3 @@ prometheus:
 
     service:
       servicePort: 9090
-
-    alertmanagers:
-      - static_configs:
-        - targets:
-          # Alertmanager's default port is 9093
-          - infra-alertmanager:9093
