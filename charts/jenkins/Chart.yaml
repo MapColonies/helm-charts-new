@@ -9,4 +9,4 @@ appVersion: 2.504.3
 dependencies:
   - name: jenkins
     version: 5.8.63
-    repository: oci://acrarolibotnonprod.azurecr.io/helm/infra
+    repository: https://charts.jenkins.io
