@@ -27,20 +27,6 @@ prometheus:
     mapcolonies.io/part-of: "monitoring"
     mapcolonies.io/owner: "infra"
 
-
-## Prometheus config map reloader ###
-  configmapReload:
-    prometheus:
-      resources:
-        limits:
-          cpu: 400m
-          memory: 128Mi
-        requests:
-          cpu: 100m
-          memory: 128Mi
-## End of prometheus config map reloader ###  
-
-
   serviceAccounts:
     server:
       create: false
@@ -67,14 +53,6 @@ prometheus:
       evaluation_interval: 30s
     extraFlags:
       - web.enable-lifecycle
-
-    resources:
-      limits:
-        cpu: 800m
-        memory: 2048Mi
-      requests:
-        cpu: 200m
-        memory: 2048Mi
 
     persistentVolume:
       existingClaim: infra-prometheus-storage
