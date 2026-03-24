@@ -64,3 +64,13 @@ loki:
 
     querier:
       max_concurrent: 4
+
+  resultsCache:
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9150"
+
+  chunksCache:
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9150"
