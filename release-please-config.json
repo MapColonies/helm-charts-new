@@ -83,6 +83,10 @@
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
+      "charts/tempo": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
+      },
       "charts/alloy": {
         "release-type": "helm",
         "extra-files": ["README.md"]
