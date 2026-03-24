@@ -1,0 +1,44 @@
+namespaces:
+  - default
+
+alloy:
+  image:
+    repository: infra/grafana/alloy
+  serviceAccount:
+    create: false
+    name: alloy-kube-api
+  rbac:
+    create: false
+  configReloader:
+    image:
+      repository: infra/grafana/prometheus-operator/prometheus-config-reloader
+
+  controller:
+    type: 'deployment'
+    podLabels:
+      mapcolonies.io/component: "infrastructure"
+      mapcolonies.io/part-of: "monitoring"
+      mapcolonies.io/owner: "infra"
+
+  alloy:
+    enableReporting: false
+    stabilityLevel: "experimental"
+    clustering:
+      enabled: true
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+      - name: otlp-http
+        port: 4318
+        targetPort: 4318
+        protocol: TCP
+    configMap:
+      create: false
+      name: infra-alloy
+
+batching: {}
+exporter:
+  sending_queue: {}
+  retry_on_failure: {}
