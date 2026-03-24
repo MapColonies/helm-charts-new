@@ -1,0 +1,61 @@
+prometheus:
+  fullnameOverride: infra-prometheus
+
+  scrapeConfigs:
+    prometheus:
+      enabled: false
+    kubernetes-api-servers:
+      enabled: false
+    kubernetes-nodes:
+      enabled: false
+    kubernetes-nodes-cadvisor:
+      enabled: false
+    kubernetes-service-endpoints:
+      enabled: false
+    kubernetes-service-endpoints-slow:
+      enabled: false
+    prometheus-pushgateway:
+      enabled: false
+    kubernetes-pods:
+      enabled: false
+    kubernetes-pods-slow:
+      enabled: false
+
+
+  commonMetaLabels:
+    mapcolonies.io/component: "infrastructure"
+    mapcolonies.io/part-of: "monitoring"
+    mapcolonies.io/owner: "infra"
+
+  serviceAccounts:
+    server:
+      create: false
+      name: monitoring
+
+  alertmanager:
+    enabled: false
+  kube-state-metrics:
+    enabled: false
+  prometheus-node-exporter:
+    enabled: false
+  prometheus-pushgateway:
+    enabled: false
+  rbac:
+    create: false
+
+
+  server:
+    fullnameOverride: 'infra-prometheus-server'
+    podLabels:
+      mapcolonies.io/alloy-api-logs: "true"
+    global:
+      scrape_interval: 30s
+      evaluation_interval: 30s
+    extraFlags:
+      - web.enable-lifecycle
+
+    persistentVolume:
+      existingClaim: infra-prometheus-storage
+
+    service:
+      servicePort: 9090
