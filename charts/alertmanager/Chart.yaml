@@ -9,7 +9,7 @@ appVersion: v0.27.0
 dependencies:
   - name: alertmanager
     version: 1.13.1
-    repository: oci://acrarolibotnonprod.azurecr.io/helm/infra
+    repository: https://prometheus-community.github.io/helm-charts
   - name: openshift-routes
     version: 1.0.2
     repository: oci://acrarolibotnonprod.azurecr.io/helm/common

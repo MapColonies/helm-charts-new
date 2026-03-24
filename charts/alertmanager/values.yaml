@@ -20,25 +20,10 @@ alertmanager:
     prometheus.io/scrape: "true"
     prometheus.io/port: "9093"
 
-  resources:
-    limits:
-      cpu: 400m
-      memory: 128Mi
-    requests:
-      cpu: 100m
-      memory: 128Mi
-
 
   ## Alertmanager config map reloader ###
   configmapReload:
     enabled: true
-    resources:
-      limits:
-        cpu: 160m
-        memory: 64Mi
-      requests:
-        cpu: 40m
-        memory: 64Mi
   ## End of alertmanager config map reloader ###
 
 
