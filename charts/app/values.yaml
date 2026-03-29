@@ -90,7 +90,7 @@ app:
           memory: 500Mi
         requests:
           cpu: 50m
-          memory: 128Mi
+          memory: 500Mi
       containerPorts:
         http: 8080
         https: 443
@@ -133,7 +133,7 @@ app:
       publicUrl: '.'
       wsProtocol: wss://
       serviceProtocol: https://
-      serviceName: catalog-int.mapcolonies.net/bff
+      serviceName: ''
       catalogAppUserId: catalog-app-{CURRENT_USER}@mapcolonies.net
       mapServerPublishPoint: ''
       mapServerUrl: ''
@@ -168,12 +168,12 @@ app:
         showDebuggerTool: true
         showActiveLayersTool: true
         showGeocoderTool: true
-      baseMaps: '{ "maps": [ { "id": "1st", "title": "1st Map", "isForPreview": true, "thumbnail": "https://mt1.google.com/vt/lyrs=s&x=6&y=4&z=3", "baseRasterLayers": [ { "id": "GOOGLE_TERRAIN", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 0, "options": { "url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", "layers": "", "credit": "GOOGLE" } }, { "id": "INFRARED_RASTER", "type": "WMS_LAYER", "opacity": 0.6, "zIndex": 1, "options": { "url": "https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?", "layers": "goes_conus_ir", "credit": "Infrared data courtesy Iowa Environmental Mesonet", "parameters": { "transparent": "true", "format": "image/png" } } } ] }, { "id": "2nd", "title": "2nd Map", "thumbnail": "https://mt1.google.com/vt/lyrs=s&x=6&y=4&z=3", "baseRasterLayers": [ { "id": "RADAR_RASTER", "type": "WMS_LAYER", "opacity": 0.6, "zIndex": 1, "options": { "url": "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?", "layers": "nexrad-n0r", "credit": "Radar data courtesy Iowa Environmental Mesonet", "parameters": { "transparent": "true", "format": "image/png" } } }, { "id": "GOOGLE_TERRAIN", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 0, "options": { "url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", "layers": "", "credit": "GOOGLE" } }, { "id": "VECTOR_TILES_GPS", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 2, "options": { "url": "https://gps.tile.openstreetmap.org/lines/{z}/{x}/{y}.png", "layers": "", "credit": "openstreetmap" } } ] }, { "id": "3rd", "title": "3rd Map", "isCurrent": true, "thumbnail": "https://a.tile.thunderforest.com/cycle/17/78208/53265.png", "baseRasterLayers": [ { "id": "VECTOR_TILES", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 0, "options": { "url": "https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=6170aad10dfd42a38d4d8c709a536f38", "layers": "", "credit": "thunderforest" } }, { "id": "VECTOR_TILES_GPS", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 1, "options": { "url": "https://gps.tile.openstreetmap.org/lines/{z}/{x}/{y}.png", "layers": "", "credit": "openstreetmap" } } ] } ] }'
-      defaultTerrainProviderUrl: https://tiles-int.mapcolonies.net/api/dem/v1/terrains/srtm100
-      webToolsUrl: https://catalog-int.mapcolonies.net/tools
+      baseMaps: ''
+      defaultTerrainProviderUrl: ''
+      webToolsUrl: ''
       modelViewerRoute: simple-catalog-viewer
-      modelViewerTokenValue: eyJhbGciOiJSUzI1NiIsImtpZCI6Im1hcC1jb2xvbmllcy1pbnQifQ.eyJkIjpbInJhc3RlciIsInJhc3RlcldtcyIsInJhc3RlckV4cG9ydCIsImRlbSIsInZlY3RvciIsIjNkIl0sImlhdCI6MTY3NDYzMjM0Niwic3ViIjoibWFwY29sb25pZXMtYXBwIiwiaXNzIjoibWFwY29sb25pZXMtdG9rZW4tY2xpIn0.D1u28gFlxf_Z1bzIiRHZonUgrdWwhZy8DtmQj15cIzaABRUrGV2n_OJlgWTuNfrao0SbUZb_s0_qUUW6Gz_zO3ET2bVx5xQjBu0CaIWdmUPDjEYr6tw-eZx8EjFFIyq3rs-Fo0daVY9cX1B2aGW_GeJir1oMnJUURhABYRoh60azzl_utee9UdhDpnr_QElNtzJZIKogngsxCWp7tI7wkTuNCBaQM7aLEcymk0ktxlWEAt1E0nGt1R-bx-HnPeeQyZlxx4UQ1nuYTijpz7N8poaCCExOFeafj9T7megv2BzTrKWgfM1eai8srSgNa3I5wKuW0EyYnGZxdbJe8aseZg
-      whatsnewUrl: http://10.8.0.9:9001/buckets/static-assets/LibotWhatsNew.pdf
+      modelViewerTokenValue: ''
+      whatsnewUrl: ''
       projectVersion: 2.2.0
       activeLayerPropeties:
         mapUrlPath: '' #todo
@@ -185,7 +185,7 @@ app:
           matrixSet: ''
           style: ''
           projection: ''
-      sitesConfig: '{"masters": [{ "dns": "https://catalog-int.mapcolonies.net", "isAlias": false }], "slaves": [], "generics": []}'
+      sitesConfig: '{"masters": [], "slaves": [], "generics": []}'
       bffPath: /bff/graphql
       selectionModeDefault: ''
       showSelectionModeSwitch: true
@@ -207,8 +207,8 @@ app:
           zoomLevel: 14
           cacheSize: 6000
       geocoder:
-        url: https://geocoding-dev.mapcolonies.net/api/geocoding/v1
-        callbackUrl: https://vector-geocoding-feedback-api-route-vector-dev.apps.j1lk3njp.eastus.aroapp.io
+        url: ''
+        callbackUrl: ''
       changesInShapeFiles:
         timeDifferenceGraceMinutes: 10
         timeModifiedThresholdHours: 12
@@ -220,7 +220,7 @@ app:
         enabled: false
         duration: 60s
       routesMapping:
-        - hostname: catalog-int.mapcolonies.net
+        - hostname:
           path: /
           suffix:
       targetPort: http
@@ -323,8 +323,8 @@ app:
           cpu: 500m
           memory: 500Mi
         requests:
-          cpu: 100m
-          memory: 128Mi
+          cpu: 125m
+          memory: 500Mi
       containerPorts:
         http: 8080
         https: 443
@@ -372,21 +372,21 @@ app:
       basePath: bff
       openapiFilePath: ./openapi3.yaml
       adminPassword: 123456
-      cswRasterUrl: http://raster-serving-int-pycsw-private-nginx-service:8080
-      csw3DUrl: http://serving-3d-pycsw-all-nginx-service:8080
-      cswDEMUrl: http://dem-pycsw-all-nginx-service:8080
-      catalogServiceRasterUrl: http://raster-core-int-raster-catalog-manager-service
-      catalogService3DUrl: http://ingestion-3d-gateway
+      cswRasterUrl: NOT_DEPLOYED
+      csw3DUrl: NOT_DEPLOYED
+      cswDEMUrl: NOT_DEPLOYED
+      catalogServiceRasterUrl: NOT_DEPLOYED
+      catalogService3DUrl: NOT_DEPLOYED
       catalogServiceDEMUrl: NOT_IMPLEMENTED
-      ingestionServiceRasterUrl: http://raster-ingestion-int-ingestion-trigger-service:8080
-      ingestionService3DUrl: http://ingestion-3d-gateway
+      ingestionServiceRasterUrl: NOT_DEPLOYED
+      ingestionService3DUrl: NOT_DEPLOYED
       ingestionServiceDEMUrl: NOT_IMPLEMENTED
-      storageExplorerRasterUrl: http://raster-ingestion-int-ingestion-trigger-service:8080
-      storageExplorer3DUrl: http://ingestion-3d-gateway
+      storageExplorerRasterUrl: NOT_DEPLOYED
+      storageExplorer3DUrl: NOT_DEPLOYED
       storageExplorerDEMUrl: NOT_IMPLEMENTED
       storageExplorerBufferSize: 1048576
-      validationServiceRasterUrl: http://raster-ingestion-int-ingestion-trigger-service:8080
-      exportLayerRasterUrl: http://raster-export-int-exporter-trigger-service
+      validationServiceRasterUrl: NOT_DEPLOYED
+      exportLayerRasterUrl: NOT_DEPLOYED
       exportLayer3DUrl: NOT_IMPLEMENTED
       exportLayerDEMUrl: NOT_IMPLEMENTED
       jobManagerServiceCommonUrl: http://common-job-manager-service
@@ -394,15 +394,15 @@ app:
       lookupTablesServiceUrl: http://common-lookup-tables
       serviceDiscoveryUrl: http://app-k8s-services-list
       externalServices:
-        pycswRecordRasterUrl: https://catalog-int.mapcolonies.net/api/raster/v1
-        pycswRecord3DUrl: https://catalog-int.mapcolonies.net/api/3d/v1
-        pycswRecordDEMUrl: https://catalog-int.mapcolonies.net/api/dem/v1
-        mapServerRecordRasterUrl: https://tiles-int.mapcolonies.net/api/raster/v1
-      mapServiceRasterUrl: https://tiles-int.mapcolonies.net/api/raster/v1
-      wfsUrl: https://geoserver-secured-vector-dev.apps.j1lk3njp.eastus.aroapp.io/geoserver/mock/wfs
+        pycswRecordRasterUrl: NOT_DEPLOYED
+        pycswRecord3DUrl: NOT_DEPLOYED
+        pycswRecordDEMUrl: NOT_DEPLOYED
+        mapServerRecordRasterUrl: NOT_DEPLOYED
+      mapServiceRasterUrl: NOT_DEPLOYED
+      wfsUrl: NOT_DEPLOYED
       wfsServicesConfig: '{"buildings": {"color": "#0465b0", "outlineColor": "#0465b0", "dWithin": 3, "isVisualized": true, "translationId": "actions.wfs.buildings-title", "icon": "location_city", "markerIcon": "buildings-marker"}, "addrs": {"translationId": "תשאול כתובת", "isVisualized": "false"}}'
-      polygonPartsUrl: https://query-int.mapcolonies.net/api/raster/v1/layer-parts/wfs
-      demHeightsUrl: https://dem-int.mapcolonies.net/api/heights/v1
+      polygonPartsUrl: NOT_DEPLOYED
+      demHeightsUrl: NOT_DEPLOYED
     route:
       enabled: true
       annotations:
@@ -411,7 +411,7 @@ app:
         enabled: false
         duration: 60s
       routesMapping:
-        - hostname: catalog-int.mapcolonies.net
+        - hostname:
           path: /bff
           suffix:
       targetPort: http
@@ -515,7 +515,7 @@ app:
           memory: 500Mi
         requests:
           cpu: 50m
-          memory: 128Mi
+          memory: 500Mi
       containerPorts:
         http: 8080
         https: 443
@@ -560,9 +560,9 @@ app:
         center: '[34.811, 31.908]'
         zoom: 7
       baseMaps: '{ "maps": [ { "id": "1st", "title": "1st Map", "thumbnail": "https://mt1.google.com/vt/lyrs=s&x=6&y=4&z=3", "baseRasteLayers": [ { "id": "GOOGLE_TERRAIN", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 0, "options": { "url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", "layers": "", "credit": "GOOGLE" } }, { "id": "INFRARED_RASTER", "type": "WMS_LAYER", "opacity": 0.6, "zIndex": 1, "options": { "url": "https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?", "layers": "goes_conus_ir", "credit": "Infrared data courtesy Iowa Environmental Mesonet", "parameters": { "transparent": "true", "format": "image/png" } } } ] }, { "id": "2nd", "title": "2nd Map", "thumbnail": "https://mt1.google.com/vt/lyrs=s&x=6&y=4&z=3", "baseRasteLayers": [ { "id": "RADAR_RASTER", "type": "WMS_LAYER", "opacity": 0.6, "zIndex": 1, "options": { "url": "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?", "layers": "nexrad-n0r", "credit": "Radar data courtesy Iowa Environmental Mesonet", "parameters": { "transparent": "true", "format": "image/png" } } }, { "id": "GOOGLE_TERRAIN", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 0, "options": { "url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", "layers": "", "credit": "GOOGLE" } }, { "id": "VECTOR_TILES_GPS", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 2, "options": { "url": "https://gps.tile.openstreetmap.org/lines/{z}/{x}/{y}.png", "layers": "", "credit": "openstreetmap" } } ] }, { "id": "3rd", "title": "3rd Map", "isCurrent": true, "thumbnail": "https://a.tile.thunderforest.com/cycle/17/78208/53265.png", "baseRasteLayers": [ { "id": "VECTOR_TILES", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 0, "options": { "url": "https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=6170aad10dfd42a38d4d8c709a536f38", "layers": "", "credit": "thunderforest" } }, { "id": "VECTOR_TILES_GPS", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 1, "options": { "url": "https://gps.tile.openstreetmap.org/lines/{z}/{x}/{y}.png", "layers": "", "credit": "openstreetmap" } } ] } ] }'
-      defaultTerrainProviderUrl: https://tiles-int.mapcolonies.net/api/dem/v1/terrains/srtm100?token=eyJhbGciOiJSUzI1NiIsImtpZCI6Im1hcC1jb2xvbmllcy1pbnQifQ.eyJkIjpbInJhc3RlciIsInJhc3RlcldtcyIsInJhc3RlckV4cG9ydCIsImRlbSIsInZlY3RvciIsIjNkIl0sImlhdCI6MTY3NDYzMjM0Niwic3ViIjoibWFwY29sb25pZXMtYXBwIiwiaXNzIjoibWFwY29sb25pZXMtdG9rZW4tY2xpIn0.D1u28gFlxf_Z1bzIiRHZonUgrdWwhZy8DtmQj15cIzaABRUrGV2n_OJlgWTuNfrao0SbUZb_s0_qUUW6Gz_zO3ET2bVx5xQjBu0CaIWdmUPDjEYr6tw-eZx8EjFFIyq3rs-Fo0daVY9cX1B2aGW_GeJir1oMnJUURhABYRoh60azzl_utee9UdhDpnr_QElNtzJZIKogngsxCWp7tI7wkTuNCBaQM7aLEcymk0ktxlWEAt1E0nGt1R-bx-HnPeeQyZlxx4UQ1nuYTijpz7N8poaCCExOFeafj9T7megv2BzTrKWgfM1eai8srSgNa3I5wKuW0EyYnGZxdbJe8aseZg
-      apps: '{ "terrain-verification": { "category": "DEM", "name": "Terrain Verification Tool", "icon": "map-marker.gif", "url": "/terrain-verification", "description": "A Terrain Verification Tool", "isInternal": true }, "nominatim": { "category": "Vector", "name": "Nominatim", "icon": "nominatim.svg", "width": 160, "url": "https://nominatim.openstreetmap.org/ui/search.html", "description": "Nominatim is a search engine for OpenStreetMap data. You may search for a name or address (forward search) or look up data by its geographic coordinate (reverse search)" }, "valhalla": { "category": "Vector", "name": "Valhalla", "externalIconURL": "https://valhalla.openstreetmap.de/favicon.png", "width": 130, "url": "https://valhalla.openstreetmap.de", "description": "Valhalla is an open source routing engine and accompanying libraries for use with OpenStreetMap data. Valhalla also includes tools like time+distance matrix computation, isochrones, elevation sampling, map matching and tour optimization (Travelling Salesman)" }, "sandcastle": { "category": "Cesium", "name": "Sandcastle", "icon": "cesium.webp", "width": 200, "url": "https://sandcastle.cesium.com", "description": "Sandcastle is a live-coding app for viewing CesiumJS examples. Contextual CesiumJS help for quickly sharing and testing code" }, "developer-portal": { "category": "Libot Mipui", "name": "Developer Portal", "icon": "developer-portal.png", "width": 100, "url": "https://mapcolonies.github.io/developer-portal", "description": "A central information hub about Libot Mipui documentation, APIs, products and microservices" }, "uploader": { "category": "Libot Mipui", "name": "Uploader", "icon": "upload.gif", "width": 100, "url": "https://tiles-int.mapcolonies.net/api/dem/v1/LibotWhatsNew.pdf?token=eyJhbGciOiJSUzI1NiIsImtpZCI6Im1hcC1jb2xvbmllcy1pbnQifQ.eyJkIjpbInJhc3RlciIsInJhc3RlcldtcyIsInJhc3RlckV4cG9ydCIsImRlbSIsInZlY3RvciIsIjNkIl0sImlhdCI6MTY3NDYzMjM0Niwic3ViIjoibWFwY29sb25pZXMtYXBwIiwiaXNzIjoibWFwY29sb25pZXMtdG9rZW4tY2xpIn0.D1u28gFlxf_Z1bzIiRHZonUgrdWwhZy8DtmQj15cIzaABRUrGV2n_OJlgWTuNfrao0SbUZb_s0_qUUW6Gz_zO3ET2bVx5xQjBu0CaIWdmUPDjEYr6tw-eZx8EjFFIyq3rs-Fo0daVY9cX1B2aGW_GeJir1oMnJUURhABYRoh60azzl_utee9UdhDpnr_QElNtzJZIKogngsxCWp7tI7wkTuNCBaQM7aLEcymk0ktxlWEAt1E0nGt1R-bx-HnPeeQyZlxx4UQ1nuYTijpz7N8poaCCExOFeafj9T7megv2BzTrKWgfM1eai8srSgNa3I5wKuW0EyYnGZxdbJe8aseZg", "description": "Download uploader exe for installation", "isDownloadable": true, "fileName": "uploader.exe" } }'
-      csw3DUrl: https://catalog-int.mapcolonies.net/api/3d/v1
+      defaultTerrainProviderUrl: ''
+      apps: ''
+      csw3DUrl: ''
       shouldShowPrecisionDisclaimer: 'כלי ניתוח השטח טרם עברו חק״ב - אין להסתמך על הנתונים <b>לשימושים מבצעיים</b>!'
     route:
       enabled: true
@@ -572,7 +572,7 @@ app:
         enabled: false
         duration: 60s
       routesMapping:
-        - hostname: catalog-int.mapcolonies.net
+        - hostname:
           path: /tools
           suffix:
       targetPort: http
@@ -674,7 +674,7 @@ common:
           memory: 200Mi
         requests:
           cpu: 50m
-          memory: 128Mi
+          memory: 200Mi
       containerPorts:
         http: 8080
         https: 443
