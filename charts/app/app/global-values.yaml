@@ -1,11 +1,11 @@
 global:
   currentSubChart: app
   shared:
-    servedEntityTypes: RECORD_ALL,RECORD_DEM
+    servedEntityTypes: RECORD_ALL
     accessToken:
       attributeName: token
       injectionType: queryParam
-      tokenValue: eyJhbGciOiJSUzI1NiIsImtpZCI6Ik1hcENvbG9uaWVzUUEifQ.eyJpYXQiOjE3NDE4ODI1MjksInN1YiI6Ik1hcENvbG9uaWVzRGV2IiwiaXNzIjoibWFwY29sb25pZXMtdG9rZW4tY2xpIn0.hyukaRvTpWsOPGz6YMUT_qPBp_xIIwJQIZjrnz08Yiw-7g8OA724LQLu0IEdTKYkzo7Z7bzckQ_gTTqf6z5BgZDuEIo8BKWwhBI69qXnwkz2tumWCXsaWr0pMXM6OYMKuhZ3WfK8EfVbig65ZNvC_0O5h2tBWPUyYPxJHOMjtzZW7ipYRpCj_3ZPOs_GC-Jg9PThJlxvTdK0z07GtIs6yJdzIkugtS-eacia9Dz9DADkoVuFgwXiz-yNAjHS9v6RzQv8s_YJBuBEnch1Y8IITCj-lVxGtJfTGERdXwAMfsDBe3pt6gPxn238A-2tIrER8mRIOYpTssPA15wY680cdw
+      tokenValue: TOKEN
     rasterIngestionFilesStructure: '{"data": {"allowedExt": [".gpkg"], "selectableExt": [".gpkg"], "relativeToAOIDirPath": "./data", "producerFileName": "*", "selectablePattern": "*"}, "product": {"allowedExt": [".shp", ".shx", ".dbf", ".prj", ".sbn", ".sbx", ".xml", ".cpg", ".qix"], "selectableExt": [".shp"], "relativeToAOIDirPath": "./shape", "producerFileName": "Product", "selectablePattern": "Product"}, "shapeMetadata": {"allowedExt": [".shp", ".shx", ".dbf", ".prj", ".sbn", ".sbx", ".xml", ".cpg", ".qix"], "selectableExt": [".shp"], "relativeToAOIDirPath": "./shape", "producerFileName": "ShapeMetadata", "selectablePattern": "ShapeMetadata"}}'
     sso:
       enabled: false
