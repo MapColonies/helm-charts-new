@@ -1,0 +1,169 @@
+global:
+  enable-services:
+    extractable:
+      enabled: true
+      coordinate-extract-app: true
+
+coordinate-extract-app:
+  nameOverride:
+  fullnameOverride:
+  # --------------- common --------------
+  commonLabels:
+  commonAnnotations:
+  # ----------- initContainers ----------
+  volumePermissions:
+    enabled: false
+  # ------ volumes and volumeMounts -----
+  persistence:
+    enabled: false
+  # ----------- command/debug -----------
+  diagnosticMode:
+    enabled: false
+    # command:
+    #   - sleep
+    # args:
+    #   - infinity
+  # --------- MAIN_OBJECT_BLOCK ---------
+  configValues:
+    deploymentAnnotations:
+      # collectord.io/index: '' # PROVIDE SPLUNK INDEX
+    autoscaling:
+      enabled: false
+    replicaCount: 1
+    podAnnotations:
+      enabled: true
+      resetOnConfigChange: true
+      annotations:
+    prometheus:
+      scrape: false
+    metrics:
+      enabled: false
+    tracing:
+      enabled: false
+    # topologySpreadConstraints:
+    #   - maxSkew: 1
+    #     topologyKey: zone
+    #     whenUnsatisfiable: DoNotSchedule
+    #     labelSelector:
+    #       matchLabels:
+    #         app.kubernetes.io/name: '{{ include "common.names.name" . }}'
+    podSecurityContext:
+      enabled: false
+    # ----------- containers ------------
+    image:
+      repository: app/coordinate-extract-app
+      tag: v3.2.6
+      pullPolicy: Always
+      debug: false
+    containerSecurityContext:
+      enabled: true
+      allowPrivilegeEscalation: false
+      # runAsUser: 0
+    extraEnvVars:
+      - name: SERVER_PORT
+        value: '{{ .Values.configValues.containerPorts.http }}'
+    extraEnvVarsCM: '{{ template "common.names.fullname" . }}'
+    extraEnvVarsSecret:
+    resources:
+      limits:
+        cpu: 200m
+        memory: 500Mi
+      requests:
+        cpu: 50m
+        memory: 500Mi
+    containerPorts:
+      http: 8080
+      https: 443
+    customLivenessProbe:
+      initialDelaySeconds: 60
+      periodSeconds: 10
+      timeoutSeconds: 1
+      failureThreshold: 3
+      successThreshold: 1
+      httpGet:
+        path: /env-config.js
+        port: http
+    customReadinessProbe:
+      initialDelaySeconds: 60
+      periodSeconds: 10
+      timeoutSeconds: 1
+      failureThreshold: 3
+      successThreshold: 1
+      httpGet:
+        path: /env-config.js
+        port: http
+    startupProbe:
+      enabled: false
+    extraVolumeMounts:
+      - name: nginx-config
+        mountPath: /etc/nginx/conf.d/default.conf
+        subPath: default.conf
+    extraVolumes:
+      - name: nginx-config
+        configMap:
+          name: '{{ template "common.names.fullname" . }}'
+          items:
+            - key: default.conf
+              path: default.conf
+  env:
+    logLevel: info
+    logPrettyPrintEnabled: false
+    responseCompressionEnabled: true
+    requestPayloadLimit: 1mb
+    publicUrl: '.'
+    language: he
+    accessToken:
+      attributeName: token
+      injectionType: queryParam
+      tokenValue: eyJhbGciOiJSUzI1NiIsImtpZCI6Ik1hcENvbG9uaWVzUUEifQ.eyJpYXQiOjE3NDE4ODI1MjksInN1YiI6Ik1hcENvbG9uaWVzRGV2IiwiaXNzIjoibWFwY29sb25pZXMtdG9rZW4tY2xpIn0.hyukaRvTpWsOPGz6YMUT_qPBp_xIIwJQIZjrnz08Yiw-7g8OA724LQLu0IEdTKYkzo7Z7bzckQ_gTTqf6z5BgZDuEIo8BKWwhBI69qXnwkz2tumWCXsaWr0pMXM6OYMKuhZ3WfK8EfVbig65ZNvC_0O5h2tBWPUyYPxJHOMjtzZW7ipYRpCj_3ZPOs_GC-Jg9PThJlxvTdK0z07GtIs6yJdzIkugtS-eacia9Dz9DADkoVuFgwXiz-yNAjHS9v6RzQv8s_YJBuBEnch1Y8IITCj-lVxGtJfTGERdXwAMfsDBe3pt6gPxn238A-2tIrER8mRIOYpTssPA15wY680cdw
+    map:
+      center: '[34.811, 31.908]'
+      zoom: 7
+    baseMaps: '{"maps":[{"id":"1st","title":"1st Map","isCurrent":true,"thumbnail":"https://mt1.google.com/vt/lyrs=s&x=6&y=4&z=3","baseRasterLayers":[{"id":"GOOGLE_TERRAIN","type":"XYZ_LAYER","opacity":1,"zIndex":0,"options":{"url":"https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}","layers":"","credit":"GOOGLE"}},{"id":"INFRARED_RASTER","type":"WMS_LAYER","opacity":0.6,"zIndex":1,"options":{"url":"https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?","layers":"goes_conus_ir","credit":"Infrared data courtesy Iowa Environmental Mesonet","parameters":{"transparent":"true","format":"image/png"}}}]},{"id":"2nd","title":"2nd Map","thumbnail":"https://mt1.google.com/vt/lyrs=s&x=6&y=4&z=3","baseRasterLayers":[{"id":"RADAR_RASTER","type":"WMS_LAYER","opacity":0.6,"zIndex":1,"options":{"url":"https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?","layers":"nexrad-n0r","credit":"Radar data courtesy Iowa Environmental Mesonet","parameters":{"transparent":"true","format":"image/png"}}},{"id":"GOOGLE_TERRAIN","type":"XYZ_LAYER","opacity":1,"zIndex":0,"options":{"url":"https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}","layers":"","credit":"GOOGLE"}},{"id":"VECTOR_TILES_GPS","type":"XYZ_LAYER","opacity":1,"zIndex":2,"options":{"url":"https://gps.tile.openstreetmap.org/lines/{z}/{x}/{y}.png","layers":"","credit":"openstreetmap"}}]},{"id":"3rd","title":"3rd Map","thumbnail":"https://a.tile.thunderforest.com/cycle/17/78208/53265.png","baseRasterLayers":[{"id":"VECTOR_TILES","type":"XYZ_LAYER","opacity":1,"zIndex":0,"options":{"url":"https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=6170aad10dfd42a38d4d8c709a536f38","layers":"","credit":"thunderforest"}},{"id":"VECTOR_TILES_GPS","type":"XYZ_LAYER","opacity":1,"zIndex":1,"options":{"url":"https://gps.tile.openstreetmap.org/lines/{z}/{x}/{y}.png","layers":"","credit":"openstreetmap"}}]}]}'
+    defaultTerrainProviderUrl: 'https://tiles-dev.mapcolonies.net/api/dem/v1/terrains/srtm100'
+    csw3DUrl: 'https://catalog-dev.mapcolonies.net/api/3d/v1'
+    extractableManagerUrl: 'https://extractable-nginx-route-3d-dev.apps.j1lk3njp.eastus.aroapp.io'
+    showPOITool: true
+    numberOfRecordsPerPage: 200
+  route:
+    enabled: true
+    annotations:
+      haproxy.router.openshift.io/rewrite-target: /
+    timeout:
+      enabled: false
+      duration: 60s
+    routesMapping:
+      - hostname:
+        path: /
+        suffix:
+    targetPort: http
+    tls:
+      enabled: true
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect
+      useCerts: false
+    extraRules:
+  ingress:
+    enabled: false
+    apiVersion:
+    type: nginx-kubernetes
+    annotations:
+    pathType: Prefix
+    hostname: libot.wwest.local
+    extraHosts: []
+    extraPaths: []
+    path: /
+    extraRules: []
+    extraTls: []
+    selfSigned: false
+    tls: true
+    cors:
+      enabled: true
+      origin: '*'
+  service:
+    annotations:
+    ports:
+      http: 80
+    protocol: TCP
+  serviceAccount:
+    create: false

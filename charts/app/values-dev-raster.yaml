@@ -1,0 +1,902 @@
+# ====================================================================================================
+# Global
+# ====================================================================================================
+global:
+  enable-services:
+    app:
+      enabled: true
+      catalog-app: true
+      catalog-web-app-bff: true
+      mc-web-tools: true
+    common:
+      enabled: true
+      k8s-services-list: true
+      mc-thumbnail-generator: false
+    extractable:
+      enabled: false
+      coordinate-extract-app: false
+
+# ====================================================================================================
+# App
+# ====================================================================================================
+app:
+
+  # ====================================================================================================
+  # Catalog App
+  # ====================================================================================================
+  catalog-app:
+    nameOverride:
+    fullnameOverride:
+    # --------------- common --------------
+    commonLabels:
+    commonAnnotations:
+    # ----------- initContainers ----------
+    volumePermissions:
+      enabled: false
+    # ------ volumes and volumeMounts -----
+    persistence:
+      enabled: false
+    # ----------- command/debug -----------
+    diagnosticMode:
+      enabled: false
+      # command:
+      #   - sleep
+      # args:
+      #   - infinity
+    # --------- MAIN_OBJECT_BLOCK ---------
+    configValues:
+      deploymentAnnotations:
+        # collectord.io/index: '' # PROVIDE SPLUNK INDEX
+      autoscaling:
+        enabled: false
+      replicaCount: 1
+      podAnnotations:
+        enabled: true
+        resetOnConfigChange: true
+        annotations:
+      prometheus:
+        scrape: false
+      metrics:
+        enabled: false
+      tracing:
+        enabled: false
+      # topologySpreadConstraints:
+      #   - maxSkew: 1
+      #     topologyKey: zone
+      #     whenUnsatisfiable: DoNotSchedule
+      #     labelSelector:
+      #       matchLabels:
+      #         app.kubernetes.io/name: '{{ include "common.names.name" . }}'
+      podSecurityContext:
+        enabled: false
+      # ----------- containers ------------
+      image:
+        repository: app/catalog-app
+        tag: v4.4.2
+        pullPolicy: Always
+        debug: false
+      containerSecurityContext:
+        enabled: true
+        allowPrivilegeEscalation: false
+        # runAsUser: 0
+      extraEnvVars:
+        - name: SERVER_PORT
+          value: '{{ .Values.configValues.containerPorts.http }}'
+      extraEnvVarsCM: '{{ template "common.names.fullname" . }}'
+      extraEnvVarsSecret:
+      resources:
+        limits:
+          cpu: 200m
+          memory: 500Mi
+        requests:
+          cpu: 50m
+          memory: 500Mi
+      containerPorts:
+        http: 8080
+        https: 443
+      customLivenessProbe:
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        timeoutSeconds: 1
+        failureThreshold: 3
+        successThreshold: 1
+        httpGet:
+          path: /env-config.js
+          port: http
+      customReadinessProbe:
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        timeoutSeconds: 1
+        failureThreshold: 3
+        successThreshold: 1
+        httpGet:
+          path: /env-config.js
+          port: http
+      startupProbe:
+        enabled: false
+      extraVolumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
+      extraVolumes:
+        - name: nginx-config
+          configMap:
+            name: '{{ template "common.names.fullname" . }}'
+            items:
+              - key: default.conf
+                path: default.conf
+    env:
+      logLevel: info
+      logPrettyPrintEnabled: false
+      responseCompressionEnabled: true
+      requestPayloadLimit: 1mb
+      publicUrl: '.'
+      wsProtocol: wss://
+      serviceProtocol: https://
+      serviceName: catalog-raster-dev.mapcolonies.net/bff
+      catalogAppUserId: catalog-app-{CURRENT_USER}@mapcolonies.net
+      mapServerPublishPoint: ''
+      mapServerUrl: ''
+      mapServerChannel: ''
+      mapServerVersion: ''
+      mapServerRequest: ''
+      activeLayer: OSM_LAYER
+      loggerHttpHost: ''
+      loggerHttpPort: ''
+      loggerHttpPath: ''
+      loggerLevel: warn
+      bboxAreaSquareKmLimit: 10000
+      language: he
+      backendLocale: he
+      jobManager:
+        pollingCycleInterval: 120000
+        filterDaysTimeSlot: 1
+        maxDateRangeDays: 60
+      defaultUser:
+        role: USER
+      runningMode:
+        type: PRODUCTION
+        autoComplete: false
+      export:
+        defaultZoomLevel: '' #todo
+        maxZoomLevel: '' #todo
+      map:
+        center: '[34.811, 31.908]'
+        zoom: 7
+        mapMode2D: INFINITE_SCROLL
+        useOptimizedTileRequests: false
+        showDebuggerTool: true
+        showActiveLayersTool: true
+        showGeocoderTool: true
+      baseMaps: '{ "maps": [ { "id": "1st", "title": "1st Map", "isForPreview": true, "thumbnail": "https://mt1.google.com/vt/lyrs=s&x=6&y=4&z=3", "baseRasterLayers": [ { "id": "GOOGLE_TERRAIN", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 0, "options": { "url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", "layers": "", "credit": "GOOGLE" } }, { "id": "INFRARED_RASTER", "type": "WMS_LAYER", "opacity": 0.6, "zIndex": 1, "options": { "url": "https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?", "layers": "goes_conus_ir", "credit": "Infrared data courtesy Iowa Environmental Mesonet", "parameters": { "transparent": "true", "format": "image/png" } } } ] }, { "id": "2nd", "title": "2nd Map", "thumbnail": "https://mt1.google.com/vt/lyrs=s&x=6&y=4&z=3", "baseRasterLayers": [ { "id": "RADAR_RASTER", "type": "WMS_LAYER", "opacity": 0.6, "zIndex": 1, "options": { "url": "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?", "layers": "nexrad-n0r", "credit": "Radar data courtesy Iowa Environmental Mesonet", "parameters": { "transparent": "true", "format": "image/png" } } }, { "id": "GOOGLE_TERRAIN", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 0, "options": { "url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", "layers": "", "credit": "GOOGLE" } }, { "id": "VECTOR_TILES_GPS", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 2, "options": { "url": "https://gps.tile.openstreetmap.org/lines/{z}/{x}/{y}.png", "layers": "", "credit": "openstreetmap" } } ] }, { "id": "3rd", "title": "3rd Map", "isCurrent": true, "thumbnail": "https://a.tile.thunderforest.com/cycle/17/78208/53265.png", "baseRasterLayers": [ { "id": "VECTOR_TILES", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 0, "options": { "url": "https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=6170aad10dfd42a38d4d8c709a536f38", "layers": "", "credit": "thunderforest" } }, { "id": "VECTOR_TILES_GPS", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 1, "options": { "url": "https://gps.tile.openstreetmap.org/lines/{z}/{x}/{y}.png", "layers": "", "credit": "openstreetmap" } } ] } ] }'
+      defaultTerrainProviderUrl: ''
+      webToolsUrl: https://catalog-raster-dev.mapcolonies.net/tools
+      modelViewerRoute: simple-catalog-viewer
+      modelViewerTokenValue: eyJhbGciOiJSUzI1NiIsImtpZCI6Ik1hcENvbG9uaWVzUUEifQ.eyJpYXQiOjE3NDE4ODI1MjksInN1YiI6Ik1hcENvbG9uaWVzRGV2IiwiaXNzIjoibWFwY29sb25pZXMtdG9rZW4tY2xpIn0.hyukaRvTpWsOPGz6YMUT_qPBp_xIIwJQIZjrnz08Yiw-7g8OA724LQLu0IEdTKYkzo7Z7bzckQ_gTTqf6z5BgZDuEIo8BKWwhBI69qXnwkz2tumWCXsaWr0pMXM6OYMKuhZ3WfK8EfVbig65ZNvC_0O5h2tBWPUyYPxJHOMjtzZW7ipYRpCj_3ZPOs_GC-Jg9PThJlxvTdK0z07GtIs6yJdzIkugtS-eacia9Dz9DADkoVuFgwXiz-yNAjHS9v6RzQv8s_YJBuBEnch1Y8IITCj-lVxGtJfTGERdXwAMfsDBe3pt6gPxn238A-2tIrER8mRIOYpTssPA15wY680cdw
+      whatsnewUrl: http://10.8.0.9:9001/buckets/static-assets/LibotWhatsNew.pdf
+      projectVersion: 2.2.0
+      activeLayerPropeties:
+        mapUrlPath: '' #todo
+        exportPath: '' #todo
+        urlPattern:
+          service: ''
+          layers: ''
+          tiled: true
+          matrixSet: ''
+          style: ''
+          projection: ''
+      sitesConfig: '{"masters": [{ "dns": "https://catalog-raster-dev.mapcolonies.net", "isAlias": false }], "slaves": [], "generics": []}'
+      bffPath: /bff/graphql
+      selectionModeDefault: ''
+      showSelectionModeSwitch: true
+      polygonParts:
+        featureTypePrefix: 'polygonParts:'
+        densityFactor: 0.3
+        geometryErrorsThreshold: 0.05
+        areaThreshold: 10
+        max:
+          WFSFeatures: 500
+          showFootprintZoomLevel: 10
+          perShape: 300
+          vertices: 300000
+      wfs:
+        style: '{"color": "#01FF1F", "hover": "#24AEE9", "pointStroke": "#01FF1F"}'
+        keyField: osm_id
+        max:
+          pageSize: 300
+          zoomLevel: 14
+          cacheSize: 6000
+      geocoder:
+        url: https://geocoding-dev.mapcolonies.net/api/geocoding/v1
+        callbackUrl: https://vector-geocoding-feedback-api-route-vector-dev.apps.j1lk3njp.eastus.aroapp.io
+      changesInShapeFiles:
+        timeDifferenceGraceMinutes: 10
+        timeModifiedThresholdHours: 12
+    route:
+      enabled: true
+      annotations:
+        haproxy.router.openshift.io/rewrite-target: /
+      timeout:
+        enabled: false
+        duration: 60s
+      routesMapping:
+        - hostname: catalog-raster-dev.mapcolonies.net
+          path: /
+          suffix:
+      targetPort: http
+      tls:
+        enabled: true
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
+        useCerts: true
+      extraRules:
+    ingress:
+      enabled: false
+      apiVersion:
+      type: nginx-kubernetes
+      annotations:
+      pathType: Prefix
+      hostname: libot.wwest.local
+      extraHosts: []
+      extraPaths: []
+      path: /ui
+      extraRules: []
+      extraTls: []
+      selfSigned: false
+      tls: true
+      cors:
+        enabled: true
+        origin: '*'
+    service:
+      annotations:
+      ports:
+        http: 80
+      protocol: TCP
+    serviceAccount:
+      create: false
+
+  # ====================================================================================================
+  # Catalog Web App BFF
+  # ====================================================================================================
+  catalog-web-app-bff:
+    nameOverride:
+    fullnameOverride:
+    # --------------- common --------------
+    commonLabels:
+    commonAnnotations:
+    # ----------- initContainers ----------
+    volumePermissions:
+      enabled: false
+    # ------ volumes and volumeMounts -----
+    persistence:
+      enabled: false
+    # ----------- command/debug -----------
+    diagnosticMode:
+      enabled: false
+      # command:
+      #   - sleep
+      # args:
+      #   - infinity
+    # --------- MAIN_OBJECT_BLOCK ---------
+    configValues:
+      deploymentAnnotations:
+        # collectord.io/index: '' # PROVIDE SPLUNK INDEX
+      autoscaling:
+        enabled: false
+      replicaCount: 1
+      podAnnotations:
+        enabled: true
+        resetOnConfigChange: true
+        annotations:
+      prometheus:
+        scrape: false
+      metrics:
+        enabled: false
+      tracing:
+        enabled: false
+      # topologySpreadConstraints:
+      #   - maxSkew: 1
+      #     topologyKey: zone
+      #     whenUnsatisfiable: DoNotSchedule
+      #     labelSelector:
+      #       matchLabels:
+      #         app.kubernetes.io/name: '{{ include "common.names.name" . }}'
+      podSecurityContext:
+        enabled: false
+      # ----------- containers ------------
+      image:
+        repository: app/catalog-web-app-bff
+        tag: v4.0.4
+        pullPolicy: Always
+        debug: false
+      containerSecurityContext:
+        enabled: true
+        runAsNonRoot: true
+        runAsUser: 1000730000
+      extraEnvVars:
+        - name: SERVER_PORT
+          value: '{{ .Values.configValues.containerPorts.http }}'
+      extraEnvVarsCM: '{{ template "common.names.fullname" . }}'
+      extraEnvVarsSecret:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 500Mi
+        requests:
+          cpu: 125m
+          memory: 500Mi
+      containerPorts:
+        http: 8080
+        https: 443
+      customLivenessProbe:
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        timeoutSeconds: 1
+        failureThreshold: 3
+        successThreshold: 1
+        httpGet:
+          path: /docs/api
+          port: http
+      customReadinessProbe:
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        timeoutSeconds: 1
+        failureThreshold: 3
+        successThreshold: 1
+        httpGet:
+          path: /docs/api
+          port: http
+      startupProbe:
+        enabled: false
+      extraVolumeMounts:
+        - name: production-json
+          mountPath: /usr/src/app/config/production.json
+          subPath: production.json
+        - name: root-ca
+          mountPath: '{{ (include "common.secrets.getSecretByName" (dict "name" "root-ca" "key" "path" "context" .)) }}'
+      extraVolumes:
+        - name: production-json
+          configMap:
+            name: '{{ template "common.names.fullname" . }}'
+            items:
+              - key: production.json
+                path: production.json
+        - name: root-ca
+          secret:
+            secretName: root-ca
+    env:
+      logLevel: info
+      logPrettyPrintEnabled: false
+      responseCompressionEnabled: true
+      requestPayloadLimit: 15mb
+      basePath: bff
+      openapiFilePath: ./openapi3.yaml
+      adminPassword: 123456
+      cswRasterUrl: http://raster-serving-dev-pycsw-private-nginx-service:8080
+      csw3DUrl: NOT_DEPLOYED
+      cswDEMUrl: NOT_DEPLOYED
+      catalogServiceRasterUrl: http://raster-core-dev-raster-catalog-manager-service
+      catalogService3DUrl: NOT_DEPLOYED
+      catalogServiceDEMUrl: NOT_IMPLEMENTED
+      ingestionServiceRasterUrl: http://raster-ingestion-dev-ingestion-trigger-service:8080
+      ingestionService3DUrl: NOT_DEPLOYED
+      ingestionServiceDEMUrl: NOT_IMPLEMENTED
+      storageExplorerRasterUrl: http://raster-ingestion-dev-ingestion-trigger-service:8080
+      storageExplorer3DUrl: NOT_DEPLOYED
+      storageExplorerDEMUrl: NOT_IMPLEMENTED
+      storageExplorerBufferSize: 1048576
+      validationServiceRasterUrl: http://raster-ingestion-dev-ingestion-trigger-service:8080
+      exportLayerRasterUrl: http://raster-export-dev-exporter-trigger-service
+      exportLayer3DUrl: NOT_IMPLEMENTED
+      exportLayerDEMUrl: NOT_IMPLEMENTED
+      jobManagerServiceCommonUrl: http://common-job-manager-service
+      jobManagerServiceTypes: Ingestion_New,Ingestion_Update,Ingestion_Swap_Update,TilesSeeding,Ingestion_New_3D,3D_Ingestion,3D_Deletion,3D_Delete
+      lookupTablesServiceUrl: http://common-lookup-tables
+      serviceDiscoveryUrl: http://app-k8s-services-list
+      externalServices:
+        pycswRecordRasterUrl: https://catalog-dev.mapcolonies.net/api/raster/v1
+        pycswRecord3DUrl: NOT_DEPLOYED
+        pycswRecordDEMUrl: NOT_DEPLOYED
+        mapServerRecordRasterUrl: https://tiles-dev.mapcolonies.net/api/raster/v1
+      mapServiceRasterUrl: https://tiles-dev.mapcolonies.net/api/raster/v1
+      wfsUrl: https://geoserver-secured-vector-dev.apps.j1lk3njp.eastus.aroapp.io/geoserver/mock/wfs
+      wfsServicesConfig: '{"buildings": {"color": "#0465b0", "outlineColor": "#0465b0", "dWithin": 3, "isVisualized": true, "translationId": "actions.wfs.buildings-title", "icon": "location_city", "markerIcon": "buildings-marker"}, "addrs": {"translationId": "תשאול כתובת", "isVisualized": "false"}}'
+      polygonPartsUrl: https://polygon-parts-dev.mapcolonies.net/api/raster/v1/wfs
+      demHeightsUrl: NOT_DEPLOYED
+    route:
+      enabled: true
+      annotations:
+        haproxy.router.openshift.io/rewrite-target: /
+      timeout:
+        enabled: false
+        duration: 60s
+      routesMapping:
+        - hostname: catalog-raster-dev.mapcolonies.net
+          path: /bff
+          suffix:
+      targetPort: http
+      tls:
+        enabled: true
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
+        useCerts: true
+      extraRules:
+    ingress:
+      enabled: false
+      apiVersion:
+      type: nginx-kubernetes
+      annotations:
+      pathType: Prefix
+      hostname: libot.wwest.local
+      extraHosts: []
+      extraPaths: []
+      path: /bff
+      extraRules: []
+      extraTls: []
+      selfSigned: false
+      tls: true
+      cors:
+        enabled: true
+        origin: '*'
+    service:
+      annotations:
+      ports:
+        http: 80
+      protocol: TCP
+    serviceAccount:
+      create: false
+
+  # ====================================================================================================
+  # MC Web Tools
+  # ====================================================================================================
+  mc-web-tools:
+    nameOverride:
+    fullnameOverride:
+    # --------------- common --------------
+    commonLabels:
+    commonAnnotations:
+    # ----------- initContainers ----------
+    volumePermissions:
+      enabled: false
+    # ------ volumes and volumeMounts -----
+    persistence:
+      enabled: false
+    # ----------- command/debug -----------
+    diagnosticMode:
+      enabled: false
+      # command:
+      #   - sleep
+      # args:
+      #   - infinity
+    # --------- MAIN_OBJECT_BLOCK ---------
+    configValues:
+      deploymentAnnotations:
+        # collectord.io/index: '' # PROVIDE SPLUNK INDEX
+      autoscaling:
+        enabled: false
+      replicaCount: 1
+      podAnnotations:
+        enabled: true
+        resetOnConfigChange: true
+        annotations:
+      prometheus:
+        scrape: false
+      metrics:
+        enabled: false
+      tracing:
+        enabled: false
+      # topologySpreadConstraints:
+      #   - maxSkew: 1
+      #     topologyKey: zone
+      #     whenUnsatisfiable: DoNotSchedule
+      #     labelSelector:
+      #       matchLabels:
+      #         app.kubernetes.io/name: '{{ include "common.names.name" . }}'
+      podSecurityContext:
+        enabled: false
+      # ----------- containers ------------
+      image:
+        repository: app/mc-web-tools
+        tag: v3.1.2
+        pullPolicy: Always
+        debug: false
+      containerSecurityContext:
+        enabled: true
+        allowPrivilegeEscalation: false
+        # runAsUser: 0
+      extraEnvVars:
+        - name: SERVER_PORT
+          value: '{{ .Values.configValues.containerPorts.http }}'
+      extraEnvVarsCM: '{{ template "common.names.fullname" . }}'
+      extraEnvVarsSecret:
+      resources:
+        limits:
+          cpu: 200m
+          memory: 500Mi
+        requests:
+          cpu: 50m
+          memory: 500Mi
+      containerPorts:
+        http: 8080
+        https: 443
+      customLivenessProbe:
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        timeoutSeconds: 1
+        failureThreshold: 3
+        successThreshold: 1
+        httpGet:
+          path: /env-config.js
+          port: http
+      customReadinessProbe:
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        timeoutSeconds: 1
+        failureThreshold: 3
+        successThreshold: 1
+        httpGet:
+          path: /env-config.js
+          port: http
+      startupProbe:
+        enabled: false
+      extraVolumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
+      extraVolumes:
+        - name: nginx-config
+          configMap:
+            name: '{{ template "common.names.fullname" . }}'
+            items:
+              - key: default.conf
+                path: default.conf
+    env:
+      logLevel: info
+      logPrettyPrintEnabled: false
+      responseCompressionEnabled: true
+      requestPayloadLimit: 1mb
+      publicUrl: /tools
+      map:
+        center: '[34.811, 31.908]'
+        zoom: 7
+      baseMaps: '{ "maps": [ { "id": "1st", "title": "1st Map", "thumbnail": "https://mt1.google.com/vt/lyrs=s&x=6&y=4&z=3", "baseRasteLayers": [ { "id": "GOOGLE_TERRAIN", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 0, "options": { "url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", "layers": "", "credit": "GOOGLE" } }, { "id": "INFRARED_RASTER", "type": "WMS_LAYER", "opacity": 0.6, "zIndex": 1, "options": { "url": "https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?", "layers": "goes_conus_ir", "credit": "Infrared data courtesy Iowa Environmental Mesonet", "parameters": { "transparent": "true", "format": "image/png" } } } ] }, { "id": "2nd", "title": "2nd Map", "thumbnail": "https://mt1.google.com/vt/lyrs=s&x=6&y=4&z=3", "baseRasteLayers": [ { "id": "RADAR_RASTER", "type": "WMS_LAYER", "opacity": 0.6, "zIndex": 1, "options": { "url": "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?", "layers": "nexrad-n0r", "credit": "Radar data courtesy Iowa Environmental Mesonet", "parameters": { "transparent": "true", "format": "image/png" } } }, { "id": "GOOGLE_TERRAIN", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 0, "options": { "url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", "layers": "", "credit": "GOOGLE" } }, { "id": "VECTOR_TILES_GPS", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 2, "options": { "url": "https://gps.tile.openstreetmap.org/lines/{z}/{x}/{y}.png", "layers": "", "credit": "openstreetmap" } } ] }, { "id": "3rd", "title": "3rd Map", "isCurrent": true, "thumbnail": "https://a.tile.thunderforest.com/cycle/17/78208/53265.png", "baseRasteLayers": [ { "id": "VECTOR_TILES", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 0, "options": { "url": "https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=6170aad10dfd42a38d4d8c709a536f38", "layers": "", "credit": "thunderforest" } }, { "id": "VECTOR_TILES_GPS", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 1, "options": { "url": "https://gps.tile.openstreetmap.org/lines/{z}/{x}/{y}.png", "layers": "", "credit": "openstreetmap" } } ] } ] }'
+      defaultTerrainProviderUrl: ''
+      apps: '{ "terrain-verification": { "category": "DEM", "name": "Terrain Verification Tool", "icon": "map-marker.gif", "url": "/terrain-verification", "description": "A Terrain Verification Tool", "isInternal": true }, "nominatim": { "category": "Vector", "name": "Nominatim", "icon": "nominatim.svg", "width": 160, "url": "https://nominatim.openstreetmap.org/ui/search.html", "description": "Nominatim is a search engine for OpenStreetMap data. You may search for a name or address (forward search) or look up data by its geographic coordinate (reverse search)" }, "valhalla": { "category": "Vector", "name": "Valhalla", "externalIconURL": "https://valhalla.openstreetmap.de/favicon.png", "width": 130, "url": "https://valhalla.openstreetmap.de", "description": "Valhalla is an open source routing engine and accompanying libraries for use with OpenStreetMap data. Valhalla also includes tools like time+distance matrix computation, isochrones, elevation sampling, map matching and tour optimization (Travelling Salesman)" }, "sandcastle": { "category": "Cesium", "name": "Sandcastle", "icon": "cesium.webp", "width": 200, "url": "https://sandcastle.cesium.com", "description": "Sandcastle is a live-coding app for viewing CesiumJS examples. Contextual CesiumJS help for quickly sharing and testing code" }, "developer-portal": { "category": "Libot Mipui", "name": "Developer Portal", "icon": "developer-portal.png", "width": 100, "url": "https://mapcolonies.github.io/developer-portal", "description": "A central information hub about Libot Mipui documentation, APIs, products and microservices" }, "uploader": { "category": "Libot Mipui", "name": "Uploader", "icon": "upload.gif", "width": 100, "url": "http://10.8.0.9:9001/buckets/static-assets/LibotWhatsNew.pdf", "description": "Download uploader exe for installation", "isDownloadable": true, "fileName": "uploader.exe" } }'
+      csw3DUrl: NOT_DEPLOYED
+      shouldShowPrecisionDisclaimer: 'כלי ניתוח השטח טרם עברו חק״ב - אין להסתמך על הנתונים <b>לשימושים מבצעיים</b>!'
+    route:
+      enabled: true
+      annotations:
+        haproxy.router.openshift.io/rewrite-target: /
+      timeout:
+        enabled: false
+        duration: 60s
+      routesMapping:
+        - hostname: catalog-raster-dev.mapcolonies.net
+          path: /tools
+          suffix:
+      targetPort: http
+      tls:
+        enabled: true
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
+        useCerts: true
+      extraRules:
+    ingress:
+      enabled: false
+      apiVersion:
+      type: nginx-kubernetes
+      annotations:
+      pathType: Prefix
+      hostname: libot.wwest.local
+      extraHosts: []
+      extraPaths: []
+      path: /tools
+      extraRules: []
+      extraTls: []
+      selfSigned: false
+      tls: true
+      cors:
+        enabled: true
+        origin: '*'
+    service:
+      annotations:
+      ports:
+        http: 80
+      protocol: TCP
+    serviceAccount:
+      create: false
+
+# ====================================================================================================
+# Common
+# ====================================================================================================
+common:
+
+  # ====================================================================================================
+  # K8S Services List
+  # ====================================================================================================
+  k8s-services-list:
+    nameOverride:
+    fullnameOverride:
+    # --------------- common --------------
+    commonLabels:
+    commonAnnotations:
+    # ----------- initContainers ----------
+    volumePermissions:
+      enabled: false
+    # ------ volumes and volumeMounts -----
+    persistence:
+      enabled: false
+    # ----------- command/debug -----------
+    diagnosticMode:
+      enabled: false
+      # command:
+      #   - sleep
+      # args:
+      #   - infinity
+    # --------- MAIN_OBJECT_BLOCK ---------
+    configValues:
+      deploymentAnnotations:
+        # collectord.io/index: '' # PROVIDE SPLUNK INDEX
+      autoscaling:
+        enabled: false
+      replicaCount: 1
+      podAnnotations:
+        enabled: true
+        resetOnConfigChange: true
+        annotations:
+      prometheus:
+        scrape: false
+      metrics:
+        enabled: false
+      tracing:
+        enabled: false
+      podSecurityContext:
+        enabled: false
+      # ----------- containers ------------
+      image:
+        repository: common/k8s-services-list
+        tag: v1.3.1
+        pullPolicy: Always
+        debug: false
+      containerSecurityContext:
+        enabled: true
+        runAsNonRoot: true
+        runAsUser: 1000730000
+      extraEnvVars:
+        - name: SERVER_PORT
+          value: '{{ .Values.configValues.containerPorts.http }}'
+      extraEnvVarsCM: '{{ template "common.names.fullname" . }}'
+      extraEnvVarsSecret:
+      resources:
+        limits:
+          cpu: 200m
+          memory: 200Mi
+        requests:
+          cpu: 50m
+          memory: 200Mi
+      containerPorts:
+        http: 8080
+        https: 443
+      livenessProbe:
+        enabled: true
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        timeoutSeconds: 1
+        failureThreshold: 3
+        successThreshold: 1
+      readinessProbe:
+        enabled: true
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        timeoutSeconds: 1
+        failureThreshold: 3
+        successThreshold: 1
+      startupProbe:
+        enabled: false
+    env:
+      logLevel: info
+      logPrettyPrintEnabled: false
+      responseCompressionEnabled: true
+      requestPayloadLimit: 1mb
+    route:
+      enabled: true
+      annotations:
+        haproxy.router.openshift.io/rewrite-target: /
+      timeout:
+        enabled: false
+        duration: 60s
+      routesMapping:
+        - hostname:
+          path: /
+          suffix:
+      targetPort: http
+      tls:
+        enabled: true
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
+        useCerts: false
+      extraRules:
+    ingress:
+      enabled: false
+      apiVersion:
+      type: nginx-org
+      annotations:
+      pathType: Prefix
+      hostname: libot.wwest.local
+      extraHosts: []
+      extraPaths: []
+      path: /service-discovery
+      extraRules: []
+      extraTls: []
+      selfSigned: false
+      tls: true
+      cors:
+        enabled: true
+        origin: '*'
+    service:
+      annotations:
+      ports:
+        http: 80
+      protocol: TCP
+    serviceAccount:
+      create: true
+    rbac:
+      create: true
+      rules:
+        - apiGroups:
+            - apps
+          resources:
+            - deployments
+          verbs:
+            - get 
+            - watch
+            - list
+        - apiGroups: 
+            - ""
+          resources:
+            - endpoints 
+            - services
+          verbs:
+            - get 
+            - watch
+            - list
+    podSecurityPolicy:
+      enabled: false
+
+  # ====================================================================================================
+  # MC Thumbnail Generator
+  # ====================================================================================================
+  mc-thumbnail-generator:
+    nameOverride:
+    fullnameOverride:
+    # --------------- common --------------
+    commonLabels:
+    commonAnnotations:
+    # ----------- initContainers ----------
+    volumePermissions:
+      enabled: false
+    # ------ volumes and volumeMounts -----
+    persistence:
+      enabled: false
+    # ----------- command/debug -----------
+    diagnosticMode:
+      enabled: false
+      # command:
+      #   - sleep
+      # args:
+      #   - infinity
+    # --------- MAIN_OBJECT_BLOCK ---------
+    configValues:
+      deploymentAnnotations:
+        # collectord.io/index: '' # PROVIDE SPLUNK INDEX
+      autoscaling:
+        enabled: false
+      replicaCount: 1
+      podAnnotations:
+        enabled: true
+        resetOnConfigChange: true
+        annotations:
+      prometheus:
+        scrape: false
+      metrics:
+        enabled: false
+      tracing:
+        enabled: false
+      podSecurityContext:
+        enabled: false
+      # ----------- containers ------------
+      image:
+        repository: common/mc-thumbnail-generator
+        tag: v3.1.1
+        pullPolicy: Always
+        debug: false
+      containerSecurityContext:
+        enabled: true
+        runAsNonRoot: true
+        runAsUser: 1000730000
+      extraEnvVars:
+        - name: SERVER_PORT
+          value: '{{ .Values.configValues.containerPorts.http }}'
+      extraEnvVarsCM: '{{ template "common.names.fullname" . }}'
+      extraEnvVarsSecret:
+      resources:
+        limits:
+          cpu: 200m
+          memory: 200Mi
+        requests:
+          cpu: 50m
+          memory: 200Mi
+      containerPorts:
+        http: 3000
+        https: 443
+      livenessProbe:
+        enabled: false
+      readinessProbe:
+        enabled: false
+      startupProbe:
+        enabled: false
+      extraVolumeMounts:
+        - name: cesium-client-root-config
+          mountPath: /home/node/app/src/cesiumClientWeb/cesiumClientWebConfig.json
+          subPath: cesiumClientWebConfig.json
+          readOnly: true
+      extraVolumes:
+        - name: cesium-client-root-config
+          configMap:
+            name: '{{ template "common.names.fullname" . }}'
+            items:
+            - key: "CESIUM_CLIENT_WEB_CONFIG"
+              path: "cesiumClientWebConfig.json"
+    env:
+      logLevel: info
+      logPrettyPrintEnabled: false
+      responseCompressionEnabled: true
+      requestPayloadLimit: 1mb
+      defaultAOIBBoxPoints: '[[33.64013671875,33.50475906922609],[37.957763671875,29.065772888415406]]'
+      serviceUrl: http://app-catalog-web-app-bff/graphql
+      zipName: Thumbnails.zip
+      watermarkTimeout: 90000
+      loadingTilesTimeout: 20000
+    route:
+      enabled: true
+      annotations:
+        haproxy.router.openshift.io/rewrite-target: /
+      timeout:
+        enabled: false
+        duration: 60s
+      routesMapping:
+        - hostname:
+          path: /
+          suffix:
+      targetPort: http
+      tls:
+        enabled: true
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
+        useCerts: false
+      extraRules:
+    ingress:
+      enabled: false
+      apiVersion:
+      type: nginx-org
+      annotations:
+      pathType: Prefix
+      hostname: libot.wwest.local
+      extraHosts: []
+      extraPaths: []
+      path: /thumbnail-generator
+      extraRules: []
+      extraTls: []
+      selfSigned: false
+      tls: true
+      cors:
+        enabled: true
+        origin: '*'
+    service:
+      annotations:
+      ports:
+        http: 80
+      protocol: TCP
+    serviceAccount:
+      create: false

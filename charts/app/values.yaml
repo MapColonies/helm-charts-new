@@ -1,0 +1,20 @@
+# Default values for the app umbrella chart.
+# Use values-dev-*.yaml for environment-specific overrides.
+global:
+  enable-services:
+    app:
+      enabled: false
+      catalog-app: false
+      catalog-web-app-bff: false
+      mc-web-tools: false
+    common:
+      enabled: false
+      k8s-services-list: false
+      mc-thumbnail-generator: false
+    extractable:
+      enabled: false
+      coordinate-extract-app: false
+
+app: {}
+common: {}
+extractable-app: {}
