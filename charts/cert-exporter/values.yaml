@@ -5,7 +5,7 @@ cert-exporter:
       mapcolonies.io/component: infrastructure
       mapcolonies.io/owner: infra
       mapcolonies.io/part-of: monitoring
-      mapcolonies.io/alloy-api-logs: "false"
+      mapcolonies.io/alloy-api-logs: "true"
     podAnnotations:
       prometheus.io/scrape: "true"
       prometheus.io/port: "8080"
