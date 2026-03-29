@@ -3,7 +3,7 @@ name: loki
 description: A wrapper Loki Helm chart
 type: application
 version: 1.0.1
-appVersion: 3.4.2
+appVersion: 3.6.7
 annotations:
   domain: infra
 dependencies:
