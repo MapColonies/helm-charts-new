@@ -1,9 +1,0 @@
-[
-  {
-    "chartLocation": "app",
-    "valuesFile": ["../global.yaml", "global-values.yaml", "global-values-overrides.yaml", "charts/common/global-values.yaml", "charts/common/global-values-overrides.yaml", "charts/app/global-values.yaml", "charts/app/global-values-overrides.yaml", "values.yaml"],
-    "namespace": "dem-dev",
-    "releaseName": "app",
-    "skip": false
-  }
-]
