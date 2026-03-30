@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/MapColonies/helm-charts-test/compare/sftpgo-stack-v1.2.1...sftpgo-stack-v1.2.2) (2026-03-30)
+
+
+### 🔧 Miscellaneous Chores
+
+* **sftpgo:** update sftpgo dependency to 0.44.0 ([#63](https://github.com/MapColonies/helm-charts-test/issues/63)) ([d411ed8](https://github.com/MapColonies/helm-charts-test/commit/d411ed82835b1f9d2c71f69a9de0d1e5ae0124d7))
+
 ## [1.2.1](https://github.com/MapColonies/helm-charts-test/compare/sftpgo-stack-v1.2.0...sftpgo-stack-v1.2.1) (2026-03-24)
 
 
