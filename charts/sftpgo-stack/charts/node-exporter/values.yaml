@@ -5,6 +5,7 @@ mclabels:
   prometheus:
     enabled: true
     port: 9100
+  logScraping: true
 
 replicaCount: 1
 
