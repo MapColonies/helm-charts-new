@@ -10,6 +10,7 @@ sftpgo:
     mapcolonies.io/owner: infra
     mapcolonies.io/component: infrastructure
     mapcolonies.io/part-of: storage
+    mapcolonies.io/alloy-api-logs: "true"
 
   envVars:
     - name: SFTPGO_DEFAULT_ADMIN_USERNAME
