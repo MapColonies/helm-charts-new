@@ -3,7 +3,7 @@ appVersion: v2.18.0
 description: Monitors and exposes PKI information as Prometheus metrics
 name: cert-exporter
 type: application
-version: 1.0.0
+version: 1.0.1
 annotations:
   domain: infra
 dependencies:
