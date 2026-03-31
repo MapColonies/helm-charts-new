@@ -11,10 +11,6 @@ dependencies:
     version: 1.0.0
     condition: global.enable-services.common.enabled
     repository: file://./charts/common
-  - name: extractable-app
-    version: 1.0.0
-    condition: global.enable-services.extractable.enabled
-    repository: file://./charts/extractable
 
 # A chart can be either an 'application' or a 'library' chart.
 #
