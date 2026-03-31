@@ -1,0 +1,353 @@
+# ====================================================================================================
+# Exporter-Gpkg-Merger
+# ====================================================================================================
+exporter-gpkg-merger:
+  enabled: true
+  image:
+    repository: raster/tiles-merger-service
+    tag: "v2.2.2"
+  replicaCount: 1
+  isExporter: true
+
+  env:
+    protocol: TCP
+    general:
+      validate: false
+      batchMaxBytes: 838860800 # 800MB
+      batchSize:
+        limitBatchSize: true
+        batchMaxSize: 1000
+    metrics:
+      enabled: false
+      scrape: true
+      port: 9500
+      # FLAG
+      measurementBuckets: "[0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 15, 50,250, 500]"
+    TASK:
+      types:
+        - jobType: "Export"
+          taskType: "tilesExporting"
+      # FLAG
+      pollingTime: 2000
+      maxAttempts: 3
+    heartbeat:
+      # FLAG
+      intervalMs: 3000
+    HTTP:
+      retries: 2
+    logging:
+      logLevel:
+        # FLAG
+        default: "Information"
+        # FLAG
+        aspNetCore: "Information"
+
+  resources:
+    enabled: false
+    value:
+      # FLAG
+      limits:
+        cpu: 1
+        memory: 4Gi
+      requests:
+        cpu: 0.25
+        memory: 4Gi
+
+# ====================================================================================================
+# Exporter-Trigger
+# ====================================================================================================
+exporter-trigger:
+  enabled: true
+  image:
+    repository: raster/exporter-trigger
+    tag: v3.2.1
+  replicaCount: 1
+  imagePullPolicy: Always
+
+  mclabels:
+    component: backend
+    partOf: export
+    owner: raster
+    gisDomain: raster
+    prometheus:
+      enabled: true
+      port: 8080
+
+  tracing:
+    enabled: true
+
+  env:
+    # FLAG
+    logLevel: info
+    requestPayloadLimit: 1mb
+    disableHttpClientLogs: false
+    # FLAG
+    cleanupExpirationDays: 30
+    estimatedStorageCalculation:
+      jpegTileEstimatedSizeInBytes: 27000
+      pngTileEstimatedSizeInBytes: 263000
+      storageFactorBuffer: 1.25
+    roiBufferMeter: 5
+    minContainedPercentage: 80
+
+  resources:
+    enabled: false
+    value:
+      # FLAG
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 0.25
+        memory: 1Gi
+
+  route:
+    enabled: false
+    path: /api/raster/v1
+    timeout:
+      enabled: false # defaults to 30s by openshift
+      duration: 60s # supported units (us, ms, s, m, h, d)
+
+  ingress:
+    enabled: false
+    type: "nginx-org" # supported values: 'nginx-org' | 'nginx-kubernetes'
+    path: /
+    host: "localhost"
+    cors:
+      enabled: true
+      origin: "*"
+
+# ====================================================================================================
+# Exporter-Overseer
+# ====================================================================================================
+exporter-overseer:
+  enabled: true
+  image:
+    repository: raster/overseer
+    tag: v2.5.2
+    pullPolicy: Always
+  replicaCount: 1
+
+  mclabels:
+    component: backend
+    partOf: export
+    owner: raster
+    gisDomain: raster
+    prometheus:
+      enabled: true
+      port: 9500
+
+  metrics:
+    enabled: true
+    prometheus:
+      scrape: true
+      port: 9500
+
+  instanceType: "export"
+
+  jobDefinitions:
+    jobs:
+      export:
+        # FLAG
+        cleanupExpirationDays: 14
+        downloadPath: "downloads"
+
+    config:
+      # FLAG
+      dequeueIntervalMs: 3000
+      heartBeat:
+        # FLAG
+        intervalMs: 3000
+
+  env:
+    # FLAG
+    logLevel: info
+    logPrettyPrintEnabled: false
+    logPinoCallerEnabled: false
+
+  resources:
+    enabled: false
+    value:
+      # FLAG
+      limits:
+        cpu: 2.5
+        memory: 1Gi
+      requests:
+        cpu: 0.75
+        memory: 1Gi
+
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    timeoutSeconds: 30
+    failureThreshold: 6
+    path: /liveness
+
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    timeoutSeconds: 30
+    failureThreshold: 6
+    path: /liveness
+
+# ====================================================================================================
+# Files-Server
+# ====================================================================================================
+files-server:
+  enabled: true
+  nginx:
+    enabled: true
+    authorization:
+      enabled: false
+    replicaCount: 1
+    image:
+      repository: nginx-otel-unprivileged
+      tag: "v1.0.0"
+    imagePullPolicy: Always
+
+    port: 8080
+    internalServicePort: 80
+    targetPort: 8080
+
+    extraVolumes: []
+    extraVolumeMounts: []
+
+    resources:
+      enabled: false
+      value:
+        # FLAG
+        limits:
+          cpu: 100m
+          memory: 128Mi
+        requests:
+          cpu: 100m
+          memory: 128Mi
+
+    route:
+      enabled: true
+      routesMapping:
+        - path: /api/raster/v1
+          host: ""
+      timeout:
+        enabled: false # defaults to 30s by openshift
+        duration: 60s # supported units (us, ms, s, m, h, d)
+      rewriteTarget: "/"
+      tls:
+        enabled: true
+        useCerts: true
+
+    ingress:
+      enabled: false
+      type: "nginx-org" # supported values: 'nginx-org' | 'nginx-kubernetes'
+      path: /
+      host: ""
+      tls:
+        enabled: false
+        useExternal: ""
+      cors:
+        enabled: true
+        origin: "*"
+
+# ====================================================================================================
+# Nginx-S3-Gateway
+# ====================================================================================================
+nginx-s3-gateway:
+  enabled: true
+  image:
+    repository: common/nginx-s3-gateway
+    tag: v3.0.2
+  replicaCount: 1
+
+  global:
+    allowDirectoryList: false
+
+  authorization:
+    enabled: false
+    domain: ""
+    url: ""
+
+  env:
+    protocol: TCP
+    port: 80
+    targetPort: 8080
+    tracing:
+      enabled: false
+    metrics:
+      enabled: false
+
+  s3:
+    bucketName: ""
+    accessKeyId: ""
+    secretAccessKey: ""
+    server: ""
+    # FLAG
+    serverPort: 9000
+    serverProto: http
+    region: us-east-1
+    style: path
+    debug: false
+    corsEnabled: true
+    # FLAG
+    nginxWorkerProcesses: 8
+  aws:
+    sigsVersion: 4
+
+  resources:
+    enabled: false
+    value:
+      # FLAG
+      limits:
+        cpu: 500m
+        memory: 900Mi
+      requests:
+        cpu: 125m
+        memory: 900Mi
+
+  route:
+    enabled: false
+    path: /api/raster/v1
+    timeout:
+      enabled: false # defaults to 30s by openshift
+      duration: 60s # supported units (us, ms, s, m, h, d)
+    tls:
+      enabled: true
+      useCerts: true
+
+  ingress:
+    enabled: false
+    type: "nginx-kubernetes" # supported values: 'nginx-org' | 'nginx-kubernetes'
+    host: ""
+    path: ""
+
+# ====================================================================================================
+# Exporter-Cleanup
+# ====================================================================================================
+exporter-cleanup:
+  enabled: true
+  image:
+    repository: "exporter-cleanup"
+    tag: "v3.0.0"
+    pullPolicy: Always
+  cron:
+    schedule: "* * * * *"
+    successfulJobsHistoryLimit: 1
+    failedJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    restartPolicy: OnFailure
+  env:
+    # FLAG
+    logLevel: info
+    s3:
+      maxRetries: 3
+      prefix: ""
+      batchSize: 100
+  resources:
+    enabled: false
+    value:
+      # FLAG
+      limits:
+        cpu: 0.25
+        memory: 256Mi
+      requests:
+        cpu: 0.0625
+        memory: 256Mi

@@ -1,0 +1,48 @@
+apiVersion: v2
+name: raster-ingestion
+description: A Helm chart for Raster ingestion services
+annotations:
+  domain: raster
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+dependencies:
+  - name: gpkg-merger
+    version: 2.2.2
+    condition: gpkg-merger.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: mapproxy-api
+    version: 1.11.3
+    condition: mapproxy-api.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: discrete-cleanup
+    version: 1.9.3
+    condition: discrete-cleanup.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm
+
+  - name: tiles-splitter
+    version: 1.3.7
+    condition: tiles-splitter.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm
+
+  - name: cache-seeder
+    version: 2.1.2
+    condition: cache-seeder.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm
+
+  - name: ingestion-trigger
+    version: 4.1.1
+    condition: ingestion-trigger.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: overseer
+    version: 2.5.2
+    condition: overseer.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: geoserver-api
+    version: 2.0.0
+    condition: geoserver-api.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster

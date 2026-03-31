@@ -1,0 +1,522 @@
+# ====================================================================================================
+# Gpkg-Merger
+# ====================================================================================================
+gpkg-merger:
+  enabled: true
+  image:
+    repository: raster/tiles-merger-service
+    tag: "v2.2.2"
+  replicaCount: 1
+  isExporter: false
+
+  env:
+    protocol: TCP
+    general:
+      validate: false
+      batchMaxBytes: 838860800 # 800MB
+      batchSize:
+        limitBatchSize: true
+        batchMaxSize: 1000
+    metrics:
+      enabled: false
+      scrape: true
+      port: 9500
+      # FLAG
+      measurementBuckets: "[0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 15, 50,250, 500]"
+    TASK:
+      types:
+        - jobType: "Ingestion_Update"
+          taskType: "tilesMerging"
+        - jobType: "Ingestion_New"
+          taskType: "tilesMerging"
+        - jobType: "Ingestion_Swap_Update"
+          taskType: "tilesMerging"
+      # FLAG
+      pollingTime: 2000
+      maxAttempts: 3
+    heartbeat:
+      # FLAG
+      intervalMs: 3000
+    HTTP:
+      retries: 2
+    logging:
+      logLevel:
+        # FLAG
+        default: "Information"
+        # FLAG
+        aspNetCore: "Information"
+
+  resources:
+    enabled: false
+    value:
+      # FLAG
+      limits:
+        cpu: 2
+        memory: 4Gi
+      requests:
+        cpu: 0.5
+        memory: 4Gi
+
+  route:
+    enabled: false
+    path: /
+    timeout:
+      enabled: false # defaults to 30s by openshift
+      duration: 60s # supported units (us, ms, s, m, h, d)
+
+# ====================================================================================================
+# MapProxy-Api
+# ====================================================================================================
+mapproxy-api:
+  enabled: true
+  image:
+    repository: raster/mapproxy-api
+    tag: "v1.11.3"
+    pullPolicy: Always
+  replicaCount: 1
+
+  mclabels:
+    component: backend
+    partOf: ingestion
+    owner: raster
+    gisDomain: raster
+    prometheus:
+      enabled: true
+      port: 8080
+
+  db:
+    schema: "MapproxyConfig"
+
+  env:
+    # FLAG
+    logLevel: info
+    mapproxyCache:
+      grids: WorldCRS84
+      upscaleTiles: 18
+      directoryLayout: tms
+
+  redis:
+    enabled: true
+    host: "raster-mapproxy-redis-master"
+    auth:
+      enableRedisUser: true
+      username: ""
+      password: "password"
+    prefix:
+      enablePrefix: false
+      prefix: ""
+
+  resources:
+    enabled: false
+    value:
+      # FLAG
+      limits:
+        cpu: 0.25
+        memory: 250Mi
+      requests:
+        cpu: 0.0625
+        memory: 250Mi
+
+  route:
+    enabled: true
+    path: /
+    timeout:
+      enabled: false # defaults to 30s by openshift
+      duration: 60s # supported units (us, ms, s, m, h, d)
+
+  ingress:
+    enabled: false
+    type: "nginx-org" # supported values: 'nginx-org' | 'nginx-kubernetes'
+    path: /
+    host: "localhost"
+    cors:
+      enabled: true
+      origin: "*"
+
+# ====================================================================================================
+# Discrete-Cleanup
+# ====================================================================================================
+discrete-cleanup:
+  enabled: true
+  imagePullPolicy: Always
+  image:
+    repository: discrete-cleanup
+    tag: v1.9.3
+  cron:
+    schedule: "* * * * *"
+    successfulJobsHistoryLimit: 1
+    failedJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    restartPolicy: OnFailure
+  env:
+    # FLAG
+    logLevel: info
+    fs:
+      blacklistSourcesLocation:
+        - "test_dir"
+    s3:
+      maxRetries: 3
+    batchSize:
+      discreteLayers: 10
+      tiffDirectoryDeletion: 1
+      tilesDeletion: 1000 # s3 default max limit is 10000 so larger batches will be capped to the s3 limit
+    failedCleanupDelayDays:
+      # FLAG
+      ingestion: 14
+      # FLAG
+      sync: 14
+    successCleanupDelayDays:
+      # FLAG
+      ingestion: 0
+    disableSourcesCleanup: true
+    cleanupTypes:
+      failedIngestionTasks: true
+      successfulIngestion: true
+      successfulSwapUpdate: true
+  resources:
+    enabled: false
+    value:
+      # FLAG
+      limits:
+        cpu: 0.25
+        memory: 250Mi
+      requests:
+        cpu: 0.0625
+        memory: 250Mi
+
+# ====================================================================================================
+# Tiles-Splitter
+# ====================================================================================================
+tiles-splitter:
+  enabled: true
+  image:
+    repository: "tiles-splitter"
+    tag: "v1.3.7"
+    pullPolicy: Always
+  replicaCount: 1
+
+  imagePullPolicy: Always
+  env:
+    # FLAG
+    logLevel: info
+    splitAttempts: 3
+    vrt:
+      nodata: "0"
+      outputSRS: "EPSG:4326"
+      resampling: "bilinear"
+      addAlpha: true
+      useBandCount: true
+      inputBandCount: 3
+    generateTiles:
+      resampling: "average"
+      profile: "geodetic"
+      srcnodata: "0"
+      verbose: true
+    queue:
+      # FLAG
+      dequeueIntervalMs: 1000
+      # FLAG
+      heartbeatIntervalMs: 3000
+  resources:
+    enabled: false
+    value:
+      # FLAG
+      limits:
+        cpu: 2
+        memory: 4Gi
+      requests:
+        cpu: 0.5
+        memory: 4Gi
+
+# ====================================================================================================
+# Cache-Seeder
+# ====================================================================================================
+cache-seeder:
+  enabled: true
+  image:
+    repository: "cache-seeder"
+    tag: "v2.1.2"
+    pullPolicy: Always
+
+  mclabels:
+    component: backend
+    partOf: ingestion
+    owner: raster
+    gisDomain: raster
+    prometheus:
+      enabled: true
+      port: 8080
+
+  redis:
+    tls: false
+  # FLAG
+  replicaCount: 5
+  env:
+    # FLAG
+    logLevel: info
+    queue:
+      heartbeat:
+        # FLAG
+        heartbeatIntervalMs: 3000
+      # FLAG
+      dequeueIntervalMs: 2000
+    # FLAG
+    seedAttempts: 5
+    # FLAG
+    seedConcurrency: 25
+    refreshBeforeYearsOffset: 1
+    invalidBboxInitialBufferMeters: 200
+    invalidBboxRetryLimit: 5
+
+  resources:
+    enabled: false
+    value:
+      # FLAG
+      limits:
+        cpu: 500m
+        memory: 1000Mi
+      requests:
+        cpu: 500m
+        memory: 1000Mi
+
+# ====================================================================================================
+# Ingestion-Trigger
+# ====================================================================================================
+ingestion-trigger:
+  enabled: true
+  imagePullPolicy: Always
+  image:
+    repository: raster/ingestion-trigger
+    tag: v4.1.1
+  replicaCount: 1
+
+  mclabels:
+    component: backend
+    partOf: ingestion
+    owner: raster
+    gisDomain: raster
+    prometheus:
+      enabled: true
+      port: 8080
+
+  metrics:
+    enabled: true
+    prometheus:
+      scrape: true
+      port: 8080
+
+  env:
+    # FLAG
+    logLevel: info
+    disableHttpClientLogs: false
+    storageExplorer:
+      layerSourceDir: "/layerSources"
+      displayNameDir: "\\layerSources"
+      watchDirectory: "watch"
+      validFileExtensions:
+        - "gpkg"
+        - "shp"
+        - "shx"
+        - "dbf"
+        - "prj"
+        - "cpg"
+    validationValuesByInfo:
+      crs:
+        - 4326
+      fileFormat:
+        - "GPKG"
+      tileSize: 256
+      resolutionFixedPointTolerance: 12
+      extentBufferInMeters: 50
+    forbiddenTypesForParallelIngesion:
+      - Ingestion_New
+      - Ingestion_Update
+      - Ingestion_Swap_Update
+    productReader:
+      maxVerticesPerChunk: 20000
+    supportedIngestionSwapTypes:
+      - productType: "RasterVectorBest"
+        productSubType: "עבירות"
+
+  resources:
+    enabled: false
+    value:
+      # FLAG
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 0.25
+        memory: 1Gi
+
+  route:
+    enabled: true
+    path: /
+    timeout:
+      enabled: false # defaults to 30s by openshift
+      duration: 60s # supported units (us, ms, s, m, h, d)
+
+  ingress:
+    enabled: false
+    type: "nginx-org" # supported values: 'nginx-org' | 'nginx-kubernetes'
+    path: /
+    host: "localhost"
+    cors:
+      enabled: true
+      origin: "*"
+
+# ====================================================================================================
+# Overseer
+# ====================================================================================================
+overseer:
+  enabled: true
+  image:
+    repository: raster/overseer
+    tag: v2.5.2
+    pullPolicy: Always
+  replicaCount: 1
+
+  mclabels:
+    component: backend
+    partOf: ingestion
+    owner: raster
+    gisDomain: raster
+    prometheus:
+      enabled: true
+      port: 9500
+
+  metrics:
+    enabled: true
+    prometheus:
+      scrape: true
+      port: 9500
+
+  instanceType: "ingestion"
+
+  jobDefinitions:
+    tasks:
+      merge:
+        tileBatchSize: 10000
+        taskBatchSize: 5
+        useNewTargetFlagInUpdate: true
+        radiusBuffer: 0.000006
+        radiusBufferUnits: "degrees"
+        truncatePrecision: 11
+        truncateCoordinates: 2
+      seed:
+        grid: "WorldCRS84"
+        # FLAG
+        maxZoom: 21
+        skipUncached: true
+        # FLAG
+        zoomThreshold: 16
+        # FLAG
+        maxTilesPerSeedTask: 500000
+
+    config:
+      # FLAG
+      dequeueIntervalMs: 3000
+      heartBeat:
+        # FLAG
+        intervalMs: 3000
+
+  env:
+    # FLAG
+    logLevel: info
+    logPrettyPrintEnabled: false
+    logPinoCallerEnabled: false
+    shapefileReader:
+      maxVerticesPerChunk: 20000
+
+  resources:
+    enabled: false
+    value:
+      # FLAG
+      limits:
+        cpu: 2.5
+        memory: 1Gi
+      requests:
+        cpu: 0.75
+        memory: 1Gi
+
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    timeoutSeconds: 30
+    failureThreshold: 6
+    path: /liveness
+
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    timeoutSeconds: 30
+    failureThreshold: 6
+    path: /liveness
+
+# ====================================================================================================
+# Geoserver-Api
+# ====================================================================================================
+geoserver-api:
+  enabled: true
+  imagePullPolicy: Always
+  image:
+    repository: raster/geoserver-api
+    tag: v2.0.0
+  replicaCount: 1
+
+  mclabels:
+    component: backend
+    partOf: ingestion
+    owner: raster
+    gisDomain: raster
+    prometheus:
+      enabled: true
+      port: 8080
+
+  metrics:
+    enabled: true
+    prometheus:
+      scrape: true
+      port: 8080
+
+  env:
+    # FLAG
+    logLevel: info
+    disableHttpClientLogs: false
+    srs: "EPSG:4326"
+    numOfDecimals: 100
+    maxFeatures: 1000
+  db:
+    schema: "polygon_parts"
+    dbType: "postgis"
+  geoserver:
+    secrets:
+      useExternal: true
+      externalSecretName: ""
+
+  resources:
+    enabled: false
+    value:
+      # FLAG
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 0.25
+        memory: 1Gi
+
+  route:
+    enabled: true
+    path: /
+    timeout:
+      enabled: false # defaults to 30s by openshift
+      duration: 60s # supported units (us, ms, s, m, h, d)
+
+  ingress:
+    enabled: false
+    type: "nginx-org" # supported values: 'nginx-org' | 'nginx-kubernetes'
+    path: /
+    host: "localhost"
+    cors:
+      enabled: true
+      origin: "*"
