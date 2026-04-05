@@ -1,5 +1,5 @@
 apiVersion: v2
-name: raster-ingestion
+name: ingestion
 description: A Helm chart for Raster ingestion services
 annotations:
   domain: raster
