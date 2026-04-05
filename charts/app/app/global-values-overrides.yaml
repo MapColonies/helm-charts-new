@@ -1,4 +1,0 @@
-global:
-  overrideGlobal:
-    configManagment:
-      enabled: false
