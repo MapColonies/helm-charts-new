@@ -118,6 +118,14 @@
       "charts/otel-collectors": {
         "release-type": "helm",
         "extra-files": ["README.md"]
+      },
+      "charts/app": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
+      },
+      "charts/extractable-app": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
       }
     }
 }
