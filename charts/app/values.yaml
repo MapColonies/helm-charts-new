@@ -573,7 +573,7 @@ app:
       map:
         center: '[34.811, 31.908]'
         zoom: 7
-      baseMaps: '{ "maps": [ { "id": "1st", "title": "1st Map", "thumbnail": "https://mt1.google.com/vt/lyrs=s&x=6&y=4&z=3", "baseRasteLayers": [ { "id": "GOOGLE_TERRAIN", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 0, "options": { "url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", "layers": "", "credit": "GOOGLE" } }, { "id": "INFRARED_RASTER", "type": "WMS_LAYER", "opacity": 0.6, "zIndex": 1, "options": { "url": "https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?", "layers": "goes_conus_ir", "credit": "Infrared data courtesy Iowa Environmental Mesonet", "parameters": { "transparent": "true", "format": "image/png" } } } ] }, { "id": "2nd", "title": "2nd Map", "thumbnail": "https://mt1.google.com/vt/lyrs=s&x=6&y=4&z=3", "baseRasteLayers": [ { "id": "RADAR_RASTER", "type": "WMS_LAYER", "opacity": 0.6, "zIndex": 1, "options": { "url": "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?", "layers": "nexrad-n0r", "credit": "Radar data courtesy Iowa Environmental Mesonet", "parameters": { "transparent": "true", "format": "image/png" } } }, { "id": "GOOGLE_TERRAIN", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 0, "options": { "url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", "layers": "", "credit": "GOOGLE" } }, { "id": "VECTOR_TILES_GPS", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 2, "options": { "url": "https://gps.tile.openstreetmap.org/lines/{z}/{x}/{y}.png", "layers": "", "credit": "openstreetmap" } } ] }, { "id": "3rd", "title": "3rd Map", "isCurrent": true, "thumbnail": "https://a.tile.thunderforest.com/cycle/17/78208/53265.png", "baseRasteLayers": [ { "id": "VECTOR_TILES", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 0, "options": { "url": "https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=6170aad10dfd42a38d4d8c709a536f38", "layers": "", "credit": "thunderforest" } }, { "id": "VECTOR_TILES_GPS", "type": "XYZ_LAYER", "opacity": 1, "zIndex": 1, "options": { "url": "https://gps.tile.openstreetmap.org/lines/{z}/{x}/{y}.png", "layers": "", "credit": "openstreetmap" } } ] } ] }'
+      baseMaps: ''
       defaultTerrainProviderUrl: ''
       apps: ''
       csw3DUrl: ''
@@ -868,7 +868,7 @@ common:
       responseCompressionEnabled: true
       requestPayloadLimit: 1mb
       defaultAOIBBoxPoints: '[[33.64013671875,33.50475906922609],[37.957763671875,29.065772888415406]]'
-      serviceUrl: http://app-catalog-web-app-bff/graphql
+      serviceUrl: ''
       zipName: Thumbnails.zip
       watermarkTimeout: 90000
       loadingTilesTimeout: 20000
