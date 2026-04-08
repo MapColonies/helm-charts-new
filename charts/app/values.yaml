@@ -377,7 +377,7 @@ catalog-web-app-bff:
     requestPayloadLimit: 15mb
     basePath: bff
     openapiFilePath: ./openapi3.yaml
-    adminPassword: 123456
+    adminPassword: ''
     cswRasterUrl: NOT_DEPLOYED
     csw3DUrl: NOT_DEPLOYED
     cswDEMUrl: NOT_DEPLOYED
