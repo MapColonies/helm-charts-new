@@ -61,7 +61,7 @@ k8s-services-list:
   configValues:
     image:
       repository: common/k8s-services-list
-      tag: v1.3.2
+      tag: v1.3.3
 
 # ====================================================================================================
 # MC Thumbnail Generator
