@@ -4,11 +4,11 @@ description: A Helm umbrella chart for Catalog App services
 
 dependencies:
   - name: catalog-app
-    version: 4.4.2
+    version: 4.4.3
     condition: global.enable-services.catalog-app
     repository: oci://acrarolibotnonprod.azurecr.io/helm/app
   - name: catalog-web-app-bff
-    version: 4.0.4
+    version: 4.0.5
     condition: global.enable-services.catalog-web-app-bff
     repository: oci://acrarolibotnonprod.azurecr.io/helm/app
   - name: mc-web-tools
@@ -37,12 +37,12 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 2.2.1
+version: 2.2.2
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: "2.2.1"
+appVersion: "2.2.2"
 annotations:
   domain: app

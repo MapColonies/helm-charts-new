@@ -163,6 +163,7 @@ catalog-app:
     runningMode:
       type: PRODUCTION
       autoComplete: false
+      cswDefaultPageSize: 200
     export:
       defaultZoomLevel: '' #todo
       maxZoomLevel: '' #todo
@@ -378,6 +379,7 @@ catalog-web-app-bff:
     basePath: bff
     openapiFilePath: ./openapi3.yaml
     adminPassword: ''
+    requestTimeout: 30000
     cswRasterUrl: NOT_DEPLOYED
     csw3DUrl: NOT_DEPLOYED
     cswDEMUrl: NOT_DEPLOYED
