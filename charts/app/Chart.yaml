@@ -1,0 +1,30 @@
+apiVersion: v2
+name: app
+description: A Helm umbrella chart for Catalog App services
+
+dependencies:
+  - name: catalog-app
+    version: 4.5.0
+    condition: global.enable-services.catalog-app
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/app
+  - name: catalog-web-app-bff
+    version: 4.0.6
+    condition: global.enable-services.catalog-web-app-bff
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/app
+  - name: mc-web-tools
+    version: 3.1.3
+    condition: global.enable-services.mc-web-tools
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/app
+  - name: k8s-services-list
+    version: 1.3.3
+    condition: global.enable-services.k8s-services-list
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/common
+  - name: mc-thumbnail-generator
+    version: 3.1.2
+    condition: global.enable-services.mc-thumbnail-generator
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/common
+
+type: application
+version: 2.2.5
+annotations:
+  domain: app
