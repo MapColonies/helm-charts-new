@@ -2,7 +2,7 @@ apiVersion: v2
 name: alloy
 description: A wrapper alloy Helm chart for adding custom config for alloy
 type: application
-version: 1.0.1
+version: 1.0.0
 appVersion: v1.9.1
 annotations:
   domain: infra
