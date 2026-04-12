@@ -124,7 +124,24 @@ otelcol.receiver.otlp "default" {
 }
 
 
-{{- range $index, $namespace := $namespaces }}
+otelcol.processor.k8sattributes "default" {
+    extract {
+        metadata = [
+            "k8s.deployment.name", "k8s.namespace.name", "k8s.pod.name",
+            "k8s.pod.start_time", "k8s.statefulset.name", "k8s.pod.uid",
+            "k8s.container.name", "k8s.node.name", "k8s.cronjob.name", "k8s.job.name",
+        ]
+        label { from = "pod", key = "mapcolonies.io/owner", tag_name = "owner" }
+        label { from = "pod", key = "mapcolonies.io/environment", tag_name = "deployment.environment.name" }
+    }
+    pod_association {
+        source { from = "resource_attribute", name = "k8s.pod.uid" }
+    }
+    output {
+        logs = [otelcol.processor.filter.health_filter.input]
+    }
+}
+
 otelcol.processor.k8sattributes "add_k8s_attributes_{{ $namespace | snakecase }}" {
     filter {
         namespace = {{ $namespace | quote }}
@@ -177,6 +194,7 @@ otelcol.processor.k8sattributes "add_k8s_attributes_{{ $namespace | snakecase }}
 }
 {{ end }}
 otelcol.processor.filter "health_filter" {
+		error_mode = "ignore"
     logs {
         log_record = [
         `attributes["url.path"] == "/health"`,
