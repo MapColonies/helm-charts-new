@@ -43,6 +43,24 @@ discovery.relabel "pod_logs" {
         action = "replace"
         target_label = "owner"
     }
+
+    // Label creation - "k8s_statefulset_name" when pod is owned by a StatefulSet
+    rule {
+        source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+        separator     = ";"
+        regex         = "StatefulSet;(.*)"
+        target_label  = "k8s_statefulset_name"
+        replacement   = "$1"
+    }
+
+    // Label creation - "k8s_deployment_name" when pod is owned by a ReplicaSet (strip the hash suffix)
+    rule {
+        source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+        separator     = ";"
+        regex         = "ReplicaSet;(.*)-[^-]+"
+        target_label  = "k8s_deployment_name"
+        replacement   = "$1"
+    }
 }
 
 // loki.source.kubernetes tails logs from Kubernetes containers using the Kubernetes API.
