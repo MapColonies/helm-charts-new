@@ -7,13 +7,9 @@ pycsw:
   image:
     repository: common/pycsw
     tag: "v6.4.1"
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
 
   mclabels:
-    component: backend
-    partOf: serving
-    owner: raster
-    gisDomain: raster
     prometheus:
       enabled: true
       port: 8080
@@ -22,31 +18,17 @@ pycsw:
   filterProductStatus: true
 
   env:
-    # FLAG
     loglevel: WARNING
-    db:
-      schema: RasterCatalogManager
-      requirePassword: true
-    maxrecords: null
-    logfile: ""
     uwsgi:
-      # FLAG
-      processes: 6
-      # FLAG
       threads: 2
       statsServer:
         enabled: true
         stats: 1717
         statsMinify: true
-    cors:
-      enabled: true
-      allowedOrigin: "*"
-      allowedHeaders: "x-api-key"
 
   resources:
     enabled: false
     value:
-      # FLAG
       limits:
         cpu: 1
         memory: 1.5Gi
@@ -61,9 +43,6 @@ pycsw:
     replicaCount: 1
     enabled: true
 
-    nginxTargetPort: 8080
-    targetPort: 8080
-
     authorization:
       enabled: true
       domain: "raster"
@@ -73,7 +52,6 @@ pycsw:
     resources:
       enabled: false
       value:
-        # FLAG
         limits:
           cpu: 0.25
           memory: 350Mi
@@ -84,9 +62,9 @@ pycsw:
     route:
       enabled: true
       path: /api/raster/v1
-      timeout:
-        enabled: false # defaults to 30s by openshift
-        duration: 60s # supported units (us, ms, s, m, h, d)
+      # timeout:
+      #   enabled: false # defaults to 30s by openshift
+      #   duration: 60s # supported units (us, ms, s, m, h, d)
       tls:
         enabled: true
         useCerts: true
@@ -99,13 +77,11 @@ pycsw:
         useExternal: ""
 
   uwsgiExporter:
-    imagePullPolicy: Always
+    imagePullPolicy: IfNotPresent
     image:
       repository: "timonwong/uwsgi-exporter"
       tag: "latest"
-    env:
-      logLevel: info # one of [debug, info, warn, error]
-    port: 9117
+    # port: 9117
     resources:
       enabled: false
       value:
@@ -125,30 +101,14 @@ pycsw-private:
   image:
     repository: common/pycsw
     tag: "v6.4.1"
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
 
   mclabels:
-    component: backend
-    partOf: serving
-    owner: raster
-    gisDomain: raster
-    prometheus:
-      enabled: true
-      port: 9117
     logScraping: true
 
   env:
-    # FLAG
     loglevel: WARNING
-    db:
-      schema: RasterCatalogManager
-      requirePassword: true
-    maxrecords: null
-    logfile: ""
     uwsgi:
-      # FLAG
-      processes: 6
-      # FLAG
       threads: 2
       statsServer:
         enabled: true
@@ -158,7 +118,6 @@ pycsw-private:
   resources:
     enabled: false
     value:
-      # FLAG
       limits:
         cpu: 1
         memory: 1.5Gi
@@ -173,9 +132,6 @@ pycsw-private:
     replicaCount: 1
     enabled: true
 
-    nginxTargetPort: 8080
-    targetPort: 8080
-
     authorization:
       enabled: true
       domain: "raster"
@@ -185,7 +141,6 @@ pycsw-private:
     resources:
       enabled: false
       value:
-        # FLAG
         limits:
           cpu: 0.25
           memory: 350Mi
@@ -214,10 +169,7 @@ pycsw-private:
     image:
       repository: "timonwong/uwsgi-exporter"
       tag: "latest"
-      imagePullPolicy: Always
-    env:
-      logLevel: info # one of [debug, info, warn, error]
-    port: 9117
+      imagePullPolicy: IfNotPresent
     resources:
       enabled: false
       value:
@@ -235,10 +187,6 @@ mapproxy:
   enabled: true
 
   mclabels:
-    component: backend
-    partOf: serving
-    owner: raster
-    gisDomain: raster
     prometheus:
       enabled: true
       port: 8080
@@ -250,7 +198,6 @@ mapproxy:
 
   tracing:
     enabled: true
-    # FLAG
     samplingRatioDenominator: 100
   metrics:
     enabled: true
@@ -262,7 +209,7 @@ mapproxy:
     image:
       repository: mapproxinator
       tag: "v1.2.5"
-      pullPolicy: Always
+      pullPolicy: IfNotPresent
     env:
       logLevel: info
     resources:
@@ -279,12 +226,11 @@ mapproxy:
     image:
       repository: mapproxinator
       tag: "v1.2.5"
-      pullPolicy: Always
+      pullPolicy: IfNotPresent
     env:
       logLevel: info
       poll:
         timeout:
-          # FLAG
           frequencyMS: 5000
     resources:
       enabled: false
@@ -300,11 +246,9 @@ mapproxy:
     image:
       repository: raster/docker-mapproxy
       tag: "v1.9.2"
-      pullPolicy: Always
+      pullPolicy: IfNotPresent
     socket: # for redis socket
-      # FLAG
       connectionTimeoutSeconds: 0.1 # Set a connection timeout, nonnegative floating point number expressing *seconds*.
-      # FLAG
       timeoutSeconds: 0.1 # Set a operation timeout nonnegative, floating point number expressing *seconds*.
     redis:
       tls: false
@@ -314,7 +258,6 @@ mapproxy:
       resources:
         enabled: false
         value:
-          # FLAG
           limits:
             cpu: 5
             memory: 3.2Gi
@@ -327,7 +270,6 @@ mapproxy:
       resources:
         enabled: false
         value:
-          # FLAG
           limits:
             cpu: 5
             memory: 3.2Gi
@@ -335,14 +277,11 @@ mapproxy:
             cpu: 1.25
             memory: 3.2Gi
     uwsgi:
-      socket: 3031
-      httpSocket: 8080
-      # FLAG
+      # socket: 3031
+      # httpSocket: 8080
       processes: 6
-      # FLAG
       threads: 2
       disableLogging: true
-      # FLAG
       timeoutSeconds: 8
       statsServer:
         stats: 1717
@@ -352,35 +291,20 @@ mapproxy:
         enabled: true
         allowedOrigin: "*"
         allowedHeaders: "x-api-key"
-      # FLAG
       requestsLogLevel: WARNING
-      # FLAG
       logLevel: WARNING
 
   nginx:
     image:
       repository: nginx-otel-unprivileged
       tag: "v1.0.0"
-      pullPolicy: Always
+      pullPolicy: IfNotPresent
     enabled: true
     replicaCount: 1
 
     volume:
       storage: 1000Mi
       accessModes: ReadWriteOnce
-    cache:
-      enabled: false
-      cachePath: /cache
-      levels: "1:2" # levels sets up a two‑level directory hierarchy under
-      keysZone: mapproxy_cache
-      keysZoneSize: 10m # 10m is about 80,000 keys
-      maxSize: 900m # physical memory
-      inactive: 60m
-      expirationTime: 60m
-      useTempPath: "off"
-
-    nginxTargetPort: 8080
-    targetPort: 8080
 
     authorization:
       enabled: true
@@ -397,9 +321,9 @@ mapproxy:
       tls:
         enabled: true
         useCerts: true
-      timeout:
-        enabled: false # defaults to 30s by openshift
-        duration: 60s # supported units (us, ms, s, m, h, d)
+      # timeout:
+      #   enabled: false # defaults to 30s by openshift
+      #   duration: 60s # supported units (us, ms, s, m, h, d)
 
     ingress:
       enabled: false
@@ -412,7 +336,6 @@ mapproxy:
     resources:
       enabled: false
       value:
-        # FLAG
         limits:
           cpu: 0.25
           memory: 350Mi
@@ -424,7 +347,7 @@ mapproxy:
     image:
       repository: "timonwong/uwsgi-exporter"
       tag: "latest"
-      pullPolicy: Always
+      pullPolicy: IfNotPresent
     env:
       logLevel: info # one of [debug, info, warn, error]
     port: 9117
@@ -446,12 +369,12 @@ redis:
   architecture: standalone
   auth:
     enabled: true
-  commonConfiguration: |-
-    # Enable AOF https:redis.io/topics/persistence#append-only-file
-    appendonly no
-    protected-mode no
-    # Disable RDB https, AOF persistence already enabled.
-    save ""
+  # commonConfiguration: |-
+  #   # Enable AOF https:redis.io/topics/persistence#append-only-file
+  #   appendonly no
+  #   protected-mode no
+  #   # Disable RDB https, AOF persistence already enabled.
+  #   save ""
   debug: false
   image:
     registry: docker.io
@@ -479,14 +402,13 @@ redis:
     podSecurityContext:
       enabled: false
     resources:
-      # FLAG
       limits:
         cpu: 0.5
         memory: 5.5Gi
       requests:
         cpu: 0.125
         memory: 5.5Gi
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
     serviceAccount:
       create: false
   metrics:
@@ -510,30 +432,17 @@ redis:
 # ====================================================================================================
 pp-geoserver:
   enabled: true
-  imagePullPolicy: Always
+  imagePullPolicy: IfNotPresent
   image:
     geoserverRepository: geoserver-os
     geoserverTag: "v2.0.0-2.26.0"
     sidecarRepository: raster/geoserver-polygon-parts
     sidecarTag: "v3.0.0"
 
-  mclabels:
-    component: backend
-    partOf: serving
-    owner: raster
-    gisDomain: raster
-    prometheus:
-      enabled: true
-      port: 9117
-    longScraping: true
-
-  # FLAG
-  updateInterval: 10000
-
   replicaCount: 1
 
   nameOverride: "pp-geoserver" # release + fullname override
-  fullnameOverride: "" # total override for deployment.
+  # fullnameOverride: "" # total override for deployment.
 
   tracing:
     enabled: true
@@ -541,45 +450,23 @@ pp-geoserver:
     enabled: true
     prometheus:
       scrape: true
-      port: 12345
 
-  # FLAG
-  initialMemory: "128M"
-  # FLAG
-  maxMemory: "756M"
+  # readiness:
+  #   path: "/geoserver" # change it according to workspace name changing
 
-  storage:
-    fs:
-      internalPvc:
-        mountPath: "/data_dir"
-
-  readiness:
-    path: "/geoserver" # change it according to workspace name changing
-
-  rootCerts:
-    enabled: false
-
-  pgSslAuth:
-    enabled: false
-
-  extraGeoserverEnv: |
-    - name: COMMUNITY_EXTENSIONS
-      value: "cog-plugin"
-    - name: JAVA_OPTS
-      value: >-
-        "-DALLOW_ENV_PARAMETRIZATION=true
-        -javaagent:/otel/opentelemetry-javaagent.jar
-        -Dotel.traces.exporter=otlp
-        -Dotel.exporter.otlp.protocol=http/protobuf
-        -Dotel.exporter.otlp.compression=gzip"
-
-  labels: {}
-  annotations: {}
-  podAnnotations: {}
+  # extraGeoserverEnv: |
+  #   - name: COMMUNITY_EXTENSIONS
+  #     value: "cog-plugin"
+  #   - name: JAVA_OPTS
+  #     value: >-
+  #       "-DALLOW_ENV_PARAMETRIZATION=true
+  #       -javaagent:/otel/opentelemetry-javaagent.jar
+  #       -Dotel.traces.exporter=otlp
+  #       -Dotel.exporter.otlp.protocol=http/protobuf
+  #       -Dotel.exporter.otlp.compression=gzip"
 
   resources:
     enabled: false
-    # FLAG
     limits:
       cpu: 2
       memory: 4500Mi
@@ -588,7 +475,6 @@ pp-geoserver:
       memory: 4000Mi
 
   sidecarResources:
-    # FLAG
     limits:
       cpu: 200m
       memory: 250Mi
@@ -596,35 +482,19 @@ pp-geoserver:
       cpu: 200m
       memory: 250Mi
 
-  service:
-    type: ClusterIP
-    port: 80
-    labels: |
-    annotations: |
+  # service:
+  #   type: ClusterIP
+  #   port: 80
+  #   labels: |
+  #   annotations: |
 
   sideCar:
-    env:
-      logLevel: "info"
-      logPretty: "false"
-      # FLAG
-      pollingInterval: 3000
-
-      featureTypesBlackLists:
-        tableNamesRegex:
-          - '.*_history$'
-          - '.*_valid$'
-        tableNameStrings:
-          - migrations
-          - history
-          - polygon_parts
-          - base_parts
-          - validation_parts
+    env: {}
+      # pollingInterval: 3000
 
   nginx:
-    imagePullPolicy: Always
+    imagePullPolicy: IfNotPresent
     enabled: true
-    replicaCount: 1
-    clientMaxBodySize: 50m
     image:
       repository: nginx-otel-unprivileged
       tag: "v1.0.0"
@@ -645,9 +515,9 @@ pp-geoserver:
 
     route:
       enabled: true
-      timeout:
-        enabled: false # defaults to 30s by openshift
-        duration: 60s # supported units (us, ms, s, m, h, d)
+      # timeout:
+      #   enabled: false # defaults to 30s by openshift
+      #   duration: 60s # supported units (us, ms, s, m, h, d)
       tls:
         enabled: true
         useCerts: true
