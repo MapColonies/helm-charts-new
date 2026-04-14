@@ -195,3 +195,27 @@ otelcol.exporter.otlphttp "default" {
         max_elapsed_time = {{ .Values.exporter.retry_on_failure.max_elapsed_time | default "60s" | quote }}
     }
 }
+
+tracing {
+    sampling_fraction = 0.1 
+    write_to          = [otelcol.processor.batch.alloy_traces.input]
+}
+
+otelcol.processor.batch "alloy_traces" {
+    timeout         = "5s"
+    send_batch_size = 1024
+
+    output {
+        traces = [otelcol.exporter.otlp.tempo.input]
+    }
+}
+
+otelcol.exporter.otlp "tempo" {
+    client {
+        endpoint = "infra-otel.{{ .Values.namespaces | first }}.svc.cluster.local:4317"
+        
+        tls {
+            insecure = true
+        }
+    }
+}
