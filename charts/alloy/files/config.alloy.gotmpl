@@ -154,7 +154,7 @@ otelcol.processor.k8sattributes "default" {
 }
 
 otelcol.processor.filter "health_filter" {
-		error_mode = "ignore"
+    error_mode = "ignore"
     logs {
         log_record = [
         `attributes["url.path"] == "/health"`,
