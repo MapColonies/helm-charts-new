@@ -1,31 +1,34 @@
 apiVersion: v2
-name: export
-description: A Helm chart for Raster export services
+name: core
+description: A Helm chart for Raster core services
 annotations:
   domain: raster
 type: application
 version: 1.0.0
 appVersion: "1.0.0"
 dependencies:
-  - name: gpkg-merger
-    version: 2.2.2
-    condition: exporter-gpkg-merger.enabled
-    alias: exporter-gpkg-merger
+  - name: raster-catalog-manager
+    version: 7.1.0
+    condition: raster-catalog-manager.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
-  - name: exporter-trigger
-    version: 3.2.1
-    condition: exporter-trigger.enabled
+  - name: job-tracker
+    version: 5.0.0
+    condition: job-tracker.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
-  - name: overseer
-    version: 2.5.2
-    condition: exporter-overseer.enabled
-    alias: exporter-overseer
+  - name: polygon-parts-worker
+    version: 2.1.7
+    condition: polygon-parts-worker.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: polygon-parts-manager
+    version: 3.1.0
+    condition: polygon-parts-manager.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: files-server
-    version: 2.2.2
+    version: 2.3.0
     condition: files-server.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
@@ -33,8 +36,3 @@ dependencies:
     version: 3.0.2
     condition: nginx-s3-gateway.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/common
-
-  - name: exporter-cleanup
-    version: 3.0.0
-    condition: exporter-cleanup.enabled
-    repository: oci://acrarolibotnonprod.azurecr.io/helm

@@ -1,0 +1,304 @@
+# ====================================================================================================
+# Raster-Catalog-Manager
+# ====================================================================================================
+raster-catalog-manager:
+  enabled: true
+  image:
+    repository: raster/raster-catalog-manager
+    tag: "v7.1.0"
+    pullPolicy: Always
+  replicaCount: 1
+
+  mclabels:
+    prometheus:
+      enabled: true
+      port: 8080
+
+  db:
+    schema: "RasterCatalogManager"
+
+  env:
+    logLevel: info
+    requestPayloadLimit: 5mb
+
+  tracing:
+    enabled: true
+  metrics:
+    enabled: true
+
+  resources:
+    enabled: false
+    value:
+      limits:
+        cpu: 0.8
+        memory: 512Mi
+      requests:
+        cpu: 0.2
+        memory: 512Mi
+
+  route:
+    enabled: true
+
+# ====================================================================================================
+# Job-Tracker
+# ====================================================================================================
+job-tracker:
+  enabled: true
+  image:
+    repository: raster/job-tracker
+    tag: "v5.0.0"
+    pullPolicy: Always
+  replicaCount: 1
+
+  mclabels:
+    prometheus:
+      enabled: true
+      port: 9500
+
+  env:
+    logLevel: info
+    queue:
+      dequeueIntervalMs: 3000
+      heartbeatIntervalMs: 3000
+
+  taskFlowManager:
+    ingestionTasksFlow:
+      - validation
+      - create-tasks
+      - tilesMerging
+      - finalize
+    exportTasksFlow:
+      - init
+      - tilesExporting
+      - finalize
+    seedTasksFlow:
+      - TilesSeeding
+
+  tracing:
+    enabled: true
+  metrics:
+    enabled: false
+    prometheus:
+      scrape: false
+      port: 9500
+
+  resources:
+    enabled: false
+    value:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+  route:
+    enabled: true
+
+# ====================================================================================================
+# Polygon-Parts-Worker
+# ====================================================================================================
+polygon-parts-worker:
+  enabled: true
+  image:
+    repository: raster/polygon-parts-worker
+    tag: v2.1.7
+    pullPolicy: Always
+  replicaCount: 1
+
+  mclabels:
+    prometheus:
+      enabled: true
+      port: 8080
+
+  jobDefinitions:
+    tasks:
+      validation:
+        chunkMaxVertices: 2500
+        maxAttempts: 3
+        smallGeometriesPercentageThreshold: 5
+        smallHolesPercentageThreshold: 5
+        reportsDownloadPath: "/downloads/validation-reports"
+
+  env:
+    logLevel: info
+    jobManagement:
+      config:
+        dequeueIntervalMs: 3000
+        heartBeat:
+          intervalMs: 3000
+
+  metrics:
+    enabled: true
+    prometheus:
+      scrape: true
+      port: 8080
+
+  resources:
+    enabled: false
+    value:
+      limits:
+        cpu: 0.75
+        memory: 0.5Gi
+      requests:
+        cpu: 0.1875
+        memory: 0.125Gi
+
+# ====================================================================================================
+# Polygon-Parts-Manager
+# ====================================================================================================
+polygon-parts-manager:
+  enabled: true
+  image:
+    repository: raster/polygon-parts-manager
+    tag: v3.1.0
+    pullPolicy: Always
+  replicaCount: 1
+
+  mclabels:
+    prometheus:
+      enabled: true
+      port: 8080
+
+  metrics:
+    enabled: true
+    prometheus:
+      scrape: true
+      port: 8080
+
+  env:
+    logLevel: info
+    requestPayloadLimit: 10mb
+    application:
+      aggregation:
+        maxDecimalDigits: 12
+        fixGeometry:
+          enabled: true
+          bufferSizeDeg: 0.000006
+        simplifyGeometry:
+          enabled: true
+          toleranceDeg: 0.000006
+      validation:
+        areaThresholdSquareMeters: 5
+      entities:
+        polygonParts:
+          minAreaSquareDeg: 1e-12
+
+  db:
+    schema: "polygon_parts"
+
+  resources:
+    enabled: false
+    value:
+      limits:
+        cpu: 0.5
+        memory: 0.5Gi
+      requests:
+        cpu: 0.25
+        memory: 0.25Gi
+
+# ====================================================================================================
+# Files-Server
+# ====================================================================================================
+files-server:
+  enabled: true
+  nginx:
+    enabled: true
+    fullnameOverride: ""
+    authorization:
+      enabled: false
+    replicaCount: 1
+    image:
+      repository: common/nginx
+      tag: "v2.1.1"
+    imagePullPolicy: Always
+
+    port: 8080
+    targetPort: 8080
+
+    opentelemetry:
+      serviceName: ""
+      exporterHost: ""
+      exporterPort: 4317
+      samplerMethod: "AlwaysOn"
+      ratio: 10
+
+    extraVolumes:
+      - name: nginx-config
+        configMap:
+          name: ""
+      - name: artifacts-storage
+        persistentVolumeClaim:
+          claimName: ""
+
+    extraVolumeMounts:
+      - name: nginx-config
+        mountPath: "/etc/nginx/conf.d/downloads.conf"
+        subPath: downloads.conf
+      - name: artifacts-storage
+        mountPath: /usr/share/nginx/html/downloads/
+        subPath: raster/artifacts
+
+    resources:
+      enabled: true
+      value:
+        limits:
+          cpu: 100m
+          memory: 128Mi
+        requests:
+          cpu: 100m
+          memory: 128Mi
+
+    route:
+      enabled: true
+      routesMapping:
+        - path: /api/raster/v1
+          host: ""
+      rewriteTarget: "/"
+      tls:
+        enabled: true
+        useCerts: true
+
+# ====================================================================================================
+# Nginx-S3-Gateway
+# ====================================================================================================
+nginx-s3-gateway:
+  enabled: true
+  image:
+    repository: common/nginx-s3-gateway
+    tag: v3.0.2
+  replicaCount: 1
+
+  authorization:
+    domain: ""
+    url: ""
+
+  env:
+    tracing:
+      enabled: false
+    metrics:
+      enabled: false
+
+  s3:
+    server: ""
+    debug: false
+
+  resources:
+    enabled: false
+    value:
+      limits:
+        cpu: 500m
+        memory: 900Mi
+      requests:
+        cpu: 125m
+        memory: 900Mi
+
+  route:
+    enabled: false
+    path: /api/raster/v1
+    timeout:
+      enabled: false
+      duration: 60s
+    tls:
+      enabled: true
+      useCert: true
