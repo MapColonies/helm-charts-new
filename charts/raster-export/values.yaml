@@ -12,10 +12,8 @@ exporter-gpkg-merger:
   env:
     general:
       validate: false
-      # batchMaxBytes: 838860800 # 800MB
     metrics:
       enabled: false
-      # measurementBuckets: "[0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 15, 50,250, 500]"
     TASK:
       types:
         - jobType: "Export"
@@ -50,12 +48,6 @@ exporter-trigger:
 
   tracing:
     enabled: true
-
-  env: {}
-    # estimatedStorageCalculation:
-    #   jpegTileEstimatedSizeInBytes: 27000
-    #   pngTileEstimatedSizeInBytes: 263000
-    #   storageFactorBuffer: 1.25
 
   resources:
     enabled: false
@@ -144,18 +136,6 @@ files-server:
       tls:
         enabled: true
         useCerts: true
-#ask nati
-    # ingress:
-    #   enabled: false
-    #   type: "nginx-org" # supported values: 'nginx-org' | 'nginx-kubernetes'
-    #   path: /
-    #   host: ""
-    #   tls:
-    #     enabled: false
-    #     useExternal: ""
-    #   cors:
-    #     enabled: true
-    #     origin: "*"
 
 # ====================================================================================================
 # Nginx-S3-Gateway
@@ -178,9 +158,6 @@ nginx-s3-gateway:
       enabled: false
 
   s3:
-  #   bucketName: ""
-  #   accessKeyId: ""
-  #   secretAccessKey: ""
     server: ""
     debug: false
 
@@ -202,13 +179,7 @@ nginx-s3-gateway:
       duration: 60s # supported units (us, ms, s, m, h, d)
     tls:
       enabled: true
-      useCerts: true
-
-  ingress:
-    enabled: false
-    type: "nginx-kubernetes" # supported values: 'nginx-org' | 'nginx-kubernetes'
-    host: ""
-    path: ""
+      useCert: true
 
 # ====================================================================================================
 # Exporter-Cleanup
@@ -220,11 +191,7 @@ exporter-cleanup:
     tag: "v3.0.0"
     pullPolicy: IfNotPresent
   cron:
-    schedule: "* * * * *"
-    # successfulJobsHistoryLimit: 1
-    # failedJobsHistoryLimit: 3
-    # concurrencyPolicy: Forbid
-    # restartPolicy: OnFailure
+    schedule: "0 0 * * *"
   env:
     logLevel: info
     s3:

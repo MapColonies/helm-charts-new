@@ -62,26 +62,16 @@ pycsw:
     route:
       enabled: true
       path: /api/raster/v1
-      # timeout:
-      #   enabled: false # defaults to 30s by openshift
-      #   duration: 60s # supported units (us, ms, s, m, h, d)
       tls:
         enabled: true
         useCerts: true
-
-    ingress:
-      enabled: false
-      path: /api/raster/v1
-      tls:
-        enabled: true
-        useExternal: ""
 
   uwsgiExporter:
     imagePullPolicy: IfNotPresent
     image:
       repository: "timonwong/uwsgi-exporter"
       tag: "latest"
-    # port: 9117
+    port: 9117
     resources:
       enabled: false
       value:
@@ -158,13 +148,6 @@ pycsw-private:
         enabled: true
         useCerts: true
 
-    ingress:
-      enabled: false
-      path: /api/raster/v1
-      tls:
-        enabled: true
-        useExternal: ""
-
   uwsgiExporter:
     image:
       repository: "timonwong/uwsgi-exporter"
@@ -194,7 +177,6 @@ mapproxy:
 
   db:
     schema: MapproxyConfig
-  podAnnotations: {}
 
   tracing:
     enabled: true
@@ -277,8 +259,6 @@ mapproxy:
             cpu: 1.25
             memory: 3.2Gi
     uwsgi:
-      # socket: 3031
-      # httpSocket: 8080
       processes: 6
       threads: 2
       disableLogging: true
@@ -321,17 +301,6 @@ mapproxy:
       tls:
         enabled: true
         useCerts: true
-      # timeout:
-      #   enabled: false # defaults to 30s by openshift
-      #   duration: 60s # supported units (us, ms, s, m, h, d)
-
-    ingress:
-      enabled: false
-      type: "nginx-org" # supported values: 'nginx-org' | 'nginx-kubernetes'
-      path: /api/raster/v1
-      tls:
-        enabled: true
-        useExternal: ""
 
     resources:
       enabled: false
@@ -369,12 +338,6 @@ redis:
   architecture: standalone
   auth:
     enabled: true
-  # commonConfiguration: |-
-  #   # Enable AOF https:redis.io/topics/persistence#append-only-file
-  #   appendonly no
-  #   protected-mode no
-  #   # Disable RDB https, AOF persistence already enabled.
-  #   save ""
   debug: false
   image:
     registry: docker.io
@@ -441,8 +404,7 @@ pp-geoserver:
 
   replicaCount: 1
 
-  nameOverride: "pp-geoserver" # release + fullname override
-  # fullnameOverride: "" # total override for deployment.
+  nameOverride: "pp-geoserver"
 
   tracing:
     enabled: true
@@ -450,20 +412,6 @@ pp-geoserver:
     enabled: true
     prometheus:
       scrape: true
-
-  # readiness:
-  #   path: "/geoserver" # change it according to workspace name changing
-
-  # extraGeoserverEnv: |
-  #   - name: COMMUNITY_EXTENSIONS
-  #     value: "cog-plugin"
-  #   - name: JAVA_OPTS
-  #     value: >-
-  #       "-DALLOW_ENV_PARAMETRIZATION=true
-  #       -javaagent:/otel/opentelemetry-javaagent.jar
-  #       -Dotel.traces.exporter=otlp
-  #       -Dotel.exporter.otlp.protocol=http/protobuf
-  #       -Dotel.exporter.otlp.compression=gzip"
 
   resources:
     enabled: false
@@ -482,15 +430,8 @@ pp-geoserver:
       cpu: 200m
       memory: 250Mi
 
-  # service:
-  #   type: ClusterIP
-  #   port: 80
-  #   labels: |
-  #   annotations: |
-
   sideCar:
     env: {}
-      # pollingInterval: 3000
 
   nginx:
     imagePullPolicy: IfNotPresent
@@ -515,16 +456,6 @@ pp-geoserver:
 
     route:
       enabled: true
-      # timeout:
-      #   enabled: false # defaults to 30s by openshift
-      #   duration: 60s # supported units (us, ms, s, m, h, d)
       tls:
         enabled: true
         useCerts: true
-
-    ingress:
-      enabled: false
-      path: /api/raster/v1
-      tls:
-        enabled: true
-        useExternal: ""

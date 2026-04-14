@@ -13,10 +13,8 @@ gpkg-merger:
     protocol: TCP
     general:
       validate: false
-      # batchMaxBytes: 838860800 # 800MB
     metrics:
       enabled: false
-      # measurementBuckets: "[0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 15, 50,250, 500]"
     TASK:
       types:
         - jobType: "Ingestion_Update"
@@ -41,13 +39,6 @@ gpkg-merger:
       requests:
         cpu: 0.5
         memory: 4Gi
-# no need for a route 
-  # route:
-  #   enabled: false
-  #   path: /
-  #   timeout:
-  #     enabled: false # defaults to 30s by openshift
-  #     duration: 60s # supported units (us, ms, s, m, h, d)
 
 # ====================================================================================================
 # MapProxy-Api
@@ -65,10 +56,6 @@ mapproxy-api:
 
   env:
     logLevel: info
-    # mapproxyCache:
-    #   grids: WorldCRS84
-    #   upscaleTiles: 18
-    #   directoryLayout: tms
 
   redis:
     enabled: true
@@ -103,13 +90,11 @@ cache-seeder:
     repository: "cache-seeder"
     tag: "v2.1.2"
     pullPolicy: IfNotPresent
-
   replicaCount: 5
+
   env:
     logLevel: info
     seedConcurrency: 25
-    # invalidBboxInitialBufferMeters: 200
-    # invalidBboxRetryLimit: 5
 
   resources:
     enabled: false
@@ -136,7 +121,7 @@ ingestion-trigger:
     enabled: true
 
   env:
-    forbiddenTypesForParallelIngesion:
+    forbiddenJobTypesForParallelIngestion:
       - Ingestion_New
       - Ingestion_Update
       - Ingestion_Swap_Update
@@ -184,11 +169,6 @@ overseer:
     tasks:
       merge:
         useNewTargetFlagInUpdate: true
-      seed: {}
-        # maxZoom: 21
-        # skipUncached: true
-        # zoomThreshold: 16
-        # maxTilesPerSeedTask: 500000
 
   resources:
     enabled: false
@@ -220,14 +200,8 @@ geoserver-api:
   metrics:
     enabled: true
 
-  env: {}
-    # disableHttpClientLogs: false
-    # srs: "EPSG:4326"
-    # numOfDecimals: 100
-    # maxFeatures: 1000
   db:
     schema: "polygon_parts"
-    # dbType: "postgis"
 
   resources:
     enabled: false
