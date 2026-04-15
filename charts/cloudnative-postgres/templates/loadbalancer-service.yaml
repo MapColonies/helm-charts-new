@@ -1,3 +1,4 @@
+{{- if .Values.postgres.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -18,3 +19,4 @@ spec:
   selector:
     cnpg.io/cluster: {{ .Release.Name }}
     role: primary
+{{- end }}
