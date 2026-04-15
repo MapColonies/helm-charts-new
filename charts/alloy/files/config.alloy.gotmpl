@@ -109,41 +109,24 @@ otelcol.processor.transform "default" {
     }
 }
 
-{{- $namespaces := .Values.namespaces | required "At least one namespace must be specified in the values file." -}}
-{{- if eq (len $namespaces) 0 }}
-    {{- fail "At least one namespace must be specified in the values file." }}
-{{- end }}
-{{- $lastIndex := sub (len $namespaces) 1 }}
 otelcol.receiver.otlp "default" {
     grpc {}
     http {}
 
     output {
-        logs = [otelcol.processor.k8sattributes.add_k8s_attributes_{{ index $namespaces 0 | snakecase }}.input]
+        logs   = [otelcol.processor.k8sattributes.default.input]
+        traces = [otelcol.processor.k8sattributes.default.input]
     }
 }
 
-
-{{- range $index, $namespace := $namespaces }}
-otelcol.processor.k8sattributes "add_k8s_attributes_{{ $namespace | snakecase }}" {
-    filter {
-        namespace = {{ $namespace | quote }}
-    }
-
+otelcol.processor.k8sattributes "default" {
     extract {
         metadata = [
-            "k8s.deployment.name",
-            "k8s.namespace.name",
-            "k8s.pod.name",
-            "k8s.pod.start_time",
-            "k8s.statefulset.name",
-            "k8s.pod.uid",
-            "k8s.container.name",
-            "k8s.node.name",
-            "k8s.cronjob.name",
-            "k8s.job.name",
+            "k8s.deployment.name", "k8s.namespace.name", "k8s.pod.name",
+            "k8s.pod.start_time", "k8s.statefulset.name", "k8s.pod.uid",
+            "k8s.container.name", "k8s.node.name", "k8s.cronjob.name", "k8s.job.name",
         ]
-
+        
         label {
             from = "pod"
             key = "mapcolonies.io/owner"
@@ -163,20 +146,15 @@ otelcol.processor.k8sattributes "add_k8s_attributes_{{ $namespace | snakecase }}
             name = "k8s.pod.uid"
         }
     }
-    {{ if eq $index $lastIndex -}}
+    
     output {
         logs = [otelcol.processor.filter.health_filter.input]
+        traces = [otelcol.processor.batch.default.input]
     }
-    {{- else }}
-
-    {{- $nextIndex := add $index 1 -}}
-    output {
-        logs = [otelcol.processor.k8sattributes.add_k8s_attributes_{{ index $namespaces $nextIndex | snakecase }}.input]
-    }
-    {{- end }}
 }
-{{ end }}
+
 otelcol.processor.filter "health_filter" {
+    error_mode = "ignore"
     logs {
         log_record = [
         `attributes["url.path"] == "/health"`,
@@ -197,6 +175,7 @@ otelcol.processor.batch "default" {
 
     output {
         logs = [otelcol.exporter.otlphttp.default.input]
+        traces = [otelcol.exporter.otlphttp.default.input]
     }
 }
 
@@ -214,5 +193,29 @@ otelcol.exporter.otlphttp "default" {
         initial_interval = {{ .Values.exporter.retry_on_failure.initial_interval | default "10s" | quote }}
         max_interval    = {{ .Values.exporter.retry_on_failure.max_interval | default "30s" | quote }}
         max_elapsed_time = {{ .Values.exporter.retry_on_failure.max_elapsed_time | default "60s" | quote }}
+    }
+}
+
+tracing {
+    sampling_fraction = 0.1 
+    write_to          = [otelcol.processor.batch.alloy_traces.input]
+}
+
+otelcol.processor.batch "alloy_traces" {
+    timeout         = "5s"
+    send_batch_size = 1024
+
+    output {
+        traces = [otelcol.exporter.otlp.tempo.input]
+    }
+}
+
+otelcol.exporter.otlp "tempo" {
+    client {
+        endpoint = "infra-otel.{{ .Values.namespaces | first }}.svc.cluster.local:4317"
+        
+        tls {
+            insecure = true
+        }
     }
 }
