@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.1.0...alloy-v1.1.1) (2026-04-16)
+
+
+### 🐛 Bug Fixes
+
+* **alloy:** add pod annotations for Prometheus scraping ([#75](https://github.com/MapColonies/helm-charts-new/issues/75)) ([bda197f](https://github.com/MapColonies/helm-charts-new/commit/bda197f284caf8f6c104d43de7fd5ef75a039eb3))
+
 ## [1.1.0](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.0.0...alloy-v1.1.0) (2026-04-15)
 
 
