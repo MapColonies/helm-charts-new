@@ -1,0 +1,31 @@
+replicaCount: 1
+nameOverride: ''
+
+image:
+  registry: ''
+  repository: elastic-alertmanager-connector
+  tag: v1.0.0
+  pullPolicy: Always
+  pullSecrets: []
+
+server:
+  host: 'https://elastic-elasticsearch:9200'
+  username: ''
+  password: ''
+  index: 'data'
+  certs: 
+    verify: true
+    path: '' # Works only if certs.verify is "true"
+
+resources:
+  enabled: true
+  value:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+extraVolumes: []
+extraVolumeMounts: []
