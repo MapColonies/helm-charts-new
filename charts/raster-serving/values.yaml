@@ -3,165 +3,42 @@
 # ====================================================================================================
 pycsw:
   enabled: true
-  replicaCount: 1
   image:
     repository: common/pycsw
     tag: "v6.4.1"
-    pullPolicy: IfNotPresent
-
-  mclabels:
-    prometheus:
-      enabled: true
-      port: 8080
-    logScraping: true
 
   filterProductStatus: true
 
-  env:
-    loglevel: WARNING
-    uwsgi:
-      threads: 2
-      statsServer:
-        enabled: true
-        stats: 1717
-        statsMinify: true
-
-  resources:
-    enabled: false
-    value:
-      limits:
-        cpu: 1
-        memory: 1.5Gi
-      requests:
-        cpu: 0.25
-        memory: 1.5Gi
-
   nginx:
+    enabled: true
     image:
       repository: nginx-otel-unprivileged
       tag: "v1.0.0"
-    replicaCount: 1
-    enabled: true
-
-    authorization:
-      enabled: true
-      domain: "raster"
-      token:
-        queryName: token
-
-    resources:
-      enabled: false
-      value:
-        limits:
-          cpu: 0.25
-          memory: 350Mi
-        requests:
-          cpu: 0.0625
-          memory: 350Mi
-
-    route:
-      enabled: true
-      path: /api/raster/v1
-      tls:
-        enabled: true
-        useCerts: true
 
   uwsgiExporter:
-    imagePullPolicy: IfNotPresent
     image:
       repository: "timonwong/uwsgi-exporter"
       tag: "latest"
-    port: 9117
-    resources:
-      enabled: false
-      value:
-        limits:
-          cpu: 0.1
-          memory: 128Mi
-        requests:
-          cpu: 0.025
-          memory: 128Mi
 
 # ====================================================================================================
 # Pycsw-Private
 # ====================================================================================================
 pycsw-private:
   enabled: true
-  replicaCount: 1
   image:
     repository: common/pycsw
     tag: "v6.4.1"
-    pullPolicy: IfNotPresent
-
-  mclabels:
-    logScraping: true
-
-  env:
-    loglevel: WARNING
-    uwsgi:
-      threads: 2
-      statsServer:
-        enabled: true
-        stats: 1717
-        statsMinify: true
-
-  resources:
-    enabled: false
-    value:
-      limits:
-        cpu: 1
-        memory: 1.5Gi
-      requests:
-        cpu: 0.25
-        memory: 1.5Gi
 
   nginx:
+    enabled: true
     image:
       repository: nginx-otel-unprivileged
       tag: "v1.0.0"
-    replicaCount: 1
-    enabled: true
-
-    authorization:
-      enabled: true
-      domain: "raster"
-      token:
-        queryName: token
-
-    resources:
-      enabled: false
-      value:
-        limits:
-          cpu: 0.25
-          memory: 350Mi
-        requests:
-          cpu: 0.0625
-          memory: 350Mi
-
-    route:
-      enabled: false
-      path: /api/raster/v1
-      timeout:
-        enabled: false # defaults to 30s by openshift
-        duration: 60s # supported units (us, ms, s, m, h, d)
-      tls:
-        enabled: true
-        useCerts: true
 
   uwsgiExporter:
     image:
       repository: "timonwong/uwsgi-exporter"
       tag: "latest"
-      imagePullPolicy: IfNotPresent
-    resources:
-      enabled: false
-      value:
-        limits:
-          cpu: 0.1
-          memory: 128Mi
-        requests:
-          cpu: 0.025
-          memory: 128Mi
 
 # ====================================================================================================
 # MapProxy
@@ -169,293 +46,65 @@ pycsw-private:
 mapproxy:
   enabled: true
 
-  mclabels:
-    prometheus:
-      enabled: true
-      port: 8080
-    logScraping: true
-
   db:
     schema: MapproxyConfig
-
-  tracing:
-    enabled: true
-    samplingRatioDenominator: 100
-  metrics:
-    enabled: true
-    prometheus:
-      scrape: true
-      port: 9117
 
   initContainer:
     image:
       repository: mapproxinator
       tag: "v1.2.5"
-      pullPolicy: IfNotPresent
-    env:
-      logLevel: info
-    resources:
-      enabled: false
-      value:
-        limits:
-          cpu: 0.1
-          memory: 128Mi
-        requests:
-          cpu: 0.025
-          memory: 128Mi
 
   mapproxinator:
     image:
       repository: mapproxinator
       tag: "v1.2.5"
-      pullPolicy: IfNotPresent
-    env:
-      logLevel: info
-      poll:
-        timeout:
-          frequencyMS: 5000
-    resources:
-      enabled: false
-      value:
-        limits:
-          cpu: 0.1
-          memory: 128Mi
-        requests:
-          cpu: 0.025
-          memory: 128Mi
 
   mapproxy:
     image:
       repository: raster/docker-mapproxy
       tag: "v1.9.2"
-      pullPolicy: IfNotPresent
-    socket: # for redis socket
-      connectionTimeoutSeconds: 0.1 # Set a connection timeout, nonnegative floating point number expressing *seconds*.
-      timeoutSeconds: 0.1 # Set a operation timeout nonnegative, floating point number expressing *seconds*.
-    redis:
-      tls: false
-    wms:
-      enabled: true
-      replicaCount: 1
-      resources:
-        enabled: false
-        value:
-          limits:
-            cpu: 5
-            memory: 3.2Gi
-          requests:
-            cpu: 1.25
-            memory: 3.2Gi
-    wmts:
-      enabled: true
-      replicaCount: 1
-      resources:
-        enabled: false
-        value:
-          limits:
-            cpu: 5
-            memory: 3.2Gi
-          requests:
-            cpu: 1.25
-            memory: 3.2Gi
-    uwsgi:
-      processes: 6
-      threads: 2
-      disableLogging: true
-      timeoutSeconds: 8
-      statsServer:
-        stats: 1717
-        statsMinify: true
-    env:
-      cors:
-        enabled: true
-        allowedOrigin: "*"
-        allowedHeaders: "x-api-key"
-      requestsLogLevel: WARNING
-      logLevel: WARNING
 
   nginx:
+    enabled: true
     image:
       repository: nginx-otel-unprivileged
       tag: "v1.0.0"
-      pullPolicy: IfNotPresent
-    enabled: true
-    replicaCount: 1
-
-    volume:
-      storage: 1000Mi
-      accessModes: ReadWriteOnce
-
-    authorization:
-      enabled: true
-      token:
-        queryName: token
-      wms:
-        enabled: true
-        domain: "rasterWms"
-      wmts:
-        domain: "raster"
-
-    route:
-      enabled: true
-      tls:
-        enabled: true
-        useCerts: true
-
-    resources:
-      enabled: false
-      value:
-        limits:
-          cpu: 0.25
-          memory: 350Mi
-        requests:
-          cpu: 0.0625
-          memory: 350Mi
 
   uwsgiExporter:
     image:
       repository: "timonwong/uwsgi-exporter"
       tag: "latest"
-      pullPolicy: IfNotPresent
-    env:
-      logLevel: info # one of [debug, info, warn, error]
-    port: 9117
-    resources:
-      enabled: false
-      value:
-        limits:
-          cpu: 0.1
-          memory: 128Mi
-        requests:
-          cpu: 0.025
-          memory: 128Mi
 
 # ====================================================================================================
 # Redis
 # ====================================================================================================
 redis:
   enabled: true
-  architecture: standalone
-  auth:
-    enabled: true
-  debug: false
   image:
     registry: docker.io
     repository: bitnamilegacy/redis
     tag: 7.2.1
-  master:
-    configuration: |
-      maxmemory 5gb
-      maxmemory-policy allkeys-lfu
-    containerSecurityContext:
-      enabled: false
-    count: 1
-    disableCommands:
-      - FLUSHALL
-    kind: StatefulSet
-    persistence:
-      accessModes:
-        - ReadWriteMany
-      enabled: false
-      size: 1Gi
-      storageClass: nfs
-    podLabels:
-      app: redis
-      role: master
-    podSecurityContext:
-      enabled: false
-    resources:
-      limits:
-        cpu: 0.5
-        memory: 5.5Gi
-      requests:
-        cpu: 0.125
-        memory: 5.5Gi
-    pullPolicy: IfNotPresent
-    serviceAccount:
-      create: false
   metrics:
-    enabled: false
     image:
       registry: docker.io
       repository: bitnamilegacy/redis-exporter
       tag: 1.55.0-debian-11-r2
-    resources:
-      limits:
-        cpu: 100m
-        memory: 128Mi
-      requests:
-        cpu: 100m
-        memory: 128Mi
-    containerSecurityContext:
-      enabled: false
 
 # ====================================================================================================
 # PP-Geoserver
 # ====================================================================================================
 pp-geoserver:
   enabled: true
-  imagePullPolicy: IfNotPresent
   image:
     geoserverRepository: geoserver-os
     geoserverTag: "v2.0.0-2.26.0"
     sidecarRepository: raster/geoserver-polygon-parts
     sidecarTag: "v3.0.0"
 
-  replicaCount: 1
-
   nameOverride: "pp-geoserver"
 
-  tracing:
-    enabled: true
-  metrics:
-    enabled: true
-    prometheus:
-      scrape: true
-
-  resources:
-    enabled: false
-    limits:
-      cpu: 2
-      memory: 4500Mi
-    requests:
-      cpu: 2
-      memory: 4000Mi
-
-  sidecarResources:
-    limits:
-      cpu: 200m
-      memory: 250Mi
-    requests:
-      cpu: 200m
-      memory: 250Mi
-
-  sideCar:
-    env: {}
-
   nginx:
-    imagePullPolicy: IfNotPresent
     enabled: true
     image:
       repository: nginx-otel-unprivileged
       tag: "v1.0.0"
-
-    authorization:
-      enabled: true
-      domain: "raster"
-
-    resources:
-      enabled: false
-      value:
-        limits:
-          cpu: 100m
-          memory: 128Mi
-        requests:
-          cpu: 100m
-          memory: 128Mi
-
-    route:
-      enabled: true
-      tls:
-        enabled: true
-        useCerts: true

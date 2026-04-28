@@ -6,34 +6,16 @@ exporter-gpkg-merger:
   image:
     repository: raster/tiles-merger-service
     tag: "v2.2.2"
-  replicaCount: 1
   isExporter: true
 
   env:
     general:
       validate: false
-    metrics:
-      enabled: false
     TASK:
       types:
         - jobType: "Export"
           taskType: "tilesExporting"
       pollingTime: 2000
-    heartbeat:
-      intervalMs: 3000
-    logging:
-      logLevel:
-        aspNetCore: "Information"
-
-  resources:
-    enabled: false
-    value:
-      limits:
-        cpu: 1
-        memory: 4Gi
-      requests:
-        cpu: 0.25
-        memory: 4Gi
 
 # ====================================================================================================
 # Exporter-Trigger
@@ -43,21 +25,6 @@ exporter-trigger:
   image:
     repository: raster/exporter-trigger
     tag: v3.2.1
-  replicaCount: 1
-  imagePullPolicy: IfNotPresent
-
-  tracing:
-    enabled: true
-
-  resources:
-    enabled: false
-    value:
-      limits:
-        cpu: 1
-        memory: 1Gi
-      requests:
-        cpu: 0.25
-        memory: 1Gi
 
 # ====================================================================================================
 # Exporter-Overseer
@@ -67,19 +34,6 @@ exporter-overseer:
   image:
     repository: raster/overseer
     tag: v2.5.2
-    pullPolicy: IfNotPresent
-  replicaCount: 1
-
-  mclabels:
-    prometheus:
-      enabled: true
-      port: 9500
-
-  metrics:
-    enabled: true
-    prometheus:
-      scrape: true
-      port: 9500
 
   instanceType: "export"
 
@@ -88,22 +42,6 @@ exporter-overseer:
       export:
         downloadPath: "downloads"
 
-  resources:
-    enabled: false
-    value:
-      limits:
-        cpu: 2.5
-        memory: 1Gi
-      requests:
-        cpu: 0.75
-        memory: 1Gi
-
-  livenessProbe:
-    timeoutSeconds: 30
-
-  readinessProbe:
-    timeoutSeconds: 30
-
 # ====================================================================================================
 # Files-Server
 # ====================================================================================================
@@ -111,31 +49,9 @@ files-server:
   enabled: true
   nginx:
     enabled: true
-    replicaCount: 1
     image:
       repository: nginx-otel-unprivileged
       tag: "v1.0.0"
-    imagePullPolicy: IfNotPresent
-
-    resources:
-      enabled: false
-      value:
-        limits:
-          cpu: 100m
-          memory: 128Mi
-        requests:
-          cpu: 100m
-          memory: 128Mi
-
-    route:
-      enabled: true
-      routesMapping:
-        - path: /api/raster/v1
-          host: ""
-      rewriteTarget: "/"
-      tls:
-        enabled: true
-        useCerts: true
 
 # ====================================================================================================
 # Nginx-S3-Gateway
@@ -145,41 +61,6 @@ nginx-s3-gateway:
   image:
     repository: common/nginx-s3-gateway
     tag: v3.0.2
-  replicaCount: 1
-
-  authorization:
-    domain: ""
-    url: ""
-
-  env:
-    tracing:
-      enabled: false
-    metrics:
-      enabled: false
-
-  s3:
-    server: ""
-    debug: false
-
-  resources:
-    enabled: false
-    value:
-      limits:
-        cpu: 500m
-        memory: 900Mi
-      requests:
-        cpu: 125m
-        memory: 900Mi
-
-  route:
-    enabled: false
-    path: /api/raster/v1
-    timeout:
-      enabled: false # defaults to 30s by openshift
-      duration: 60s # supported units (us, ms, s, m, h, d)
-    tls:
-      enabled: true
-      useCert: true
 
 # ====================================================================================================
 # Exporter-Cleanup
@@ -189,21 +70,5 @@ exporter-cleanup:
   image:
     repository: "exporter-cleanup"
     tag: "v3.0.0"
-    pullPolicy: IfNotPresent
   cron:
     schedule: "0 0 * * *"
-  env:
-    logLevel: info
-    s3:
-      maxRetries: 3
-      prefix: ""
-      batchSize: 100
-  resources:
-    enabled: false
-    value:
-      limits:
-        cpu: 0.25
-        memory: 256Mi
-      requests:
-        cpu: 0.0625
-        memory: 256Mi
