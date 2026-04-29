@@ -1,0 +1,74 @@
+# ====================================================================================================
+# Exporter-Gpkg-Merger
+# ====================================================================================================
+exporter-gpkg-merger:
+  enabled: true
+  image:
+    repository: raster/tiles-merger-service
+    tag: "v2.2.2"
+  isExporter: true
+
+  env:
+    general:
+      validate: false
+    TASK:
+      types:
+        - jobType: "Export"
+          taskType: "tilesExporting"
+      pollingTime: 2000
+
+# ====================================================================================================
+# Exporter-Trigger
+# ====================================================================================================
+exporter-trigger:
+  enabled: true
+  image:
+    repository: raster/exporter-trigger
+    tag: v3.2.1
+
+# ====================================================================================================
+# Exporter-Overseer
+# ====================================================================================================
+exporter-overseer:
+  enabled: true
+  image:
+    repository: raster/overseer
+    tag: v2.5.2
+
+  instanceType: "export"
+
+  jobDefinitions:
+    jobs:
+      export:
+        downloadPath: "downloads"
+
+# ====================================================================================================
+# Files-Server
+# ====================================================================================================
+files-server:
+  enabled: true
+  nginx:
+    enabled: true
+    image:
+      repository: nginx-otel-unprivileged
+      tag: "v1.0.0"
+
+# ====================================================================================================
+# Nginx-S3-Gateway
+# ====================================================================================================
+nginx-s3-gateway:
+  enabled: true
+  image:
+    repository: common/nginx-s3-gateway
+    tag: v3.0.2
+
+# ====================================================================================================
+# Exporter-Cleanup
+# ====================================================================================================
+exporter-cleanup:
+  enabled: false
+  image:
+    repository: "exporter-cleanup"
+    tag: "v3.0.0"
+  cron:
+    schedule: "0 0 * * *"

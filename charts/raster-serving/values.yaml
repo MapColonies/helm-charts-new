@@ -1,0 +1,110 @@
+# ====================================================================================================
+# Pycsw
+# ====================================================================================================
+pycsw:
+  enabled: true
+  image:
+    repository: common/pycsw
+    tag: "v6.4.1"
+
+  filterProductStatus: true
+
+  nginx:
+    enabled: true
+    image:
+      repository: nginx-otel-unprivileged
+      tag: "v1.0.0"
+
+  uwsgiExporter:
+    image:
+      repository: "timonwong/uwsgi-exporter"
+      tag: "latest"
+
+# ====================================================================================================
+# Pycsw-Private
+# ====================================================================================================
+pycsw-private:
+  enabled: true
+  image:
+    repository: common/pycsw
+    tag: "v6.4.1"
+
+  nginx:
+    enabled: true
+    image:
+      repository: nginx-otel-unprivileged
+      tag: "v1.0.0"
+
+  uwsgiExporter:
+    image:
+      repository: "timonwong/uwsgi-exporter"
+      tag: "latest"
+
+# ====================================================================================================
+# MapProxy
+# ====================================================================================================
+mapproxy:
+  enabled: true
+
+  db:
+    schema: MapproxyConfig
+
+  initContainer:
+    image:
+      repository: mapproxinator
+      tag: "v1.2.5"
+
+  mapproxinator:
+    image:
+      repository: mapproxinator
+      tag: "v1.2.5"
+
+  mapproxy:
+    image:
+      repository: raster/docker-mapproxy
+      tag: "v1.9.2"
+
+  nginx:
+    enabled: true
+    image:
+      repository: nginx-otel-unprivileged
+      tag: "v1.0.0"
+
+  uwsgiExporter:
+    image:
+      repository: "timonwong/uwsgi-exporter"
+      tag: "latest"
+
+# ====================================================================================================
+# Redis
+# ====================================================================================================
+redis:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/redis
+    tag: 7.2.1
+  metrics:
+    image:
+      registry: docker.io
+      repository: bitnamilegacy/redis-exporter
+      tag: 1.55.0-debian-11-r2
+
+# ====================================================================================================
+# PP-Geoserver
+# ====================================================================================================
+pp-geoserver:
+  enabled: true
+  image:
+    geoserverRepository: geoserver-os
+    geoserverTag: "v2.0.0-2.26.0"
+    sidecarRepository: raster/geoserver-polygon-parts
+    sidecarTag: "v3.0.0"
+
+  nameOverride: "pp-geoserver"
+
+  nginx:
+    enabled: true
+    image:
+      repository: nginx-otel-unprivileged
+      tag: "v1.0.0"

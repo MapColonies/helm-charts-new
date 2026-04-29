@@ -1,0 +1,84 @@
+# ====================================================================================================
+# Gpkg-Merger
+# ====================================================================================================
+gpkg-merger:
+  enabled: true
+  image:
+    repository: raster/tiles-merger-service
+    tag: "v2.2.2"
+  isExporter: false
+
+  env:
+    protocol: TCP
+    general:
+      validate: false
+    TASK:
+      types:
+        - jobType: "Ingestion_Update"
+          taskType: "tilesMerging"
+        - jobType: "Ingestion_New"
+          taskType: "tilesMerging"
+        - jobType: "Ingestion_Swap_Update"
+          taskType: "tilesMerging"
+      pollingTime: 2000
+
+# ====================================================================================================
+# MapProxy-Api
+# ====================================================================================================
+mapproxy-api:
+  enabled: true
+  image:
+    repository: raster/mapproxy-api
+    tag: "v1.11.3"
+
+  db:
+    schema: "MapproxyConfig"
+
+# ====================================================================================================
+# Discrete-Cleanup
+# ====================================================================================================
+discrete-cleanup:
+  enabled: false
+
+# ====================================================================================================
+# Cache-Seeder
+# ====================================================================================================
+cache-seeder:
+  enabled: true
+  image:
+    repository: "cache-seeder"
+    tag: "v2.1.2"
+
+# ====================================================================================================
+# Ingestion-Trigger
+# ====================================================================================================
+ingestion-trigger:
+  enabled: true
+  image:
+    repository: raster/ingestion-trigger
+    tag: v4.1.1
+
+# ====================================================================================================
+# Overseer
+# ====================================================================================================
+overseer:
+  enabled: true
+  image:
+    repository: raster/overseer
+    tag: v2.5.2
+
+  instanceType: "ingestion"
+
+  jobDefinitions:
+    tasks:
+      merge:
+        useNewTargetFlagInUpdate: true
+
+# ====================================================================================================
+# Geoserver-Api
+# ====================================================================================================
+geoserver-api:
+  enabled: true
+  image:
+    repository: raster/geoserver-api
+    tag: v2.0.0
