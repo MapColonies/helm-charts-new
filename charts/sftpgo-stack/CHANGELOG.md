@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/MapColonies/helm-charts-new/compare/sftpgo-stack-v1.2.2...sftpgo-stack-v1.2.3) (2026-04-29)
+
+
+### 🐛 Bug Fixes
+
+* **sftp:** remove node-exporter service ([#73](https://github.com/MapColonies/helm-charts-new/issues/73)) ([eadeae5](https://github.com/MapColonies/helm-charts-new/commit/eadeae5313b7f18ff9c3c2c61d20eab6571d7377))
+
 ## [1.2.2](https://github.com/MapColonies/helm-charts-test/compare/sftpgo-stack-v1.2.1...sftpgo-stack-v1.2.2) (2026-03-30)
 
 
