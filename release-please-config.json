@@ -119,6 +119,10 @@
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
+      "charts/elastic-alertmanager-connector": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
+      },
       "charts/app": {
         "release-type": "helm",
         "extra-files": ["README.md"]

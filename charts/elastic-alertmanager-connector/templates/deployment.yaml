@@ -1,0 +1,62 @@
+{{- $fullName := include "elastic-alertmanager-connector.fullname" . -}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullName }}-deployment
+  labels:
+     {{- include "elastic-alertmanager-connector.labels" . | nindent 4 }}  
+spec:
+  selector:
+    matchLabels:
+      {{- include "elastic-alertmanager-connector.selectorLabels" . | nindent 6 }}  
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        {{- include "elastic-alertmanager-connector.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- if .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.image.pullSecrets  | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ $fullName }}-container
+          {{- with .Values.image }}
+          image: {{ .registry }}/{{ .repository }}:{{ .tag }}
+          imagePullPolicy: {{ .pullPolicy | default "IfNotPresent" }}
+          {{- end }}          
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          {{ if .Values.extraVolumeMounts -}}
+          volumeMounts:
+            {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- end }}              
+          env:
+            - name: ES_HOST
+              value: {{ required "You must supply host address for the server" .Values.server.host | quote }}
+            - name: INDEX_NAME
+              value: {{ required "You must supply the index for data writes of the server" .Values.server.index | quote }}
+            - name: ES_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $fullName }}-secret
+                  key: username
+            - name: ES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $fullName }}-secret
+                  key: password
+            - name: ES_VERIFY_CERTS
+              value: {{ .Values.server.certs.verify | quote }}
+            - name: ES_CERT_PATH
+              value: {{ .Values.server.certs.path | quote }}
+          {{- if .Values.resources.enabled }}
+          resources:
+            {{- toYaml .Values.resources.value | nindent 12 }}
+          {{- end }}
+      {{ if .Values.extraVolumes -}}
+      volumes:
+        {{- tpl (toYaml .Values.extraVolumes) . | nindent 8 }}
+      {{- end }}          

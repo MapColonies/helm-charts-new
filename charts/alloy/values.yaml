@@ -19,6 +19,9 @@ alloy:
       mapcolonies.io/component: "infrastructure"
       mapcolonies.io/part-of: "monitoring"
       mapcolonies.io/owner: "infra"
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "12345"
 
   alloy:
     enableReporting: false
