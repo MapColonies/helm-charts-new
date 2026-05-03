@@ -4,11 +4,11 @@ description: A Helm umbrella chart for Catalog App services
 
 dependencies:
   - name: catalog-app
-    version: 4.5.0
+    version: 4.6.0
     condition: global.enable-services.catalog-app
     repository: oci://acrarolibotnonprod.azurecr.io/helm/app
   - name: catalog-web-app-bff
-    version: 4.0.6
+    version: 4.0.7
     condition: global.enable-services.catalog-web-app-bff
     repository: oci://acrarolibotnonprod.azurecr.io/helm/app
   - name: mc-web-tools
@@ -25,6 +25,6 @@ dependencies:
     repository: oci://acrarolibotnonprod.azurecr.io/helm/common
 
 type: application
-version: 2.2.5
+version: 2.2.6
 annotations:
   domain: app
