@@ -10,15 +10,16 @@ pycsw:
   filterProductStatus: true
 
   nginx:
-    enabled: true
     image:
       repository: nginx-otel-unprivileged
       tag: "v1.0.0"
+    enabled: true
 
   uwsgiExporter:
     image:
       repository: "timonwong/uwsgi-exporter"
       tag: "latest"
+    port: 9117
 
 # ====================================================================================================
 # Pycsw-Private
@@ -30,10 +31,10 @@ pycsw-private:
     tag: "v6.4.1"
 
   nginx:
-    enabled: true
     image:
       repository: nginx-otel-unprivileged
       tag: "v1.0.0"
+    enabled: true
 
   uwsgiExporter:
     image:
@@ -49,6 +50,10 @@ mapproxy:
   db:
     schema: MapproxyConfig
 
+  storage:
+    tilesStorageProvider: FS
+    mapproxyConfigProvider: DB
+
   initContainer:
     image:
       repository: mapproxinator
@@ -63,12 +68,15 @@ mapproxy:
     image:
       repository: raster/docker-mapproxy
       tag: "v1.9.2"
+    socket:
+      connectionTimeoutSeconds: 0.1
+      timeoutSeconds: 0.1
 
   nginx:
-    enabled: true
     image:
       repository: nginx-otel-unprivileged
       tag: "v1.0.0"
+    enabled: true
 
   uwsgiExporter:
     image:
@@ -80,15 +88,26 @@ mapproxy:
 # ====================================================================================================
 redis:
   enabled: true
+  debug: false
   image:
     registry: docker.io
     repository: bitnamilegacy/redis
     tag: 7.2.1
   metrics:
+    enabled: false
     image:
       registry: docker.io
       repository: bitnamilegacy/redis-exporter
       tag: 1.55.0-debian-11-r2
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    containerSecurityContext:
+      enabled: false
 
 # ====================================================================================================
 # PP-Geoserver

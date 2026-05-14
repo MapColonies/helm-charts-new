@@ -46,21 +46,13 @@ exporter-overseer:
 # Files-Server
 # ====================================================================================================
 files-server:
-  enabled: true
-  nginx:
-    enabled: true
-    image:
-      repository: nginx-otel-unprivileged
-      tag: "v1.0.0"
+  enabled: false
 
 # ====================================================================================================
 # Nginx-S3-Gateway
 # ====================================================================================================
 nginx-s3-gateway:
-  enabled: true
-  image:
-    repository: common/nginx-s3-gateway
-    tag: v3.0.2
+  enabled: false
 
 # ====================================================================================================
 # Exporter-Cleanup
