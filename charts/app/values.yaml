@@ -26,7 +26,7 @@ catalog-app:
   configValues:
     image:
       repository: app/catalog-app
-      tag: v6.0.2
+      tag: v6.0.4
 
 catalog-web-app-bff:
   configValues:
