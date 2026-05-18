@@ -5,7 +5,7 @@ annotations:
   domain: infra
 type: application
 version: 1.0.0
-appVersion: "1.4.0"
+appVersion: "12.3.1"
 dependencies:
   - name: grafana
     version: 10.7.0
