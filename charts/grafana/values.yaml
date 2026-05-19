@@ -21,3 +21,5 @@ grafana:
   grafana.ini:
     metrics:
       enabled: "true"
+    paths:
+      plugins: /opt/grafana/plugins
