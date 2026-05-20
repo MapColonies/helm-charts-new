@@ -22,4 +22,4 @@ grafana:
     metrics:
       enabled: "true"
     paths:
-      plugins: /opt/grafana/plugins
+      plugins: /var/lib/grafana-plugins
