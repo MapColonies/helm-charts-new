@@ -10,7 +10,7 @@ grafana:
     prometheus.io/port: "3000"
 
   image:
-    tag: 1.1.0
+    tag: 1.1.1
 
   rbac:
     create: false
@@ -22,4 +22,4 @@ grafana:
     metrics:
       enabled: "true"
     paths:
-      plugins: /opt/grafana/plugins
+      plugins: /var/lib/grafana-plugins
