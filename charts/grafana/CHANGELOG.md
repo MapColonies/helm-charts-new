@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.0.1...grafana-v1.0.2) (2026-05-20)
+
+
+### 🔗 Dependencies
+
+* **grafana:** update image version to 1.1.1 ([#84](https://github.com/MapColonies/helm-charts-new/issues/84)) ([febce2a](https://github.com/MapColonies/helm-charts-new/commit/febce2a15b515e4f21725835cc84e6a4c9b4cc5c))
+
 ## [1.0.1](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.0.0...grafana-v1.0.1) (2026-05-20)
 
 
