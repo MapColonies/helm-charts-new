@@ -109,10 +109,10 @@ otelcol.processor.transform "default" {
     }
 }
 
-{{- $namespaces := .Values.namespaces | required "At least one namespace must be specified in the values file." -}}
-{{- if eq (len $namespaces) 0 }}
+{{- if empty .Values.namespaces }}
     {{- fail "At least one namespace must be specified in the values file." }}
 {{- end }}
+{{- $namespaces := .Values.namespaces }}
 {{- $lastIndex := sub (len $namespaces) 1 }}
 otelcol.receiver.otlp "default" {
     grpc {}
