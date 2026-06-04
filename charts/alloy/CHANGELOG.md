@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.1.1...alloy-v1.1.2) (2026-06-04)
+
+
+### 🐛 Bug Fixes
+
+* **alloy:** scope k8sattributes enrichment per namespace MAPCO-10609 ([#86](https://github.com/MapColonies/helm-charts-new/issues/86)) ([50214cb](https://github.com/MapColonies/helm-charts-new/commit/50214cba77e49d8eda2d9ee9a977bd180bec187d))
+
 ## [1.1.1](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.1.0...alloy-v1.1.1) (2026-04-16)
 
 
