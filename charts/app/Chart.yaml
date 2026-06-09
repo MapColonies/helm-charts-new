@@ -2,12 +2,12 @@ apiVersion: v2
 name: app
 description: A Helm umbrella chart for Catalog App services
 type: application
-version: 2.2.29
+version: 2.2.30
 annotations:
   domain: app
 dependencies:
   - name: catalog-app
-    version: 6.1.2
+    version: 6.1.3
     condition: global.enable-services.catalog-app
     repository: oci://acrarolibotnonprod.azurecr.io/helm/app
   - name: catalog-web-app-bff
