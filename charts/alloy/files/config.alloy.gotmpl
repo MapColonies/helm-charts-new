@@ -97,7 +97,7 @@ otelcol.processor.transform "default" {
         // Execute these dependent lookups if the JSON parsed successfully into a map
         `set(severity_text, cache["SeverityText"]) where IsMap(cache)`,
         `set(severity_number, Int(cache["SeverityNumber"])) where IsMap(cache)`,
-				`set(attributes, cache["Attributes"]) where IsMap(cache)`,
+        `set(attributes, cache["Attributes"]) where IsMap(cache)`,
         `set(resource.attributes["_temp_resource"], cache["Resource"]) where IsMap(cache)`,
         `merge_maps(resource.attributes, resource.attributes["_temp_resource"], "upsert") where IsMap(resource.attributes["_temp_resource"])`,
         `delete_key(resource.attributes, "_temp_resource")`,        
