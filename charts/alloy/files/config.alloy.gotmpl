@@ -100,7 +100,7 @@ otelcol.processor.transform "default" {
         `set(attributes, cache["Attributes"]) where IsMap(cache)`,
         `set(resource.attributes["_temp_resource"], cache["Resource"]) where IsMap(cache)`,
         `merge_maps(resource.attributes, resource.attributes["_temp_resource"], "upsert") where IsMap(resource.attributes["_temp_resource"])`,
-        `delete_key(resource.attributes, "_temp_resource")`,        
+        `delete_key(resource.attributes, "_temp_resource")`,
         `set(trace_id.string, cache["TraceId"]) where IsMap(cache)`,
         `set(span_id.string, cache["SpanId"]) where IsMap(cache)`,
         `set(instrumentation_scope.name, cache["InstrumentationScope"]) where IsMap(cache)`,
