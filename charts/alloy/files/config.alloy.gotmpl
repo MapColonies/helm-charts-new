@@ -91,22 +91,21 @@ otelcol.processor.transform "default" {
         `set(resource.attributes, attributes)`,
         `delete_key(resource.attributes, "loki.attribute.labels")`,
         
-        // Only attempt to parse if the body looks like a JSON object
+        // Attempt to parse if the body looks like a JSON object
         `set(cache, ParseJSON(body)) where IsMatch(body, "^\\s*\\{")`,
         
         // Execute these dependent lookups if the JSON parsed successfully into a map
         `set(severity_text, cache["SeverityText"]) where IsMap(cache)`,
         `set(severity_number, Int(cache["SeverityNumber"])) where IsMap(cache)`,
-        `set(attributes, cache["Attributes"]) where IsMap(cache)`,
-        `set(resource_cache, cache["Resource"]) where IsMap(cache)`,
-        `merge_maps(resource.attributes, resource_cache, "upsert") where IsMap(resource_cache)`
+				`set(attributes, cache["Attributes"]) where IsMap(cache)`,
+        `set(resource.attributes["_temp_resource"], cache["Resource"]) where IsMap(cache)`,
+        `merge_maps(resource.attributes, resource.attributes["_temp_resource"], "upsert") where IsMap(resource.attributes["_temp_resource"])`,
+        `delete_key(resource.attributes, "_temp_resource")`,        
         `set(trace_id.string, cache["TraceId"]) where IsMap(cache)`,
         `set(span_id.string, cache["SpanId"]) where IsMap(cache)`,
         `set(instrumentation_scope.name, cache["InstrumentationScope"]) where IsMap(cache)`,
         `set(time_unix_nano, cache["Timestamp"]) where IsMap(cache)`,
         `set(body, cache["Body"]) where IsMap(cache)`,
-        
-        // Runs unconditionally
         `replace_all_patterns(resource.attributes, "key","\\_", ".")`,
         ]
     }
