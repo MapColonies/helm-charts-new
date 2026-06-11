@@ -98,7 +98,8 @@ otelcol.processor.transform "default" {
         `set(severity_text, cache["SeverityText"]) where IsMap(cache)`,
         `set(severity_number, Int(cache["SeverityNumber"])) where IsMap(cache)`,
         `set(attributes, cache["Attributes"]) where IsMap(cache)`,
-        `merge_maps(resource.attributes, cache["Resource"], "upsert") where IsMap(cache["Resource"])`,
+        `set(resource_cache, cache["Resource"]) where IsMap(cache)`,
+        `merge_maps(resource.attributes, resource_cache, "upsert") where IsMap(resource_cache)`
         `set(trace_id.string, cache["TraceId"]) where IsMap(cache)`,
         `set(span_id.string, cache["SpanId"]) where IsMap(cache)`,
         `set(instrumentation_scope.name, cache["InstrumentationScope"]) where IsMap(cache)`,
