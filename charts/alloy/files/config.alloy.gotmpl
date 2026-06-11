@@ -92,7 +92,7 @@ otelcol.processor.transform "default" {
         `delete_key(resource.attributes, "loki.attribute.labels")`,
         
         // Only attempt to parse if the body looks like a JSON object
-        `set(cache, ParseJSON(body)) where IsMatch(body, "^\\{")`,
+        `set(cache, ParseJSON(body)) where IsMatch(body, "^\\s*\\{")`,
         
         // Execute these dependent lookups if the JSON parsed successfully into a map
         `set(severity_text, cache["SeverityText"]) where IsMap(cache)`,
