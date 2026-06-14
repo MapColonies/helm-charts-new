@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.1.2...alloy-v1.1.3) (2026-06-14)
+
+
+### 🐛 Bug Fixes
+
+* **alloy:** add conditional checks for JSON parsing in transform processor ([#88](https://github.com/MapColonies/helm-charts-new/issues/88)) ([3831b03](https://github.com/MapColonies/helm-charts-new/commit/3831b036bd3f0f0e33145913ccfffc9aad22ab98))
+
 ## [1.1.2](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.1.1...alloy-v1.1.2) (2026-06-04)
 
 
