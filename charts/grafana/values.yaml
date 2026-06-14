@@ -18,6 +18,24 @@ grafana:
     create: false
     name: monitoring
 
+  sidecar:
+    searchNamespace: null
+    resources:
+      limits:
+        cpu: 50m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 32Mi
+    securityContext:
+      runAsUser: 1000810000
+    dashboards:
+      enabled: true
+      label: "mapcolonies.io/grafana-dashboards"
+      folderAnnotation: "mapcolonies.io/grafana-dashboards-folder"
+      provider:
+        foldersFromFilesStructure: true
+
   grafana.ini:
     metrics:
       enabled: "true"
