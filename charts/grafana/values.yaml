@@ -27,8 +27,6 @@ grafana:
       requests:
         cpu: 50m
         memory: 32Mi
-    securityContext:
-      runAsUser: 1000810000
     dashboards:
       enabled: true
       label: "mapcolonies.io/grafana-dashboards"
