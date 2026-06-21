@@ -12,6 +12,7 @@ alloy:
   configReloader:
     image:
       repository: infra/grafana/prometheus-operator/prometheus-config-reloader
+      tag: v0.91.0
 
   controller:
     type: 'deployment'

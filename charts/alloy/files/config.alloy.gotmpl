@@ -85,28 +85,44 @@ otelcol.receiver.loki "default" {
 
 otelcol.processor.transform "default" {
     error_mode = "ignore"
+
     log_statements {
         context = "log"
         statements = [
-        `set(resource.attributes, attributes)`,
-        `delete_key(resource.attributes, "loki.attribute.labels")`,
+            `set(resource.attributes, attributes)`,
+            `delete_key(resource.attributes, "loki.attribute.labels")`,
+            `replace_all_patterns(resource.attributes, "key","\\_", ".")`,
+        ]
+    }
+
+		log_statements {
+        context = "log"
         
-        // Attempt to parse if the body looks like a JSON object
-        `set(cache, ParseJSON(body)) where IsMatch(body, "^\\s*\\{")`,
-        
-        // Execute these dependent lookups if the JSON parsed successfully into a map
-        `set(severity_text, cache["SeverityText"]) where IsMap(cache)`,
-        `set(severity_number, Int(cache["SeverityNumber"])) where IsMap(cache)`,
-        `set(attributes, cache["Attributes"]) where IsMap(cache)`,
-        `set(resource.attributes["_temp_resource"], cache["Resource"]) where IsMap(cache)`,
-        `merge_maps(resource.attributes, resource.attributes["_temp_resource"], "upsert") where IsMap(resource.attributes["_temp_resource"])`,
-        `delete_key(resource.attributes, "_temp_resource")`,
-        `set(trace_id.string, cache["TraceId"]) where IsMap(cache)`,
-        `set(span_id.string, cache["SpanId"]) where IsMap(cache)`,
-        `set(instrumentation_scope.name, cache["InstrumentationScope"]) where IsMap(cache)`,
-        `set(time_unix_nano, cache["Timestamp"]) where IsMap(cache)`,
-        `set(body, cache["Body"]) where IsMap(cache)`,
-        `replace_all_patterns(resource.attributes, "key","\\_", ".")`,
+        // Skips this entire block if the log isn't JSON
+        conditions = [
+            `IsMatch(body, "^\\s*\\{")`,
+        ]
+
+        statements = [
+            `set(cache, ParseJSON(body))`,
+            `set(severity_text, cache["SeverityText"]) where IsMap(cache)`,
+            `set(severity_number, Int(cache["SeverityNumber"])) where IsMap(cache)`,
+            `set(attributes, cache["Attributes"]) where IsMap(cache)`,
+            `set(resource.attributes["_temp_resource"], cache["Resource"]) where IsMap(cache)`,
+            `merge_maps(resource.attributes, resource.attributes["_temp_resource"], "upsert") where IsMap(resource.attributes["_temp_resource"])`,
+            `delete_key(resource.attributes, "_temp_resource")`,        
+            
+            // Context and tracing extractions
+            `set(trace_id.string, cache["TraceId"]) where IsMap(cache)`,
+            `set(span_id.string, cache["SpanId"]) where IsMap(cache)`,
+            `set(instrumentation_scope.name, cache["InstrumentationScope"]) where IsMap(cache)`,
+            
+            // Explicit Int64 Casting for timestamps
+            `set(time_unix_nano, Int(cache["Timestamp"])) where IsMap(cache)`,
+            `set(body, cache["Body"]) where IsMap(cache)`,
+            
+            // Normalizes the newly merged JSON attributes
+            `replace_all_patterns(resource.attributes, "key","\\_", ".")`,
         ]
     }
 
