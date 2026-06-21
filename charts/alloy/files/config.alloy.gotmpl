@@ -95,7 +95,7 @@ otelcol.processor.transform "default" {
         ]
     }
 
-    log_statements {
+		log_statements {
         context = "log"
         
         // Skips this entire block if the log isn't JSON
@@ -120,6 +120,9 @@ otelcol.processor.transform "default" {
             // Explicit Int64 Casting for timestamps
             `set(time_unix_nano, Int(cache["Timestamp"])) where IsMap(cache)`,
             `set(body, cache["Body"]) where IsMap(cache)`,
+            
+            // Normalizes the newly merged JSON attributes
+            `replace_all_patterns(resource.attributes, "key","\\_", ".")`,
         ]
     }
 
