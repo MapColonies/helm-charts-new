@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.1.3...alloy-v1.1.4) (2026-06-21)
+
+
+### 🐛 Bug Fixes
+
+* **alloy:** update versions and seperate config to blocks ([#93](https://github.com/MapColonies/helm-charts-new/issues/93)) ([1f756a1](https://github.com/MapColonies/helm-charts-new/commit/1f756a1ef6fa16c6ac015e9e7b7c8e5c34d63522))
+
 ## [1.1.3](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.1.2...alloy-v1.1.3) (2026-06-14)
 
 
