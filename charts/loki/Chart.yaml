@@ -9,4 +9,4 @@ annotations:
 dependencies:
   - name: loki
     repository: https://grafana-community.github.io/helm-charts
-    version: 6.56.1
+    version: 7.0.0
