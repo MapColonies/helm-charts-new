@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/MapColonies/helm-charts-new/compare/loki-v1.1.0...loki-v1.2.0) (2026-06-22)
+
+
+### 🎉 Features
+
+* update loki version to 7.0.0 ([#95](https://github.com/MapColonies/helm-charts-new/issues/95)) ([cc41190](https://github.com/MapColonies/helm-charts-new/commit/cc411909241f3019cc5da1dfdd8d22375dff8878))
+
 ## [1.1.0](https://github.com/MapColonies/helm-charts-new/compare/loki-v1.0.0...loki-v1.1.0) (2026-04-06)
 
 
