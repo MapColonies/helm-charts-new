@@ -5,9 +5,8 @@ exporter-gpkg-merger:
   enabled: true
   image:
     repository: raster/tiles-merger-service
-    tag: "v2.2.2"
+    tag: "v2.2.3"
   isExporter: true
-
   env:
     general:
       validate: false
@@ -15,7 +14,9 @@ exporter-gpkg-merger:
       types:
         - jobType: "Export"
           taskType: "tilesExporting"
-      pollingTime: 2000
+      pollingTime: 3000 # TODO: fix default value inside the service
+    heartbeat:
+      intervalMs: 3000 # TODO: fix default value inside the service
 
 # ====================================================================================================
 # Exporter-Trigger
@@ -33,34 +34,6 @@ exporter-overseer:
   enabled: true
   image:
     repository: raster/overseer
-    tag: v2.5.2
+    tag: v2.8.0
 
   instanceType: "export"
-
-  jobDefinitions:
-    jobs:
-      export:
-        downloadPath: "downloads"
-
-# ====================================================================================================
-# Files-Server
-# ====================================================================================================
-files-server:
-  enabled: false
-
-# ====================================================================================================
-# Nginx-S3-Gateway
-# ====================================================================================================
-nginx-s3-gateway:
-  enabled: false
-
-# ====================================================================================================
-# Exporter-Cleanup
-# ====================================================================================================
-exporter-cleanup:
-  enabled: false
-  image:
-    repository: "exporter-cleanup"
-    tag: "v3.0.0"
-  cron:
-    schedule: "0 0 * * *"

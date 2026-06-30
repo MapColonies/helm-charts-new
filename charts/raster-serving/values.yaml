@@ -5,21 +5,32 @@ pycsw:
   enabled: true
   image:
     repository: common/pycsw
-    tag: "v6.4.1"
+    tag: "v6.4.2"
 
   filterProductStatus: true
 
+  env:
+    uwsgi:
+      processes: 6
+      threads: 2
+    db:
+      schema: RasterCatalogManager
+      requirePassword: true
+
   nginx:
+    fullnameOverride: "{{ .Release.Name }}-pycsw-nginx"
     image:
-      repository: nginx-otel-unprivileged
-      tag: "v1.0.0"
-    enabled: true
+      repository: common/nginx-otel-unprivileged
+      tag: "v2.1.6"
+    extraVolumes:
+      - name: nginx-config
+        configMap:
+          name: "{{ .Release.Name }}-pycsw-nginx-configmap"
 
   uwsgiExporter:
     image:
       repository: "timonwong/uwsgi-exporter"
       tag: "latest"
-    port: 9117
 
 # ====================================================================================================
 # Pycsw-Private
@@ -28,18 +39,31 @@ pycsw-private:
   enabled: true
   image:
     repository: common/pycsw
-    tag: "v6.4.1"
+    tag: "v6.4.2"
+
+  env:
+    uwsgi:
+      processes: 6
+      threads: 2
+    db:
+      schema: RasterCatalogManager
+      requirePassword: true
 
   nginx:
+    fullnameOverride: "{{ .Release.Name }}-pycsw-private-nginx"
     image:
-      repository: nginx-otel-unprivileged
-      tag: "v1.0.0"
-    enabled: true
+      repository: common/nginx
+      tag: "v2.1.6"
+    extraVolumes:
+      - name: nginx-config
+        configMap:
+          name: "{{ .Release.Name }}-pycsw-private-nginx-configmap"
 
   uwsgiExporter:
     image:
       repository: "timonwong/uwsgi-exporter"
       tag: "latest"
+
 
 # ====================================================================================================
 # MapProxy
@@ -51,7 +75,6 @@ mapproxy:
     schema: MapproxyConfig
 
   storage:
-    tilesStorageProvider: FS
     mapproxyConfigProvider: DB
 
   initContainer:
@@ -68,9 +91,14 @@ mapproxy:
     image:
       repository: raster/docker-mapproxy
       tag: "v1.9.2"
-    socket:
-      connectionTimeoutSeconds: 0.1
-      timeoutSeconds: 0.1
+    uwsgi:
+      processes: 6
+      threads: 2
+    env:
+      cors:
+        enabled: true
+        allowedOrigin: "*"
+        allowedHeaders: "*"
 
   nginx:
     image:

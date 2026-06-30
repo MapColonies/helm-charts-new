@@ -8,27 +8,32 @@ version: 1.0.0
 appVersion: "1.0.0"
 dependencies:
   - name: raster-catalog-manager
-    version: 7.1.0
+    version: 7.2.0
     condition: raster-catalog-manager.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: job-tracker
-    version: 5.0.0
+    version: 5.2.0
     condition: job-tracker.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: polygon-parts-worker
-    version: 2.1.7
+    version: 2.2.0
     condition: polygon-parts-worker.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: polygon-parts-manager
-    version: 3.1.0
+    version: 3.3.1
     condition: polygon-parts-manager.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
+  - name: cleaner
+    version: 1.1.3
+    condition: cleaner.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
   - name: files-server
-    version: 2.3.0
+    version: 2.5.0
     condition: files-server.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
