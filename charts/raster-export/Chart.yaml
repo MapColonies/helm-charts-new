@@ -14,7 +14,7 @@ dependencies:
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: exporter-trigger
-    version: 3.2.1
+    version: 3.3.0
     condition: exporter-trigger.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 

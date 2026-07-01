@@ -25,7 +25,9 @@ exporter-trigger:
   enabled: true
   image:
     repository: raster/exporter-trigger
-    tag: v3.2.1
+    tag: v3.3.0
+  configManagement:
+    offlineMode: true
 
 # ====================================================================================================
 # Exporter-Overseer
@@ -35,5 +37,8 @@ exporter-overseer:
   image:
     repository: raster/overseer
     tag: v2.8.0
-
-  instanceType: "export"
+  configManagement:
+    offlineMode: true
+  instanceType: &instanceType "export"
+  mclabels:
+    partOf: *instanceType
