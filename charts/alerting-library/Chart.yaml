@@ -1,6 +1,6 @@
 apiVersion: v2
 name: alerting-library
-description: Generates Grafana Unified Alerting ConfigMaps from a simple values API
+description: A Helm library chart that provides a simplified, schema-validated API for dynamically generating Grafana Unified Alerting rules.
 annotations:
   domain: infra
 type: library
