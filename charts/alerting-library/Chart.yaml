@@ -1,0 +1,7 @@
+apiVersion: v2
+name: alerting-library
+description: Generates Grafana Unified Alerting ConfigMaps from a simple values API
+annotations:
+  domain: infra
+type: library
+version: 0.0.1
