@@ -1,0 +1,3 @@
+{{- if .Values.alerts.enabled }}
+{{ include "alerting-library.configmap" . }}
+{{- end }}

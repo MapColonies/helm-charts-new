@@ -10,3 +10,6 @@ dependencies:
   - name: alloy
     repository: https://grafana.github.io/helm-charts
     version: 1.10.0
+  - name: alerting-library
+    version: 0.0.1
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/infra

@@ -46,3 +46,36 @@ batching: {}
 exporter:
   sending_queue: {}
   retry_on_failure: {}
+
+alerts:
+  enabled: true
+  team: infra
+  folder: Alloy
+  rules:
+    - name: AlloyInstanceDown
+      expr: up{app_kubernetes_io_name=~".*alloy.*"} == 0 and on() (sum(up{app_kubernetes_io_name=~".*alloy.*"}) > 0)
+      severity: warning
+      for: "2m"
+      summary: "Alloy instance is down (Degraded Redundancy)"
+      description: "Alloy instance {{ $labels.instance }} is down. The cluster is running with degraded redundancy, but other instances are still processing telemetry."
+
+    - name: AlloyClusterDown
+      expr: sum(up{app_kubernetes_io_name=~".*alloy.*"}) == 0
+      severity: critical
+      for: "2m"
+      summary: "Alloy cluster is completely down"
+      description: "All Alloy instances are unreachable!"
+
+    - name: AlloyUnhealthyComponent
+      expr: alloy_component_controller_running_components{health_type!="healthy"} > 0
+      severity: warning
+      for: "5m"
+      summary: "Alloy has unhealthy components"
+      description: "Alloy component {{ $labels.component_id }} on {{ $labels.instance }} is reporting a state of {{ $labels.health_type }}. Check the Alloy UI for configuration or connectivity errors."
+
+    - name: AlloyComponentEvaluationSlow
+      expr: rate(alloy_component_evaluation_seconds_sum[5m]) / rate(alloy_component_evaluation_seconds_count[5m]) > 1
+      severity: warning
+      for: "10m"
+      summary: "Alloy component evaluation is slow"
+      description: "Average component evaluation time on {{ $labels.instance }} has exceeded 1 second (currently {{ $value | humanizeDuration }}). This may cause telemetry processing backlogs."
