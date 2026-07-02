@@ -47,8 +47,6 @@ grafana:
   #   - team: "infra"
   #     url: "https://hooks.slack.com/services/T00000000/B000
   alertingTeamsWebhooks: {}
-    # - team: "infra"
-    #   url: "bla"
 
   # Alerting Receiver Type
   # This is the type of receiver to use for Grafana alerting.
