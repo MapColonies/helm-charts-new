@@ -27,7 +27,6 @@ Optional values:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  # Result for you: "infra-alloy-alerts"
   name: {{ printf "%s-alerts" $baseName }}
   namespace: {{ .Release.Namespace }}
   labels:
@@ -44,13 +43,13 @@ data:
     {{- end }}
     {{- end }}
     groups:
-      - orgId: 1
-        name: {{ $baseName }}
+      - orgId: {{ .Values.alerts.orgId | default 1 }}
+        name: {{ $baseName }}k
         folder: {{ .Values.alerts.folder | default "MapColonies Alerts" | quote }}
-        interval: 1m
+        interval: {{ .Values.alerts.interval | default "1m" }}
         rules:
         {{- range .Values.alerts.rules }}
-          - uid: {{ printf "%s/%s/%s" $.Release.Namespace $baseName .name | sha256sum | trunc 8 | quote }}
+          - uid: {{ printf "%s/%s/%s" $.Release.Namespace $baseName .name | sha256sum | trunc 16 | quote }}
             title: {{ .name | quote }}
             condition: C
             data:
@@ -64,7 +63,7 @@ data:
                     type: prometheus
                     uid: prometheus
                   editorMode: code
-                  expr: {{ .expr }}
+                  expr: {{ .expr | quote }}
                   instant: true
                   intervalMs: 1000
                   maxDataPoints: 43200
@@ -98,10 +97,10 @@ data:
             execErrState: {{ .execErrState | default "Error" | quote }}
             for: {{ .for | default "5m" | quote }}
             labels:
-              severity: {{ .severity }}
-              alert_team: {{ $.Values.alerts.team }}
+              severity: {{ .severity | quote }}
+              alert_team: {{ $.Values.alerts.team | quote }}
             annotations:
-              summary: {{ .summary }}
+              summary: {{ .summary | quote }}
               description: {{ .description | default "" | quote }}
         {{- end }}
 {{- end -}}
