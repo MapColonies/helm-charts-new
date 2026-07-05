@@ -54,10 +54,6 @@ grafana:
   # alertingReceiverType: "slack"
   alertingReceiverType: ""
 
-  # Namespaces where teams deploy alert/dashboard ConfigMaps.
-  # Grafana SA gets ConfigMap read access in each listed namespace.
-  sidecarNamespaces: []
-
   envFromSecrets:
     - name: grafana-webhooks
       optional: true
