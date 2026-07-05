@@ -32,7 +32,7 @@ catalog-web-app-bff:
   configValues:
     image:
       repository: app/catalog-web-app-bff
-      tag: v4.2.2
+      tag: v4.2.3
 
 mc-web-tools:
   configValues:
