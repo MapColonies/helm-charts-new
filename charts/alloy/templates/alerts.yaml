@@ -1,3 +1,18 @@
-{{- if .Values.alerts.enabled }}
-{{ include "alerting-library.configmap" . }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-alerts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    mapcolonies.io/grafana-alerts: "true"
+data:
+{{- if .Values.grafanaAlertCleanup.enabled }}
+  cleanup.yaml: |
+    apiVersion: 1
+    deleteRules:
+    {{- range .Values.grafanaAlertCleanup.deleteRules }}
+      - orgId: 1
+        uid: {{ .uid | quote }}
+    {{- end }}
 {{- end }}
+{{ (.Files.Glob "files/alerts/*.yaml").AsConfig | indent 2 }}
