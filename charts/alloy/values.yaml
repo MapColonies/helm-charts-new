@@ -49,12 +49,3 @@ batching: {}
 exporter:
   sending_queue: {}
   retry_on_failure: {}
-
-# Set enabled: true to push a deleteRules ConfigMap to the Grafana alerts sidecar.
-# Once the Grafana rules listed below are confirmed deleted, set enabled: false.
-grafanaAlertCleanup:
-  enabled: true
-  # For example:
-  # deleteRules:
-  #   - uid: some-alert-uid
-  deleteRules: {}
