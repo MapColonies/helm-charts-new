@@ -19,7 +19,8 @@ grafana:
     name: monitoring
 
   sidecar:
-    searchNamespace: null
+    image:
+      repository: infra/kiwigrid/k8s-sidecar
     resources:
       limits:
         cpu: 50m
@@ -30,11 +31,40 @@ grafana:
     dashboards:
       enabled: true
       label: "mapcolonies.io/grafana-dashboards"
+      searchNamespace: null
       folderAnnotation: "mapcolonies.io/grafana-dashboards-folder"
       provider:
         foldersFromFilesStructure: true
+    alerts:
+      enabled: true
+      label: "mapcolonies.io/grafana-alerts"
+      searchNamespace: null
+    datasources:
+      enabled: true
+      label: "mapcolonies.io/grafana-datasources"
+      searchNamespace: null
+
+  # Alerting Teams Webhooks
+  # This is a list of teams and their corresponding webhook URLs for Grafana alerting.
+  # Example:
+  # alertingTeamsWebhooks:
+  #   - team: "infra"
+  #     url: "https://hooks.slack.com/services/T00000000/B000
+  alertingTeamsWebhooks: {}
+
+  # Alerting Receiver Type
+  # This is the type of receiver to use for Grafana alerting.
+  # Example:
+  # alertingReceiverType: "slack"
+  alertingReceiverType: ""
+
+  envFromSecrets:
+    - name: grafana-webhooks
+      optional: true
 
   grafana.ini:
+    unified_alerting:
+      enabled: true
     metrics:
       enabled: "true"
     paths:
