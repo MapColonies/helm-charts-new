@@ -122,10 +122,6 @@
       "charts/elastic-alertmanager-connector": {
         "release-type": "helm",
         "extra-files": ["README.md"]
-      },
-      "charts/alerting-library": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
       }
     }
 }

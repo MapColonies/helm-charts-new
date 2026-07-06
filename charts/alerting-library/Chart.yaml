@@ -1,7 +1,0 @@
-apiVersion: v2
-name: alerting-library
-description: A Helm library chart that provides a simplified, schema-validated API for dynamically generating Grafana Unified Alerting rules.
-annotations:
-  domain: infra
-type: library
-version: 0.0.1

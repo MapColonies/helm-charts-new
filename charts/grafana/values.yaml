@@ -39,6 +39,10 @@ grafana:
       enabled: true
       label: "mapcolonies.io/grafana-alerts"
       searchNamespace: null
+    datasources:
+      enabled: true
+      label: "mapcolonies.io/grafana-datasources"
+      searchNamespace: null
 
   # Alerting Teams Webhooks
   # This is a list of teams and their corresponding webhook URLs for Grafana alerting.
@@ -53,10 +57,6 @@ grafana:
   # Example:
   # alertingReceiverType: "slack"
   alertingReceiverType: ""
-
-  # Namespaces where teams deploy alert/dashboard ConfigMaps.
-  # Grafana SA gets ConfigMap read access in each listed namespace.
-  sidecarNamespaces: []
 
   envFromSecrets:
     - name: grafana-webhooks
