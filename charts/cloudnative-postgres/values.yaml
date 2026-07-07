@@ -23,6 +23,7 @@ postgres:
       mapcolonies.io/part-of: "data"
       mapcolonies.io/owner: "infra"
       mapcolonies.io/alloy-api-logs: "true"
+      mapcolonies.io/criticality: "customer"
 
     annotations:
       prometheus.io/scrape: "true"

@@ -26,6 +26,7 @@ loki:
       mapcolonies.io/part-of: "monitoring"
       mapcolonies.io/owner: "infra"
       mapcolonies.io/alloy-api-logs: "true"
+      mapcolonies.io/criticality: "internal"
 
     auth_enabled: false
     schemaConfig:

@@ -2,6 +2,7 @@ mclabels:
   owner: "infra"
   partOf: "scaler"
   component: "infrastructure"
+  criticality: "internal"
 
 image:
   pullPolicy: IfNotPresent

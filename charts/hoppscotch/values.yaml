@@ -17,3 +17,4 @@ hoppscotch:
       mapcolonies.io/part-of: "web-tools"
       mapcolonies.io/owner: "infra"
       mapcolonies.io/alloy-api-logs: "true"
+      mapcolonies.io/criticality: "internal"

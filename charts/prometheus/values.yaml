@@ -26,6 +26,7 @@ prometheus:
     mapcolonies.io/component: "infrastructure"
     mapcolonies.io/part-of: "monitoring"
     mapcolonies.io/owner: "infra"
+    mapcolonies.io/criticality: "customer"
 
   serviceAccounts:
     server:
@@ -48,6 +49,7 @@ prometheus:
     fullnameOverride: 'infra-prometheus-server'
     podLabels:
       mapcolonies.io/alloy-api-logs: "true"
+      mapcolonies.io/criticality: "customer"
     global:
       scrape_interval: 30s
       evaluation_interval: 30s

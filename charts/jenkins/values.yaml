@@ -4,6 +4,7 @@ jenkins:
       mapcolonies.io/component: infrastructure
       mapcolonies.io/part-of: jenkins
       mapcolonies.io/owner: infra
+      mapcolonies.io/criticality: internal
     podAnnotations:
       prometheus.io/scrape: "true"
       prometheus.io/port: "8080"

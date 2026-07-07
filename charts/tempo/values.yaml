@@ -15,6 +15,7 @@ tempo-distributed:
       mapcolonies.io/component: "infrastructure"
       mapcolonies.io/part-of: "monitoring"
       mapcolonies.io/owner: "infra"
+      mapcolonies.io/criticality: "internal"
     podAnnotations:
       prometheus.io/port: "9150"
 
@@ -26,6 +27,7 @@ tempo-distributed:
       mapcolonies.io/part-of: "monitoring"
       mapcolonies.io/owner: "infra"
       mapcolonies.io/alloy-api-logs: "true"
+      mapcolonies.io/criticality: "internal"
     podAnnotations:
       prometheus.io/scrape: "true"
       prometheus.io/port: "3200"
@@ -43,6 +45,7 @@ tempo-distributed:
         mapcolonies.io/component: "infrastructure"
         mapcolonies.io/part-of: "monitoring"
         mapcolonies.io/owner: "infra"
+        mapcolonies.io/criticality: "internal"
     podAnnotations:
       prometheus.io/scrape: "false"
 

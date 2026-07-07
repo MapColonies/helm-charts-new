@@ -9,13 +9,14 @@ alertmanager:
     mapcolonies.io/part-of: "monitoring"
     mapcolonies.io/owner: "infra"
     mapcolonies.io/alloy-api-logs: "true"
+    mapcolonies.io/criticality: "internal"
 
   service:
     labels:
       mapcolonies.io/component: "infrastructure"
       mapcolonies.io/part-of: "monitoring"
       mapcolonies.io/owner: "infra"
-
+      mapcolonies.io/criticality: "internal"
   podAnnotations:
     prometheus.io/scrape: "true"
     prometheus.io/port: "9093"
