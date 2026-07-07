@@ -26,6 +26,7 @@ prometheus:
     mapcolonies.io/component: "infrastructure"
     mapcolonies.io/part-of: "monitoring"
     mapcolonies.io/owner: "infra"
+    mapcolonies.io/criticality: "internal"
 
   serviceAccounts:
     server:

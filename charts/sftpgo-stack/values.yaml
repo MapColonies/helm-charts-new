@@ -10,6 +10,7 @@ sftpgo:
     mapcolonies.io/owner: infra
     mapcolonies.io/component: infrastructure
     mapcolonies.io/part-of: storage
+    mapcolonies.io/criticality: internal
     mapcolonies.io/alloy-api-logs: "true"
 
   envVars:

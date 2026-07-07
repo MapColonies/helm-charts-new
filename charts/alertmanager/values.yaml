@@ -8,6 +8,7 @@ alertmanager:
     mapcolonies.io/component: "infrastructure"
     mapcolonies.io/part-of: "monitoring"
     mapcolonies.io/owner: "infra"
+    mapcolonies.io/criticality: "internal"
     mapcolonies.io/alloy-api-logs: "true"
 
   service:
@@ -15,6 +16,7 @@ alertmanager:
       mapcolonies.io/component: "infrastructure"
       mapcolonies.io/part-of: "monitoring"
       mapcolonies.io/owner: "infra"
+      mapcolonies.io/criticality: "internal"
 
   podAnnotations:
     prometheus.io/scrape: "true"

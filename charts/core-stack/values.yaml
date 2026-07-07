@@ -21,7 +21,8 @@ minio:
     mapcolonies.io/environment: "production"
     mapcolonies.io/component: "infrastructure"
     mapcolonies.io/part-of: "core-stack"
-    mapcolonies.io/owner: "infra" 
+    mapcolonies.io/owner: "infra"
+    mapcolonies.io/criticality: "internal"
 
 redis:
   enabled: true
@@ -49,7 +50,8 @@ redis:
     mapcolonies.io/environment: "production"
     mapcolonies.io/component: "infrastructure"
     mapcolonies.io/part-of: "core-stack"
-    mapcolonies.io/owner: "infra" 
+    mapcolonies.io/owner: "infra"
+    mapcolonies.io/criticality: "internal"
   master:
     configuration: |
       maxmemory 5gb
@@ -92,7 +94,8 @@ elasticsearch:
     mapcolonies.io/environment: "production"
     mapcolonies.io/component: "infrastructure"
     mapcolonies.io/part-of: "core-stack"
-    mapcolonies.io/owner: "infra" 
+    mapcolonies.io/owner: "infra"
+    mapcolonies.io/criticality: "internal"
 
   master:
     containerSecurityContext:

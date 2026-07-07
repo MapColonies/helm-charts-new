@@ -2,6 +2,8 @@ mclabels:
   owner: "infra"
   partOf: "postgres"
   component: "infrastructure"
+  # Rendered only once the mclabels library chart (MapColonies/infra) adds support for this key
+  criticality: "internal"
 
 postgres:
   enabled: true
