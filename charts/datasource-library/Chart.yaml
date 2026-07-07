@@ -1,0 +1,5 @@
+apiVersion: v2
+name: datasource-library
+description: Helm library chart for generating Grafana datasource provisioning YAML
+type: library
+version: 0.0.1

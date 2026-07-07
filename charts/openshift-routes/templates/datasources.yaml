@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-datasources
+  namespace: {{ .Release.Namespace }}
+  labels:
+    mapcolonies.io/grafana-datasources: "true"
+data:
+  postgres.yaml: |
+{{ include "datasource-library.postgres" . | indent 4 }}
