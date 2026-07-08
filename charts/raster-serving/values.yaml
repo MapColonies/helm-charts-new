@@ -9,6 +9,9 @@ pycsw:
 
   filterProductStatus: true
 
+  mclabels:
+    logScraping: true # TODO: fix the key typo in service
+
   env:
     uwsgi:
       processes: 6
@@ -18,14 +21,17 @@ pycsw:
       requirePassword: true
 
   nginx:
-    fullnameOverride: "{{ .Release.Name }}-pycsw-nginx"
     image:
-      repository: common/nginx-otel-unprivileged
+      repository: common/nginx
       tag: "v2.1.6"
-    extraVolumes:
-      - name: nginx-config
-        configMap:
-          name: "{{ .Release.Name }}-pycsw-nginx-configmap"
+    mclabels:
+      partOf: serving
+      owner: raster
+    prometheusExporter:
+       enabled: true
+       image:
+         repository: common/nginx/nginx-prometheus-exporter
+         tag: 1.4.1
 
   uwsgiExporter:
     image:
@@ -41,6 +47,9 @@ pycsw-private:
     repository: common/pycsw
     tag: "v6.4.2"
 
+  mclabels:
+    logScraping: true # TODO: fix the key typo in service
+
   env:
     uwsgi:
       processes: 6
@@ -50,14 +59,18 @@ pycsw-private:
       requirePassword: true
 
   nginx:
-    fullnameOverride: "{{ .Release.Name }}-pycsw-private-nginx"
     image:
       repository: common/nginx
       tag: "v2.1.6"
-    extraVolumes:
-      - name: nginx-config
-        configMap:
-          name: "{{ .Release.Name }}-pycsw-private-nginx-configmap"
+    mclabels:
+      partOf: serving
+      owner: raster
+    prometheusExporter:
+       enabled: true
+       image:
+         repository: common/nginx/nginx-prometheus-exporter
+         tag: 1.4.1
+
 
   uwsgiExporter:
     image:
@@ -70,6 +83,8 @@ pycsw-private:
 # ====================================================================================================
 mapproxy:
   enabled: true
+  metrics:
+    enabled: false
 
   db:
     schema: MapproxyConfig
@@ -121,19 +136,18 @@ redis:
     registry: docker.io
     repository: bitnamilegacy/redis
     tag: 7.2.1
+  commonConfiguration: |-
+    # Enable AOF https:redis.io/topics/persistence#append-only-file
+    appendonly no
+    protected-mode no
+    # Disable RDB https, AOF persistence already enabled.
+    save ""
   metrics:
-    enabled: false
+    enabled: true
     image:
       registry: docker.io
       repository: bitnamilegacy/redis-exporter
       tag: 1.55.0-debian-11-r2
-    resources:
-      limits:
-        cpu: 100m
-        memory: 128Mi
-      requests:
-        cpu: 100m
-        memory: 128Mi
     containerSecurityContext:
       enabled: false
 
@@ -146,12 +160,23 @@ pp-geoserver:
     geoserverRepository: geoserver-os
     geoserverTag: "v2.0.0-2.26.0"
     sidecarRepository: raster/geoserver-polygon-parts
-    sidecarTag: "v3.0.0"
+    sidecarTag: "v3.2.0"
 
   nameOverride: "pp-geoserver"
+
+  mclabels:
+    logScraping: true # TODO: fix the key typo in service
 
   nginx:
     enabled: true
     image:
-      repository: nginx-otel-unprivileged
-      tag: "v1.0.0"
+      repository: common/nginx
+      tag: "v2.1.6"
+    mclabels:
+      partOf: serving
+      owner: raster
+    prometheusExporter:
+      enabled: true
+      image:
+        repository: common/nginx/nginx-prometheus-exporter
+        tag: 1.4.1
