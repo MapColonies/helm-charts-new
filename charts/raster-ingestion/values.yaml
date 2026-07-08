@@ -30,7 +30,9 @@ mapproxy-api:
   enabled: true
   image:
     repository: raster/mapproxy-api
-    tag: "v1.11.3"
+    tag: "v1.13.0"
+  configManagement:
+    offlineMode: true
   db:
     schema: "MapproxyConfig"
 
@@ -41,7 +43,7 @@ mapproxy-api:
 cache-seeder:
   enabled: true
   image:
-    repository: "cache-seeder"
+    repository: "raster/cache-seeder"
     tag: "v2.3.2"
   env:
     seedConcurrency: 25
@@ -55,6 +57,8 @@ ingestion-trigger:
   image:
     repository: raster/ingestion-trigger
     tag: v4.3.0
+  configManagement:
+    offlineMode: true
   env:
     productReader:
       maxVerticesPerChunk: 20000
@@ -71,6 +75,8 @@ overseer:
   image:
     repository: raster/overseer
     tag: v2.8.0
+  configManagement:
+    offlineMode: true
   instanceType: "ingestion"
 
 
@@ -81,4 +87,6 @@ geoserver-api:
   enabled: true
   image:
     repository: raster/geoserver-api
-    tag: v2.0.0
+    tag: v2.1.0
+  configManagement:
+    offlineMode: true
