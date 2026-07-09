@@ -11,7 +11,7 @@ Add as a dependency in your chart's `Chart.yaml`:
 dependencies:
   - name: datasource-library
     version: "0.0.1"
-    repository: "oci://acrarolibotnonprod.azurecr.io/helm/common"
+    repository: "oci://acrarolibotnonprod.azurecr.io/helm/infra"
 ```
 <!-- x-release-please-end-version -->
 

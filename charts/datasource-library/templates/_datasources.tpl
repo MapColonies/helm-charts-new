@@ -47,7 +47,7 @@ Example — environment per entry:
 {{- $globalEnvironment := dig "global" "mclabels" "environment" "" (toJson .Values | fromJson) -}}
 apiVersion: 1
 datasources:
-  {{- range .Values.datasources.postgres }}
+  {{- range dig "datasources" "postgres" (list) .Values }}
   {{- $team    := required "datasource-library: 'team' is required on every datasources.postgres entry" .team -}}
   {{- $service := required (printf "datasource-library: 'service' is required (team: %s)" $team) .service -}}
   {{- $environment     := required (printf "datasource-library: entry '%s/%s' is missing an environment. Set 'environment' on the entry or set global.mclabels.environment" $team $service) (.environment | default $globalEnvironment) -}}
