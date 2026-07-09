@@ -4,4 +4,4 @@ description: Helm library chart for generating Grafana datasource provisioning Y
 annotations:
   domain: infra
 type: library
-version: 0.0.1
+version: 0.1.0
