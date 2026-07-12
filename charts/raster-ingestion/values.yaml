@@ -56,7 +56,7 @@ ingestion-trigger:
   enabled: true
   image:
     repository: raster/ingestion-trigger
-    tag: v4.3.0
+    tag: v4.4.0
   configManagement:
     offlineMode: true
   env:
@@ -74,7 +74,7 @@ overseer:
   enabled: true
   image:
     repository: raster/overseer
-    tag: v2.8.0
+    tag: v2.9.0
   configManagement:
     offlineMode: true
   instanceType: "ingestion"
@@ -90,3 +90,22 @@ geoserver-api:
     tag: v2.1.0
   configManagement:
     offlineMode: true
+
+# ====================================================================================================
+# Polygon-Parts-Worker
+# ====================================================================================================
+polygon-parts-worker:
+  enabled: true
+  image:
+    repository: raster/polygon-parts-worker
+    tag: v2.3.0
+  instanceType: ingestion
+  configManagement:
+    offlineMode: true
+  jobManagement:
+    config:
+      dequeueIntervalMs: 30000
+  jobDefinitions:
+    tasks:
+      validation:
+        reportsDownloadPath: "/validation-reports" 

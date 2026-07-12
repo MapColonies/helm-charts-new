@@ -42,3 +42,25 @@ exporter-overseer:
   instanceType: &instanceType "export"
   mclabels:
     partOf: *instanceType
+
+# ====================================================================================================
+# Polygon-Parts-Worker
+# ====================================================================================================
+exporter-polygon-parts-worker:
+  enabled: true
+  image:
+    repository: raster/polygon-parts-worker
+    tag: v2.3.0
+  instanceType: &instanceType "export"
+  mclabels:
+    partOf: *instanceType
+  configManagement:
+    offlineMode: true
+  jobManagement:
+    config:
+      dequeueIntervalMs: 30000
+  jobDefinitions:
+    tasks:
+      validation:
+        reportsDownloadPath: "/validation-reports" 
+

@@ -40,25 +40,6 @@ job-tracker:
 
 
 # ====================================================================================================
-# Polygon-Parts-Worker
-# ====================================================================================================
-polygon-parts-worker:
-  enabled: true
-  image:
-    repository: raster/polygon-parts-worker
-    tag: v2.2.0
-  configManagement:
-    offlineMode: true
-  jobManagement:
-    config:
-      dequeueIntervalMs: 30000
-  jobDefinitions:
-    tasks:
-      validation:
-        reportsDownloadPath: "/validation-reports" 
-
-
-# ====================================================================================================
 # Polygon-Parts-Manager
 # ====================================================================================================
 polygon-parts-manager:

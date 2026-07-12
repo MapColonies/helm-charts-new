@@ -23,16 +23,22 @@ dependencies:
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: ingestion-trigger
-    version: 4.3.0
+    version: 4.4.0
     condition: ingestion-trigger.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: overseer
-    version: 2.8.0
+    version: 2.9.0
     condition: overseer.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: geoserver-api
     version: 2.1.0
     condition: geoserver-api.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: polygon-parts-worker
+    version: 2.3.0
+    condition: polygon-parts-worker.enabled
+    alias: polygon-parts-worker
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster

@@ -17,11 +17,6 @@ dependencies:
     condition: job-tracker.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
-  - name: polygon-parts-worker
-    version: 2.2.0
-    condition: polygon-parts-worker.enabled
-    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
-
   - name: polygon-parts-manager
     version: 3.3.1
     condition: polygon-parts-manager.enabled
