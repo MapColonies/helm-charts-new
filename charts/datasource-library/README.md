@@ -65,22 +65,21 @@ Generates a Grafana datasource provisioning YAML block for all entries under `da
 | `host` | yes | — | Postgres host and port (`host:port`) |
 | `database` | yes | — | Database name |
 | `username` | yes | — | Database user |
-| `password` | no | — | Password (in case ssl is not set) |
+| `password` | yes (no SSL) | — | Database password; not used when `ssl` is set (cert auth) |
 | `environment` | no | `global.mclabels.environment` | Environment override for this entry |
 | `version` | no | `1300` | Postgres server version (e.g. `1500` for PG 15) |
-| `ssl` | no | — | SSL configuration block (see below) |
+| `ssl` | no | — | SSL configuration block (see below); omit for non-SSL |
 
 ### SSL block (`ssl`)
 
-Omit the entire `ssl` block for non-SSL connections (`sslmode: disable`).
+When set, the connection uses client-certificate authentication (`sslmode: verify-full` by default). The `password` field is ignored. All three cert paths are required.
 
 | Field | Required | Default | Description |
 |---|---|---|---|
-| `secretName` | yes | — | Kubernetes Secret name; cert paths resolve to `/etc/secrets/{secretName}/{certFile,keyFile,caFile}` |
+| `certFile` | yes | — | Absolute path to the client certificate file |
+| `keyFile` | yes | — | Absolute path to the client private key file |
+| `rootCertFile` | yes | — | Absolute path to the CA certificate file |
 | `mode` | no | `verify-full` | One of `require`, `verify-ca`, `verify-full` |
-| `certFile` | no | `/etc/secrets/{secretName}/certFile` | Override path to client certificate |
-| `keyFile` | no | `/etc/secrets/{secretName}/keyFile` | Override path to client private key |
-| `rootCertFile` | no | `/etc/secrets/{secretName}/caFile` | Override path to CA certificate |
 
 ## Examples
 
@@ -98,12 +97,12 @@ datasources:
       host: some-host
       database: infra-jobnik
       username: mapcolonies
-      password: password
+      password: mapcolonies-password
 ```
 
-Produces datasource named `infra-jobnik-dev`.
+Produces datasource named `infra-jobnik-dev` with `sslmode: disable`.
 
-### SSL with default cert paths
+### SSL with client certificates
 
 ```yaml
 datasources:
@@ -111,25 +110,13 @@ datasources:
     - team: infra
       service: opala
       environment: prod
-      host: "some-host"
+      host: some-host
       database: infra-opala
       username: mapcolonies
-      password: password
       ssl:
-        secretName: pg-certs
+        certFile: /etc/secrets/pg-certs/certFile
+        keyFile: /etc/secrets/pg-certs/keyFile
+        rootCertFile: /etc/secrets/pg-certs/caFile
 ```
 
-Produces datasource named `infra-opala-prod` with cert paths:
-- `/etc/secrets/pg-certs/certFile`
-- `/etc/secrets/pg-certs/keyFile`
-- `/etc/secrets/pg-certs/caFile`
-
-### SSL with custom CA path
-
-```yaml
-ssl:
-  secretName: pg-certs
-  rootCertFile: /etc/secrets/pg-certs/custom-ca.crt
-```
-
-In this case, `certFile` and `keyFile` still use the default paths; only `rootCertFile` is overridden.
+Produces datasource named `infra-opala-prod` with `sslmode: verify-full`. No password is rendered.
