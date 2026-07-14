@@ -1,64 +1,48 @@
 {{/*
 Generate Grafana provisioning YAML for all configured postgres datasources.
 
-Datasource name follows the convention: team-service-environment
+This define produces the raw provisioning content only; templates/datasources-secret.yaml
+wraps it into a Secret that the Grafana k8s-sidecar picks up.
 
-Environment resolution (first match wins):
-  1. env field on the entry itself
-  2. global.mclabels.environment
-  3. error
+Datasource name follows the convention: team-service-environment
+  team         instance-level (.Values.team)
+  environment  instance-level (.Values.environment or global.mclabels.environment)
+  service      per-entry
 
 Required per entry:
-  team, service, host, database, username, password
+  service, host, database, username
+
+Auth (at least one required per entry):
+  password                 password auth
+  ssl.certFile + keyFile   client-certificate auth (both required together)
 
 Optional per entry:
-  environment      override environment for this entry (default: global.mclabels.environment)
   version          (default: 1300)
   ssl:
-    secretName     Kubernetes secret name; resolves cert paths to /etc/secrets/{secretName}/{certFile,keyFile,caFile}
-    mode           (default: verify-full) — one of: require, verify-ca, verify-full
-    certFile       override default path to client certificate
-    keyFile        override default path to client private key
-    rootCertFile   override default path to CA certificate
-
-Example — environment from global:
-  datasources:
-    postgres:
-      - team: infra
-        service: jobnik
-        host: hostname
-        database: infra-jobnik
-        username: mapcolonies
-        password: mapcolonies-password
-
-Example — environment per entry:
-  datasources:
-    postgres:
-      - team: infra
-        service: jobnik
-        environment: prod
-        host: hostname
-        database: infra-jobnik
-        username: mapcolonies
-        ssl:
-          secretName: pg-certs
+    mode           (default: require) — one of: require, verify-ca, verify-full
+    certFile       path to client certificate (must be mounted into Grafana)
+    keyFile        path to client private key (must be mounted into Grafana)
+    rootCertFile   path to CA certificate (required for verify-ca and verify-full)
 */}}
 {{- define "datasource-library.postgres" -}}
-{{- $globalEnvironment := dig "global" "mclabels" "environment" "" (toJson .Values | fromJson) -}}
+{{- $team := include "datasource-library.team" . -}}
+{{- $environment := include "datasource-library.environment" . -}}
 apiVersion: 1
 datasources:
-  {{- range dig "datasources" "postgres" (list) .Values }}
-  {{- $team    := required "datasource-library: 'team' is required on every datasources.postgres entry" .team -}}
-  {{- $service := required (printf "datasource-library: 'service' is required (team: %s)" $team) .service -}}
-  {{- $environment     := required (printf "datasource-library: entry '%s/%s' is missing an environment. Set 'environment' on the entry or set global.mclabels.environment" $team $service) (.environment | default $globalEnvironment) -}}
-  {{- $name    := printf "%s-%s-%s" $team $service $environment }}
-  {{- if .ssl }}
-    {{- $_ := required (printf "datasource-library: 'ssl.secretName' is required when ssl is set (entry: %s/%s)" $team $service) .ssl.secretName -}}
-    {{- if .ssl.mode }}
-      {{- if not (has .ssl.mode (list "require" "verify-ca" "verify-full")) }}
-        {{- fail (printf "datasource-library: ssl.mode '%s' is invalid (entry: %s/%s). Must be one of: require, verify-ca, verify-full" .ssl.mode $team $service) }}
-      {{- end }}
-    {{- end }}
+  {{- range dig "datasources" "postgres" (list) (toJson .Values | fromJson) }}
+  {{- $service := required "datasource-library: 'service' is required on every datasources.postgres entry" .service -}}
+  {{- $name := printf "%s-%s-%s" $team $service $environment -}}
+  {{- $ssl := .ssl | default dict -}}
+  {{- $mode := $ssl.mode | default "require" -}}
+  {{- $hasPassword := not (empty .password) -}}
+  {{- $hasCert := not (empty $ssl.certFile) -}}
+  {{- $hasKey := not (empty $ssl.keyFile) -}}
+  {{- if ne $hasCert $hasKey -}}
+    {{- fail (printf "datasource-library: entry '%s/%s' has an incomplete client certificate. Provide both 'ssl.certFile' and 'ssl.keyFile', or neither" $team $service) -}}
+  {{- end -}}
+  {{- $hasClientCert := and $hasCert $hasKey -}}
+  {{- if not (or $hasPassword $hasClientCert) -}}
+    {{- fail (printf "datasource-library: entry '%s/%s' has no auth method. Provide 'password', or a client certificate ('ssl.certFile' and 'ssl.keyFile')" $team $service) -}}
   {{- end }}
   - name: {{ $name }}
     uid: {{ $name }}
@@ -71,15 +55,20 @@ datasources:
       database: {{ required (printf "datasource-library: 'database' is required (entry: %s/%s)" $team $service) .database | quote }}
       postgresVersion: {{ .version | default 1300 }}
     {{- if .ssl }}
-      {{- $secretBase := printf "/etc/secrets/%s" .ssl.secretName }}
-      sslmode: {{ .ssl.mode | default "verify-full" | quote }}
-      sslCertFile: {{ .ssl.certFile | default (printf "%s/certFile" $secretBase) | quote }}
-      sslKeyFile: {{ .ssl.keyFile | default (printf "%s/keyFile" $secretBase) | quote }}
-      sslRootCertFile: {{ .ssl.rootCertFile | default (printf "%s/caFile" $secretBase) | quote }}
+      sslmode: {{ $mode | quote }}
+      {{- if $hasClientCert }}
+      sslCertFile: {{ $ssl.certFile | quote }}
+      sslKeyFile: {{ $ssl.keyFile | quote }}
+      {{- end }}
+      {{- if $ssl.rootCertFile }}
+      sslRootCertFile: {{ $ssl.rootCertFile | quote }}
+      {{- end }}
     {{- else }}
       sslmode: "disable"
+    {{- end }}
+    {{- if $hasPassword }}
     secureJsonData:
-      password: {{ required (printf "datasource-library: 'password' is required (entry: %s/%s)" $team $service) .password | quote }}
+      password: {{ .password | quote }}
     {{- end }}
   {{- end }}
 {{- end }}

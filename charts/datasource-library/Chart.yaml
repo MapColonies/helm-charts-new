@@ -1,7 +1,7 @@
 apiVersion: v2
 name: datasource-library
-description: Helm library chart for generating Grafana datasource provisioning YAML
+description: Helm chart that renders a Secret with Grafana datasource provisioning YAML
 annotations:
   domain: infra
-type: library
+type: application
 version: 0.1.0

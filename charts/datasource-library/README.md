@@ -1,10 +1,12 @@
 # datasource-library
 
-A Helm library chart for generating Grafana datasource provisioning YAML. Designed for use with the [Grafana k8s-sidecar](https://github.com/kiwigrid/k8s-sidecar): consumer charts create a labeled ConfigMap that the sidecar picks up and writes into Grafana's provisioning directory.
+A Helm chart that renders a Kubernetes **Secret** containing Grafana datasource provisioning YAML. Designed for use with the [Grafana k8s-sidecar](https://github.com/kiwigrid/k8s-sidecar): the Secret carries the `mapcolonies.io/grafana-datasources` label, and the sidecar writes it into Grafana's provisioning directory.
+
+The provisioning YAML contains connection passwords, so it is delivered as a Secret (not a ConfigMap).
 
 ## Usage
 
-Add as a dependency in your chart's `Chart.yaml`:
+Add as a subchart dependency in your chart's `Chart.yaml`:
 
 <!-- x-release-please-start-version -->
 ```yaml
@@ -15,72 +17,111 @@ dependencies:
 ```
 <!-- x-release-please-end-version -->
 
-Create a `templates/datasources.yaml` in your chart:
+Configure datasources under the `datasource-library` key in your chart's values. The chart renders the Secret automatically — no template file needed in the consumer chart:
 
 ```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Release.Name }}-datasources
-  namespace: {{ .Release.Namespace }}
-  labels:
-    mapcolonies.io/grafana-datasources: "true"
-data:
-  postgres.yaml: |
-{{ include "datasource-library.postgres" . | indent 4 }}
+datasource-library:
+  team: infra
+  # environment: dev        # optional; defaults to global.mclabels.environment
+  datasources:
+    postgres:
+      - service: jobnik
+        host: some-host:5432
+        database: infra-jobnik
+        username: mapcolonies
+        password: password
 ```
+
+This produces a Secret named `infra-dev-grafana-datasources` with a `infra-dev.yaml` provisioning key.
 
 ## Datasource naming
 
-All datasources are named and UID'd using the convention:
+Each datasource is named and UID'd using the convention:
 
 ```
 {team}-{service}-{environment}
 ```
 
-Example: `infra-jobnik-dev`
+`team` and `environment` are instance-level; `service` is per entry. Example: `infra-jobnik-dev`.
 
 ## Environment resolution
 
-Environment is resolved per entry in this order:
+Environment is resolved once per instance:
 
-1. `environment` field on the entry itself
+1. `environment` field at the instance level
 2. `global.mclabels.environment` (standard infra value, present in all deployments)
-3. **Error** — template fails with a descriptive message naming the offending entry
+3. **Error** — rendering fails with a descriptive message
 
-## Templates
+## Secret naming and multiple instances
 
-### `datasource-library.postgres`
+The Secret and its provisioning file are named:
 
-Generates a Grafana datasource provisioning YAML block for all entries under `datasources.postgres`.
+```
+{team}-{environment}[-{instance}]-grafana-datasources   # Secret
+{team}-{environment}[-{instance}].yaml                  # data key
+```
+
+`instance` is an **optional** disambiguator. You only need it when a single release contains **more than one datasource set for the same team and environment** — for example, several services in one umbrella chart, each depending on `datasource-library`. Set a distinct `instance` on each to keep the Secret names (and the sidecar's on-disk filenames) unique:
+
+```yaml
+# service-a/values.yaml
+datasource-library:
+  team: infra
+  instance: jobnik
+  datasources: { postgres: [ ... ] }
+
+# service-b/values.yaml
+datasource-library:
+  team: infra
+  instance: opala
+  datasources: { postgres: [ ... ] }
+```
+
+→ `infra-prod-jobnik-grafana-datasources` and `infra-prod-opala-grafana-datasources`. If `team`+`environment` are already unique across the release, `instance` can be omitted.
+
+## Authentication
+
+Every entry must provide **at least one** auth method. Password auth and TLS are orthogonal — you can use either, or both (e.g. `sslmode: require` for transport encryption together with a password):
+
+- **Password** — set `password`.
+- **Client certificate** — set both `ssl.certFile` and `ssl.keyFile` (a lone `certFile` or `keyFile` is rejected).
+
+An entry with SSL but no password and no client certificate has no way to authenticate and is rejected.
 
 ## Values
 
-### PostgreSQL entry
+Values are validated by `values.schema.json` (field types, enums, unknown-key rejection, and the `rootCertFile` requirement). Team/environment resolution and the auth-method requirement are enforced at render time.
+
+### Instance-level
 
 | Field | Required | Default | Description |
 |---|---|---|---|
-| `team` | yes | — | Team name, used in datasource name |
+| `team` | yes | — | Owning team; used in datasource and Secret names |
+| `environment` | no | `global.mclabels.environment` | Environment for all datasources in this instance |
+| `instance` | no | — | Disambiguator for the Secret name (see above) |
+
+### PostgreSQL entry (`datasources.postgres[]`)
+
+| Field | Required | Default | Description |
+|---|---|---|---|
 | `service` | yes | — | Service name, used in datasource name |
 | `host` | yes | — | Postgres host and port (`host:port`) |
 | `database` | yes | — | Database name |
 | `username` | yes | — | Database user |
-| `password` | no | — | Password (in case ssl is not set) |
-| `environment` | no | `global.mclabels.environment` | Environment override for this entry |
+| `password` | conditional | — | Password auth. Required unless a client certificate is provided |
 | `version` | no | `1300` | Postgres server version (e.g. `1500` for PG 15) |
 | `ssl` | no | — | SSL configuration block (see below) |
 
 ### SSL block (`ssl`)
 
-Omit the entire `ssl` block for non-SSL connections (`sslmode: disable`).
+Omit the entire `ssl` block for non-SSL connections (`sslmode: disable`). Cert files must already be mounted into the Grafana pod — this chart only writes the paths into the datasource, it does not create or mount any secret.
 
 | Field | Required | Default | Description |
 |---|---|---|---|
-| `secretName` | yes | — | Kubernetes Secret name; cert paths resolve to `/etc/secrets/{secretName}/{certFile,keyFile,caFile}` |
-| `mode` | no | `verify-full` | One of `require`, `verify-ca`, `verify-full` |
-| `certFile` | no | `/etc/secrets/{secretName}/certFile` | Override path to client certificate |
-| `keyFile` | no | `/etc/secrets/{secretName}/keyFile` | Override path to client private key |
-| `rootCertFile` | no | `/etc/secrets/{secretName}/caFile` | Override path to CA certificate |
+| `mode` | no | `require` | One of `require`, `verify-ca`, `verify-full` |
+| `certFile` | conditional | — | Path to client certificate. Required together with `keyFile` |
+| `keyFile` | conditional | — | Path to client private key. Required together with `certFile` |
+| `rootCertFile` | conditional | — | Path to CA certificate. **Required** when `mode` is `verify-ca` or `verify-full` |
 
 ## Examples
 
@@ -91,45 +132,55 @@ global:
   mclabels:
     environment: dev
 
-datasources:
-  postgres:
-    - team: infra
-      service: jobnik
-      host: some-host
-      database: infra-jobnik
-      username: mapcolonies
-      password: password
+datasource-library:
+  team: infra
+  datasources:
+    postgres:
+      - service: jobnik
+        host: some-host:5432
+        database: infra-jobnik
+        username: mapcolonies
+        password: password
 ```
 
-Produces datasource named `infra-jobnik-dev`.
+Produces datasource `infra-jobnik-dev` with `sslmode: disable`, in Secret `infra-dev-grafana-datasources`.
 
-### SSL with default cert paths
+### TLS + password auth
 
 ```yaml
-datasources:
-  postgres:
-    - team: infra
-      service: opala
-      environment: prod
-      host: "some-host"
-      database: infra-opala
-      username: mapcolonies
-      password: password
-      ssl:
-        secretName: pg-certs
+datasource-library:
+  team: infra
+  environment: prod
+  datasources:
+    postgres:
+      - service: opala
+        host: some-host:5432
+        database: infra-opala
+        username: mapcolonies
+        password: password
+        ssl:
+          mode: require
 ```
 
-Produces datasource named `infra-opala-prod` with cert paths:
-- `/etc/secrets/pg-certs/certFile`
-- `/etc/secrets/pg-certs/keyFile`
-- `/etc/secrets/pg-certs/caFile`
+Encrypts the connection (`sslmode: require`) while authenticating with a password. No CA needed for `require`.
 
-### SSL with custom CA path
+### Client-certificate auth with full verification
 
 ```yaml
-ssl:
-  secretName: pg-certs
-  rootCertFile: /etc/secrets/pg-certs/custom-ca.crt
+datasource-library:
+  team: infra
+  environment: prod
+  datasources:
+    postgres:
+      - service: opala
+        host: some-host:5432
+        database: infra-opala
+        username: mapcolonies
+        ssl:
+          mode: verify-full
+          certFile: /etc/secrets/pg-certs/tls.crt
+          keyFile: /etc/secrets/pg-certs/tls.key
+          rootCertFile: /etc/secrets/pg-certs/ca.crt
 ```
 
-In this case, `certFile` and `keyFile` still use the default paths; only `rootCertFile` is overridden.
+`verify-ca` and `verify-full` both require `rootCertFile`.
