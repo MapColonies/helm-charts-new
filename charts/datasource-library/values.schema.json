@@ -40,10 +40,9 @@
           "type": "string",
           "enum": ["require", "verify-ca", "verify-full"]
         },
-        "certFile": { "type": "string" },
-        "keyFile": { "type": "string" },
-        "rootCertFile": { "type": "string" }
-      },
+        "certFile": { "type": "string", "minLength": 1 },
+        "keyFile": { "type": "string", "minLength": 1 },
+        "rootCertFile": { "type": "string", "minLength": 1 }
       "if": {
         "required": ["mode"],
         "properties": {
