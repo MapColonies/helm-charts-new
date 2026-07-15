@@ -85,22 +85,44 @@ otelcol.receiver.loki "default" {
 
 otelcol.processor.transform "default" {
     error_mode = "ignore"
+
     log_statements {
         context = "log"
         statements = [
-        `set(resource.attributes, attributes)`,
-        `delete_key(resource.attributes, "loki.attribute.labels")`,
-        `set(cache, ParseJSON(body))`,
-        `set(severity_text, cache["SeverityText"])`,
-        `set(severity_number, Int(cache["SeverityNumber"]))`,
-        `set(attributes, cache["Attributes"])`,
-        `merge_maps(resource.attributes, cache["Resource"],"upsert")`,
-        `set(trace_id.string, cache["TraceId"])`,
-        `set(span_id.string, cache["SpanId"])`,
-        `set(instrumentation_scope.name, cache["InstrumentationScope"])`,
-        `set(time_unix_nano, cache["Timestamp"])`,
-        `set(body, cache["Body"])`,
-        `replace_all_patterns(resource.attributes, "key","\\_", ".")`,
+            `set(resource.attributes, attributes)`,
+            `delete_key(resource.attributes, "loki.attribute.labels")`,
+            `replace_all_patterns(resource.attributes, "key","\\_", ".")`,
+        ]
+    }
+
+		log_statements {
+        context = "log"
+        
+        // Skips this entire block if the log isn't JSON
+        conditions = [
+            `IsMatch(body, "^\\s*\\{")`,
+        ]
+
+        statements = [
+            `set(cache, ParseJSON(body))`,
+            `set(severity_text, cache["SeverityText"]) where IsMap(cache)`,
+            `set(severity_number, Int(cache["SeverityNumber"])) where IsMap(cache)`,
+            `set(attributes, cache["Attributes"]) where IsMap(cache)`,
+            `set(resource.attributes["_temp_resource"], cache["Resource"]) where IsMap(cache)`,
+            `merge_maps(resource.attributes, resource.attributes["_temp_resource"], "upsert") where IsMap(resource.attributes["_temp_resource"])`,
+            `delete_key(resource.attributes, "_temp_resource")`,        
+            
+            // Context and tracing extractions
+            `set(trace_id.string, cache["TraceId"]) where IsMap(cache)`,
+            `set(span_id.string, cache["SpanId"]) where IsMap(cache)`,
+            `set(instrumentation_scope.name, cache["InstrumentationScope"]) where IsMap(cache)`,
+            
+            // Explicit Int64 Casting for timestamps
+            `set(time_unix_nano, Int(cache["Timestamp"])) where IsMap(cache)`,
+            `set(body, cache["Body"]) where IsMap(cache)`,
+            
+            // Normalizes the newly merged JSON attributes
+            `replace_all_patterns(resource.attributes, "key","\\_", ".")`,
         ]
     }
 
@@ -109,24 +131,34 @@ otelcol.processor.transform "default" {
     }
 }
 
+{{- if empty .Values.namespaces }}
+    {{- fail "At least one namespace must be specified in the values file." }}
+{{- end }}
+{{- $namespaces := .Values.namespaces }}
+{{- $lastIndex := sub (len $namespaces) 1 }}
 otelcol.receiver.otlp "default" {
     grpc {}
     http {}
 
     output {
-        logs   = [otelcol.processor.k8sattributes.default.input]
-        traces = [otelcol.processor.k8sattributes.default.input]
+        logs   = [otelcol.processor.k8sattributes.add_k8s_attributes_{{ index $namespaces 0 | snakecase }}.input]
+        traces = [otelcol.processor.k8sattributes.add_k8s_attributes_{{ index $namespaces 0 | snakecase }}.input]
     }
 }
 
-otelcol.processor.k8sattributes "default" {
+{{- range $index, $namespace := $namespaces }}
+otelcol.processor.k8sattributes "add_k8s_attributes_{{ $namespace | snakecase }}" {
+    filter {
+        namespace = {{ $namespace | quote }}
+    }
+
     extract {
         metadata = [
             "k8s.deployment.name", "k8s.namespace.name", "k8s.pod.name",
             "k8s.pod.start_time", "k8s.statefulset.name", "k8s.pod.uid",
             "k8s.container.name", "k8s.node.name", "k8s.cronjob.name", "k8s.job.name",
         ]
-        
+
         label {
             from = "pod"
             key = "mapcolonies.io/owner"
@@ -146,12 +178,20 @@ otelcol.processor.k8sattributes "default" {
             name = "k8s.pod.uid"
         }
     }
-    
+    {{ if eq $index $lastIndex -}}
     output {
-        logs = [otelcol.processor.filter.health_filter.input]
+        logs   = [otelcol.processor.filter.health_filter.input]
         traces = [otelcol.processor.batch.default.input]
     }
+    {{- else }}
+    {{- $nextIndex := add $index 1 -}}
+    output {
+        logs   = [otelcol.processor.k8sattributes.add_k8s_attributes_{{ index $namespaces $nextIndex | snakecase }}.input]
+        traces = [otelcol.processor.k8sattributes.add_k8s_attributes_{{ index $namespaces $nextIndex | snakecase }}.input]
+    }
+    {{- end }}
 }
+{{ end }}
 
 otelcol.processor.filter "health_filter" {
     error_mode = "ignore"

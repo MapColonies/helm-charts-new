@@ -4,11 +4,11 @@ description: A Helm chart for Prometheus
 annotations:
   domain: infra
 type: application
-version: 1.0.0
-appVersion: v3.10.0
+version: 1.1.0
+appVersion: v3.11.0
 dependencies:
   - name: prometheus
-    version: 28.13.0
+    version: 28.16.0
     repository: https://prometheus-community.github.io/helm-charts
   - name: openshift-routes
     version: 1.0.2

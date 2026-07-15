@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/MapColonies/helm-charts-new/compare/prometheus-v1.0.0...prometheus-v1.1.0) (2026-06-15)
+
+
+### 🎉 Features
+
+* **prometheus:** Update prometheus chart version to 3.11.0 MAPCO-10774 ([#91](https://github.com/MapColonies/helm-charts-new/issues/91)) ([d30e28b](https://github.com/MapColonies/helm-charts-new/commit/d30e28bada2fa4daf9d1fe69592af80baaa508db))
+
 ## 1.0.0 (2026-03-24)
 
 

@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.1.4](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.1.3...alloy-v1.1.4) (2026-06-21)
+
+
+### 🐛 Bug Fixes
+
+* **alloy:** update versions and seperate config to blocks ([#93](https://github.com/MapColonies/helm-charts-new/issues/93)) ([1f756a1](https://github.com/MapColonies/helm-charts-new/commit/1f756a1ef6fa16c6ac015e9e7b7c8e5c34d63522))
+
+## [1.1.3](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.1.2...alloy-v1.1.3) (2026-06-14)
+
+
+### 🐛 Bug Fixes
+
+* **alloy:** add conditional checks for JSON parsing in transform processor ([#88](https://github.com/MapColonies/helm-charts-new/issues/88)) ([3831b03](https://github.com/MapColonies/helm-charts-new/commit/3831b036bd3f0f0e33145913ccfffc9aad22ab98))
+
+## [1.1.2](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.1.1...alloy-v1.1.2) (2026-06-04)
+
+
+### 🐛 Bug Fixes
+
+* **alloy:** scope k8sattributes enrichment per namespace MAPCO-10609 ([#86](https://github.com/MapColonies/helm-charts-new/issues/86)) ([50214cb](https://github.com/MapColonies/helm-charts-new/commit/50214cba77e49d8eda2d9ee9a977bd180bec187d))
+
 ## [1.1.1](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.1.0...alloy-v1.1.1) (2026-04-16)
 
 
