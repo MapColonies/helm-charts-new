@@ -1,0 +1,16 @@
+apiVersion: v2
+name: claude-otel-collector
+description: A wrapper Helm chart for the dedicated OpenTelemetry Collector ingesting Claude Code telemetry, scraped by Prometheus
+type: application
+version: 1.0.0
+appVersion: 0.115.1
+annotations:
+  domain: infra
+dependencies:
+  - name: opentelemetry-collector
+    repository: https://open-telemetry.github.io/opentelemetry-helm-charts
+    version: 0.111.0
+    alias: otel
+  - name: openshift-routes
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/common
+    version: 1.0.2
