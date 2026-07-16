@@ -24,13 +24,13 @@ Optional per entry:
     keyFile        path to client private key (must be mounted into Grafana)
     rootCertFile   path to CA certificate (required for verify-ca and verify-full)
 */}}
-{{- define "datasource-library.postgres" -}}
-{{- $team := include "datasource-library.team" . -}}
-{{- $environment := include "datasource-library.environment" . -}}
+{{- define "grafana-datasources.postgres" -}}
+{{- $team := include "grafana-datasources.team" . -}}
+{{- $environment := include "grafana-datasources.environment" . -}}
 apiVersion: 1
 datasources:
   {{- range dig "datasources" "postgres" (list) (toJson .Values | fromJson) }}
-  {{- $service := required "datasource-library: 'service' is required on every datasources.postgres entry" .service -}}
+  {{- $service := required "grafana-datasources: 'service' is required on every datasources.postgres entry" .service -}}
   {{- $name := printf "%s-%s-%s" $team $service $environment -}}
   {{- $ssl := .ssl | default dict -}}
   {{- $mode := $ssl.mode | default "require" -}}
@@ -38,21 +38,21 @@ datasources:
   {{- $hasCert := not (empty $ssl.certFile) -}}
   {{- $hasKey := not (empty $ssl.keyFile) -}}
   {{- if ne $hasCert $hasKey -}}
-    {{- fail (printf "datasource-library: entry '%s/%s' has an incomplete client certificate. Provide both 'ssl.certFile' and 'ssl.keyFile', or neither" $team $service) -}}
+    {{- fail (printf "grafana-datasources: entry '%s/%s' has an incomplete client certificate. Provide both 'ssl.certFile' and 'ssl.keyFile', or neither" $team $service) -}}
   {{- end -}}
   {{- $hasClientCert := and $hasCert $hasKey -}}
   {{- if not (or $hasPassword $hasClientCert) -}}
-    {{- fail (printf "datasource-library: entry '%s/%s' has no auth method. Provide 'password', or a client certificate ('ssl.certFile' and 'ssl.keyFile')" $team $service) -}}
+    {{- fail (printf "grafana-datasources: entry '%s/%s' has no auth method. Provide 'password', or a client certificate ('ssl.certFile' and 'ssl.keyFile')" $team $service) -}}
   {{- end }}
   - name: {{ $name }}
     uid: {{ $name }}
     type: grafana-postgresql-datasource
-    url: {{ required (printf "datasource-library: 'host' is required (entry: %s/%s)" $team $service) .host | quote }}
-    user: {{ required (printf "datasource-library: 'username' is required (entry: %s/%s)" $team $service) .username | quote }}
+    url: {{ required (printf "grafana-datasources: 'host' is required (entry: %s/%s)" $team $service) .host | quote }}
+    user: {{ required (printf "grafana-datasources: 'username' is required (entry: %s/%s)" $team $service) .username | quote }}
     isDefault: false
     editable: false
     jsonData:
-      database: {{ required (printf "datasource-library: 'database' is required (entry: %s/%s)" $team $service) .database | quote }}
+      database: {{ required (printf "grafana-datasources: 'database' is required (entry: %s/%s)" $team $service) .database | quote }}
       postgresVersion: {{ .version | default 1300 }}
     {{- if .ssl }}
       sslmode: {{ $mode | quote }}

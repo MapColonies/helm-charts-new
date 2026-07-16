@@ -123,7 +123,7 @@
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
-      "charts/datasource-library": {
+      "charts/grafana-datasources": {
         "release-type": "helm",
         "extra-files": ["README.md"]
       }

@@ -1,4 +1,4 @@
-# datasource-library
+# grafana-datasources
 
 A Helm chart that renders a Kubernetes **Secret** containing Grafana datasource provisioning YAML. Designed for use with the [Grafana k8s-sidecar](https://github.com/kiwigrid/k8s-sidecar): the Secret carries the `mapcolonies.io/grafana-datasources` label, and the sidecar writes it into Grafana's provisioning directory.
 
@@ -11,16 +11,16 @@ Add as a subchart dependency in your chart's `Chart.yaml`:
 <!-- x-release-please-start-version -->
 ```yaml
 dependencies:
-  - name: datasource-library
+  - name: grafana-datasources
     version: "0.1.0"
     repository: "oci://acrarolibotnonprod.azurecr.io/helm/infra"
 ```
 <!-- x-release-please-end-version -->
 
-Configure datasources under the `datasource-library` key in your chart's values. The chart renders the Secret automatically — no template file needed in the consumer chart:
+Configure datasources under the `grafana-datasources` key in your chart's values. The chart renders the Secret automatically — no template file needed in the consumer chart:
 
 ```yaml
-datasource-library:
+grafana-datasources:
   team: infra
   # environment: dev        # optional; defaults to global.mclabels.environment
   datasources:
@@ -61,17 +61,17 @@ The Secret and its provisioning file are named:
 {team}-{environment}[-{instance}].yaml                  # data key
 ```
 
-`instance` is an **optional** disambiguator. You only need it when a single release contains **more than one datasource set for the same team and environment** — for example, several services in one umbrella chart, each depending on `datasource-library`. Set a distinct `instance` on each to keep the Secret names (and the sidecar's on-disk filenames) unique:
+`instance` is an **optional** disambiguator. You only need it when a single release contains **more than one datasource set for the same team and environment** — for example, several services in one umbrella chart, each depending on `grafana-datasources`. Set a distinct `instance` on each to keep the Secret names (and the sidecar's on-disk filenames) unique:
 
 ```yaml
 # service-a/values.yaml
-datasource-library:
+grafana-datasources:
   team: infra
   instance: jobnik
   datasources: { postgres: [ ... ] }
 
 # service-b/values.yaml
-datasource-library:
+grafana-datasources:
   team: infra
   instance: opala
   datasources: { postgres: [ ... ] }
@@ -132,7 +132,7 @@ global:
   mclabels:
     environment: dev
 
-datasource-library:
+grafana-datasources:
   team: infra
   datasources:
     postgres:
@@ -148,7 +148,7 @@ Produces datasource `infra-jobnik-dev` with `sslmode: disable`, in Secret `infra
 ### TLS + password auth
 
 ```yaml
-datasource-library:
+grafana-datasources:
   team: infra
   environment: prod
   datasources:
@@ -167,7 +167,7 @@ Encrypts the connection (`sslmode: require`) while authenticating with a passwor
 ### Client-certificate auth with full verification
 
 ```yaml
-datasource-library:
+grafana-datasources:
   team: infra
   environment: prod
   datasources:

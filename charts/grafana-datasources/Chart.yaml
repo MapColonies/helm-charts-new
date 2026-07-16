@@ -1,5 +1,5 @@
 apiVersion: v2
-name: datasource-library
+name: grafana-datasources
 description: Helm chart that renders a Secret with Grafana datasource provisioning YAML
 annotations:
   domain: infra
