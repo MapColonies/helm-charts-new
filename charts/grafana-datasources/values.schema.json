@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "grafana-datasources values",
+  "type": "object",
+  "properties": {
+    "team": { "type": "string", "minLength": 1 },
+    "environment": { "type": "string" },
+    "instance": { "type": "string" },
+    "datasources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "postgres": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/postgresEntry" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "postgresEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["service", "host", "database", "username"],
+      "properties": {
+        "service": { "type": "string", "minLength": 1 },
+        "host": { "type": "string", "minLength": 1 },
+        "database": { "type": "string", "minLength": 1 },
+        "username": { "type": "string", "minLength": 1 },
+        "password": { "type": "string", "minLength": 1 },
+        "version": { "type": "integer" },
+        "ssl": { "$ref": "#/definitions/ssl" }
+      }
+    },
+    "ssl": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["require", "verify-ca", "verify-full"]
+        },
+        "certFile": { "type": "string", "minLength": 1 },
+        "keyFile": { "type": "string", "minLength": 1 },
+        "rootCertFile": { "type": "string", "minLength": 1 }
+      },
+      "if": {
+        "required": ["mode"],
+        "properties": {
+          "mode": { "enum": ["verify-ca", "verify-full"] }
+        }
+      },
+      "then": {
+        "required": ["rootCertFile"]
+      }
+    }
+  }
+}
