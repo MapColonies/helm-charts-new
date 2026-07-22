@@ -12,7 +12,7 @@ Add as a subchart dependency in your chart's `Chart.yaml`:
 ```yaml
 dependencies:
   - name: grafana-datasources
-    version: "0.1.0"
+    version: "1.0.0"
     repository: "oci://acrarolibotnonprod.azurecr.io/helm/infra"
 ```
 <!-- x-release-please-end-version -->
