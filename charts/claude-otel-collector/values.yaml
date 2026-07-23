@@ -53,6 +53,10 @@ otel:
             endpoint: ${env:MY_POD_IP}:4318
     exporters:
       debug: null
+      # Claude Code events (tool runs, edit decisions, api errors) go straight
+      # to Loki's native OTLP endpoint — Alloy adds nothing for non-k8s sources
+      otlphttp:
+        endpoint: http://infra-loki-gateway/otlp
       prometheus:
         endpoint: ${env:MY_POD_IP}:8889
         # Claude Code metric attributes (user.email, model, session.id...)
@@ -62,7 +66,14 @@ otel:
     service:
       pipelines:
         traces: null
-        logs: null
+        logs:
+          receivers:
+            - otlp
+          processors:
+            - memory_limiter
+            - batch
+          exporters:
+            - otlphttp
         metrics:
           receivers:
             - otlp
