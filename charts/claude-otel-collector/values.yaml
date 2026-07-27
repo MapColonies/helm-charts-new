@@ -1,0 +1,94 @@
+otel:
+  fullnameOverride: infra-claude-otel
+  serviceAccount:
+    create: false
+    name: monitoring
+  image:
+    repository: infra/opentelemetry-collector-contrib
+
+  mode: deployment
+
+  # single replica by design: the prometheus exporter accumulates counters in
+  # pod memory, and multiple replicas would split them across pods
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8889"
+
+  ports:
+    otlp:
+      enabled: false
+    jaeger-compact:
+      enabled: false
+    jaeger-thrift:
+      enabled: false
+    jaeger-grpc:
+      enabled: false
+    zipkin:
+      enabled: false
+    metrics:
+      enabled: true
+    claude-metrics:
+      enabled: true
+      containerPort: 8889
+      servicePort: 8889
+      protocol: TCP
+
+  config:
+    receivers:
+      jaeger: null
+      zipkin: null
+      prometheus: null
+      otlp:
+        protocols:
+          grpc: null
+          http:
+            cors:
+              allowed_origins:
+                - "http://*"
+                - "https://*"
+            endpoint: ${env:MY_POD_IP}:4318
+    exporters:
+      debug: null
+      # Claude Code events (tool runs, edit decisions, api errors) go straight
+      # to Loki's native OTLP endpoint — Alloy adds nothing for non-k8s sources
+      otlphttp:
+        endpoint: http://infra-loki-gateway/otlp
+      prometheus:
+        endpoint: ${env:MY_POD_IP}:8889
+        # Claude Code metric attributes (user.email, model, session.id...)
+        # arrive as resource attributes and must become Prometheus labels
+        resource_to_telemetry_conversion:
+          enabled: true
+    service:
+      pipelines:
+        traces: null
+        logs:
+          receivers:
+            - otlp
+          processors:
+            - memory_limiter
+            - batch
+          exporters:
+            - otlphttp
+        metrics:
+          receivers:
+            - otlp
+          processors:
+            - memory_limiter
+            - batch
+          exporters:
+            - prometheus
+
+openshift-routes:
+  routes:
+    - name: claude-otel
+      service:
+        name: infra-claude-otel
+        port: otlp-http
+      tls:
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect

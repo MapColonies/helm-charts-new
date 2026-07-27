@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.1.4...alloy-v1.2.0) (2026-07-16)
+
+
+### 🎉 Features
+
+* **alloy:** add alerts ([#100](https://github.com/MapColonies/helm-charts-new/issues/100)) ([48ed7ca](https://github.com/MapColonies/helm-charts-new/commit/48ed7caf30696dcc0fece9b858ca62a428f8863c))
+
 ## [1.1.4](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.1.3...alloy-v1.1.4) (2026-06-21)
 
 

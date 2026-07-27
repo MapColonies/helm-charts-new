@@ -14,6 +14,9 @@ alloy:
       repository: infra/grafana/prometheus-operator/prometheus-config-reloader
       tag: v0.91.0
 
+  crds:
+    create: false
+
   controller:
     type: 'deployment'
     podLabels:

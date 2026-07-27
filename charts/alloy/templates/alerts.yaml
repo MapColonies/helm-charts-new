@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-alerts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    mapcolonies.io/grafana-alerts: "true"
+data:
+{{ (.Files.Glob "files/alerts/*.yaml").AsConfig | indent 2 }}

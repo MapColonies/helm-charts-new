@@ -1,0 +1,330 @@
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: alloy_otelcol
+    folder: Alloy
+    interval: 1m
+    rules:
+      - uid: mx-orc-spn
+        title: OtelcolReceiverRefusedSpans
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: "(1 - (sum by (cluster, namespace, job) (rate(otelcol_receiver_refused_spans_total[1m])) / sum by (cluster, namespace, job) (rate(otelcol_receiver_refused_spans_total[1m]) + rate(otelcol_receiver_accepted_spans_total[1m])))) < 0.95"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 10m
+        labels:
+          severity: warning
+          alert_team: infra
+        annotations:
+          summary: The receiver pushing spans to the pipeline success rate is below 95%.
+          description: "The receiver could not push some spans to the pipeline under job {{ $labels.job }}. This could be due to reaching a limit such as the ones imposed by otelcol.processor.memory_limiter."
+
+      - uid: mx-orc-met
+        title: OtelcolReceiverRefusedMetrics
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: "(1 - (sum by (cluster, namespace, job) (rate(otelcol_receiver_refused_metric_points_total[1m])) / sum by (cluster, namespace, job) (rate(otelcol_receiver_refused_metric_points_total[1m]) + rate(otelcol_receiver_accepted_metric_points_total[1m])))) < 0.95"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 10m
+        labels:
+          severity: warning
+          alert_team: infra
+        annotations:
+          summary: The receiver pushing metrics to the pipeline success rate is below 95%.
+          description: "The receiver could not push some metric points to the pipeline under job {{ $labels.job }}. This could be due to reaching a limit such as the ones imposed by otelcol.processor.memory_limiter."
+
+      - uid: mx-orc-log
+        title: OtelcolReceiverRefusedLogs
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: "(1 - (sum by (cluster, namespace, job) (rate(otelcol_receiver_refused_log_records_total[1m])) / sum by (cluster, namespace, job) (rate(otelcol_receiver_refused_log_records_total[1m]) + rate(otelcol_receiver_accepted_log_records_total[1m])))) < 0.95"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 10m
+        labels:
+          severity: warning
+          alert_team: infra
+        annotations:
+          summary: The receiver pushing logs to the pipeline success rate is below 95%.
+          description: "The receiver could not push some log records to the pipeline under job {{ $labels.job }}. This could be due to reaching a limit such as the ones imposed by otelcol.processor.memory_limiter."
+
+      - uid: mx-oex-spn
+        title: OtelcolExporterFailedSpans
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: "(1 - (sum by (cluster, namespace, job) (rate(otelcol_exporter_send_failed_spans_total[1m])) / sum by (cluster, namespace, job) (rate(otelcol_exporter_send_failed_spans_total[1m]) + rate(otelcol_exporter_sent_spans_total[1m])))) < 0.95"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 10m
+        labels:
+          severity: warning
+          alert_team: infra
+        annotations:
+          summary: The exporter sending spans success rate is below 95%.
+          description: "The exporter failed to send spans to their destination under job {{ $labels.job }}. There could be an issue with the payload or with the destination endpoint."
+
+      - uid: mx-oex-met
+        title: OtelcolExporterFailedMetrics
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: "(1 - (sum by (cluster, namespace, job) (rate(otelcol_exporter_send_failed_metric_points_total[1m])) / sum by (cluster, namespace, job) (rate(otelcol_exporter_send_failed_metric_points_total[1m]) + rate(otelcol_exporter_sent_metric_points_total[1m])))) < 0.95"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 10m
+        labels:
+          severity: warning
+          alert_team: infra
+        annotations:
+          summary: The exporter sending metrics success rate is below 95%.
+          description: "The exporter failed to send metric points to their destination under job {{ $labels.job }}. There could be an issue with the payload or with the destination endpoint."
+
+      - uid: mx-oex-log
+        title: OtelcolExporterFailedLogs
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: "(1 - (sum by (cluster, namespace, job) (rate(otelcol_exporter_send_failed_log_records_total[1m])) / sum by (cluster, namespace, job) (rate(otelcol_exporter_send_failed_log_records_total[1m]) + rate(otelcol_exporter_sent_log_records_total[1m])))) < 0.95"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 10m
+        labels:
+          severity: warning
+          alert_team: infra
+        annotations:
+          summary: The exporter sending logs success rate is below 95%.
+          description: "The exporter failed to send log records to their destination under job {{ $labels.job }}. There could be an issue with the payload or with the destination endpoint."

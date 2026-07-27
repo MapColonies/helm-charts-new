@@ -119,7 +119,15 @@
         "release-type": "helm",
         "extra-files": ["README.md"]
       },
+      "charts/claude-otel-collector": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
+      },
       "charts/elastic-alertmanager-connector": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
+      },
+      "charts/grafana-datasources": {
         "release-type": "helm",
         "extra-files": ["README.md"]
       }
