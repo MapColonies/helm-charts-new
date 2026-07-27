@@ -1,0 +1,32 @@
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    url: 'http://infra-prometheus-server:9090'
+    editable: false
+    isDefault: true
+  - name: Tempo
+    uid: tempo
+    type: tempo
+    url: 'http://infra-tempo-gateway'
+    editable: false
+    isDefault: false
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+      tracesToMetrics:
+        datasourceUid: prometheus
+  - name: Loki
+    uid: loki
+    type: loki
+    url: 'http://infra-loki-gateway'
+    editable: false
+    isDefault: false
+    jsonData:
+      derivedFields:
+        - name: traceID
+          matcherType: label
+          matcherRegex: trace_id
+          datasourceUid: tempo
+          url: '$${__value.raw}'

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.0.2...grafana-v1.1.0) (2026-07-19)
+
+
+### 🎉 Features
+
+* **grafana:** enabled the sidecar dashboard to load dashboards ([#89](https://github.com/MapColonies/helm-charts-new/issues/89)) ([c396046](https://github.com/MapColonies/helm-charts-new/commit/c396046fc970454ca54ebf8019861aa628c791d5))
+* **grafana:** support alerts and datasources sidecar ([#99](https://github.com/MapColonies/helm-charts-new/issues/99)) ([d76d0fd](https://github.com/MapColonies/helm-charts-new/commit/d76d0fd799ddf617a2c2c7a216ae7eaf704087be))
+
 ## [1.0.2](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.0.1...grafana-v1.0.2) (2026-05-20)
 
 

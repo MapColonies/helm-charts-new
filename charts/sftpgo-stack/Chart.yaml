@@ -11,7 +11,7 @@ dependencies:
     repository: oci://ghcr.io/sftpgo/helm-charts
     version: 0.44.0
   - name: sftpgo-node-exporter
-    version: 1.0.0
+    version: 1.0.1
     repository: file://charts/node-exporter
   - name: openshift-routes
     repository: oci://acrarolibotnonprod.azurecr.io/helm/common

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-alerting-provisioning
+  namespace: {{ .Release.Namespace }}
+  labels:
+    mapcolonies.io/grafana-alerts: "true"
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: grafana
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  contact-points.yaml: |
+{{ tpl (.Files.Get "files/contact-points.yaml.gotmpl") . | indent 4 }}
+  notification-policy.yaml: |
+{{ tpl (.Files.Get "files/notification-policy.yaml.gotmpl") . | indent 4 }}

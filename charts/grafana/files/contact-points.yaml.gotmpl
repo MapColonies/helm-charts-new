@@ -1,0 +1,14 @@
+apiVersion: 1
+{{- if .Values.grafana.alertingTeamsWebhooks }}
+contactPoints:
+{{- range .Values.grafana.alertingTeamsWebhooks }}
+  - orgId: 1
+    name: {{ .team }}-alerts
+    receivers:
+      - uid: {{ .team }}-receiver
+        type: {{ $.Values.grafana.alertingReceiverType }}
+        settings:
+          url: {{ printf "${%s_WEBHOOK}" (upper .team) | quote }}
+        disableResolveMessage: false
+{{- end }}
+{{- end }}
