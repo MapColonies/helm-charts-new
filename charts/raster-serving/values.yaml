@@ -137,6 +137,7 @@ mapproxy:
 redis:
   enabled: true
   debug: false
+  architecture: standalone
   image:
     registry: docker.io
     repository: bitnamilegacy/redis
@@ -153,8 +154,26 @@ redis:
       registry: docker.io
       repository: bitnamilegacy/redis-exporter
       tag: 1.55.0-debian-11-r2
+  master:
     containerSecurityContext:
       enabled: false
+    count: 1
+    disableCommands:
+      - FLUSHALL
+    kind: StatefulSet
+    persistence:
+      accessModes:
+        - ReadWriteMany
+      enabled: false
+      size: 1Gi
+      storageClass: nfs
+    podLabels:
+      app: redis
+      role: master
+    podSecurityContext:
+      enabled: false
+    serviceAccount:
+      create: false
 
 # ====================================================================================================
 # PP-Geoserver
@@ -176,7 +195,8 @@ pp-geoserver:
     enabled: true
     image:
       repository: common/nginx
-      tag: "v2.1.6"
+      tag: "v2.2.1"
+    nameOverride: nginx-pp-geoserver
     mclabels:
       partOf: serving
       owner: raster

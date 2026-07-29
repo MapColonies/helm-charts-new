@@ -90,6 +90,9 @@ geoserver-api:
     tag: v2.1.0
   configManagement:
     offlineMode: true
+  db:
+    schema: "polygon_parts"
+    dbType: "postgis"
 
 # ====================================================================================================
 # Polygon-Parts-Worker
