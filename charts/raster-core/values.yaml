@@ -31,7 +31,7 @@ job-tracker:
     exportTasksFlow:
       - init
       - tilesExporting
-      # - polygon-parts # disabled by deisgn until we will support it
+      # - polygon-parts # disabled by design until we will support it
       - finalize
     seedTasksFlow:
       - TilesSeeding
