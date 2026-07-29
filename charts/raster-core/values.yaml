@@ -2,7 +2,6 @@
 # Raster-Catalog-Manager
 # ====================================================================================================
 raster-catalog-manager:
-  enabled: true
   image:
     repository: raster/raster-catalog-manager
     tag: "v7.2.0"
@@ -16,7 +15,6 @@ raster-catalog-manager:
 # Job-Tracker
 # ====================================================================================================
 job-tracker:
-  enabled: true
   image:
     repository: raster/job-tracker
     tag: "v5.2.0"
@@ -43,7 +41,6 @@ job-tracker:
 # Polygon-Parts-Manager
 # ====================================================================================================
 polygon-parts-manager:
-  enabled: true
   image:
     repository: raster/polygon-parts-manager
     tag: v3.3.1
@@ -65,7 +62,6 @@ polygon-parts-manager:
 # Cleaner
 # ====================================================================================================
 cleaner:
-  enabled: true
   image:
     repository: raster/cleaner
     tag: "v1.1.3"
@@ -88,9 +84,7 @@ cleaner:
 # Files-Server
 # ====================================================================================================
 files-server:
-  enabled: true
   nginx:
-    enabled: true
     image:
       repository: common/nginx
       tag: v2.1.5
@@ -99,7 +93,6 @@ files-server:
       rewriteTarget: "/"
 
     prometheusExporter:
-      enabled: true
       image:
         repository: common/nginx/nginx-prometheus-exporter
         tag: 1.4.1
@@ -110,7 +103,6 @@ files-server:
 # Nginx-S3-Gateway
 # ====================================================================================================
 nginx-s3-gateway:
-  enabled: true
   image:
     repository: common/nginx-s3-gateway
     tag: v3.0.2

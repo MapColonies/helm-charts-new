@@ -2,7 +2,6 @@
 # Exporter-Gpkg-Merger
 # ====================================================================================================
 exporter-gpkg-merger:
-  enabled: true
   image:
     repository: raster/tiles-merger-service
     tag: "v2.2.3"
@@ -22,7 +21,6 @@ exporter-gpkg-merger:
 # Exporter-Trigger
 # ====================================================================================================
 exporter-trigger:
-  enabled: true
   image:
     repository: raster/exporter-trigger
     tag: v3.3.0
@@ -33,7 +31,6 @@ exporter-trigger:
 # Exporter-Overseer
 # ====================================================================================================
 exporter-overseer:
-  enabled: true
   image:
     repository: raster/overseer
     tag: v2.8.0
@@ -47,7 +44,6 @@ exporter-overseer:
 # Polygon-Parts-Worker
 # ====================================================================================================
 exporter-polygon-parts-worker:
-  enabled: true
   image:
     repository: raster/polygon-parts-worker
     tag: v2.3.0

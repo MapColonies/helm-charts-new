@@ -2,7 +2,6 @@
 # Gpkg-Merger
 # ====================================================================================================
 gpkg-merger:
-  enabled: true
   image:
     repository: raster/tiles-merger-service
     tag: "v2.2.3"
@@ -27,7 +26,6 @@ gpkg-merger:
 # MapProxy-Api
 # ====================================================================================================
 mapproxy-api:
-  enabled: true
   image:
     repository: raster/mapproxy-api
     tag: "v1.13.0"
@@ -41,7 +39,6 @@ mapproxy-api:
 # Cache-Seeder
 # ====================================================================================================
 cache-seeder:
-  enabled: true
   image:
     repository: "raster/cache-seeder"
     tag: "v2.3.2"
@@ -53,7 +50,6 @@ cache-seeder:
 # Ingestion-Trigger
 # ====================================================================================================
 ingestion-trigger:
-  enabled: true
   image:
     repository: raster/ingestion-trigger
     tag: v4.4.0
@@ -71,7 +67,6 @@ ingestion-trigger:
 # Overseer
 # ====================================================================================================
 overseer:
-  enabled: true
   image:
     repository: raster/overseer
     tag: v2.9.0
@@ -84,7 +79,6 @@ overseer:
 # Geoserver-Api
 # ====================================================================================================
 geoserver-api:
-  enabled: true
   image:
     repository: raster/geoserver-api
     tag: v2.1.0
@@ -98,7 +92,6 @@ geoserver-api:
 # Polygon-Parts-Worker
 # ====================================================================================================
 polygon-parts-worker:
-  enabled: true
   image:
     repository: raster/polygon-parts-worker
     tag: v2.3.0
