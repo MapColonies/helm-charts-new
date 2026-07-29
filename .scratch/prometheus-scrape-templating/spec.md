@@ -63,66 +63,80 @@ cannot see.
    without me writing it, so that annotated services are scraped by default.
 4. As an infra engineer, I want to supply one namespace list that both service-discovery
    jobs use, so that the two jobs cannot silently drift apart.
-5. As an infra engineer running a site where pod discovery is inappropriate, I want to
+5. As an infra engineer, I want it to be impossible for any values combination to produce
+   cluster-wide discovery, because my clusters do not grant cluster-scoped RBAC and a job
+   that escaped the restriction would quietly discover nothing rather than fail.
+6. As an infra engineer running a site where pod discovery is inappropriate, I want to
    turn off the pod service-discovery job with a flag, so that I am not forced to accept
    a job my site does not want.
-6. As an infra engineer, I want to turn off the service service-discovery job with a
+7. As an infra engineer, I want to turn off the service service-discovery job with a
    flag, for the same reason.
-7. As an infra engineer, I want to turn off the self-scrape job with a flag, so that a
+8. As an infra engineer, I want to turn off the self-scrape job with a flag, so that a
    site using an external meta-monitoring arrangement is not double-scraped.
-8. As an infra engineer, I want the high-cardinality label and histogram-bucket drop
+9. As an infra engineer, I want the high-cardinality label and histogram-bucket drop
    rules to come from the chart, so that I do not copy 120 lines of regexes into every
    environment.
-9. As an infra engineer whose site runs components the chart's drop rules do not cover,
-   I want to append my own drop rules to the pod discovery job, so that I can control
-   cardinality without a chart change.
-10. As an infra engineer, I want to append my own drop rules to the service discovery
+10. As an infra engineer whose site runs components the chart's drop rules do not cover,
+    I want to append my own drop rules to the pod discovery job, so that I can control
+    cardinality without a chart change.
+11. As an infra engineer, I want to append my own drop rules to the service discovery
     job independently of the pod one, because the two jobs drop different metric families.
-11. As an infra engineer, I want to declare a blackbox probe job by giving only its name,
+12. As an infra engineer who needs a series the chart's rules drop, I want to turn the
+    chart-owned rules off for that job and supply my own set, so that recovering a metric
+    I actually use does not require a chart release.
+13. As an infra engineer, I want to declare a blackbox probe job by giving only its name,
     module, interval and target URLs, so that the probe relabelling scaffolding is not my
     problem.
-12. As an infra engineer, I want to give the blackbox exporter's address once, so that
+14. As an infra engineer, I want to give the blackbox exporter's address once, so that
     changing it is a one-line edit rather than ten.
-13. As an infra engineer running more than one blackbox exporter, I want to override the
+15. As an infra engineer running more than one blackbox exporter, I want to override the
     address on an individual job, so that a job can point at a different exporter.
-14. As an infra engineer, I want to write a probe target as a bare URL string, so that
+16. As an infra engineer, I want to write a probe target as a bare URL string, so that
     the common case is one line per target.
-15. As an infra engineer, I want to attach labels to an individual probe target when I
+17. As an infra engineer, I want to attach labels to an individual probe target when I
     need to, so that targets can carry ownership and scope metadata without me hand-writing
     static config groups.
-16. As an infra engineer, I want to declare a plain static scrape job with a metrics path,
+18. As an infra engineer, I want to declare a plain static scrape job with a metrics path,
     scheme, interval, timeout and targets, so that exporters that are not blackbox probes
     are equally terse.
-17. As an infra engineer, I want to attach labels to static job targets, so that exporter
+19. As an infra engineer, I want to attach labels to static job targets, so that exporter
     metrics carry the same ownership metadata as probes.
-18. As an infra engineer with a job that fits neither generator, I want a raw escape hatch
-    that appends verbatim scrape config, so that an unusual job never blocks me on a chart
-    release.
-19. As an infra engineer, I want jobs I do not declare to produce no output at all, so
+20. As an infra engineer whose job needs one field the generator does not model — a
+    per-job metric drop rule, an extra parameter, credentials — I want to pass it through
+    on that job, so that a single missing line does not cost me the whole generator.
+21. As an infra engineer with a job that fits neither generator, I want a raw escape hatch
+    that appends scrape config, so that an unusual job never blocks me on a chart release.
+22. As an infra engineer using the escape hatch, I want its content templated like
+    everything else here, so that a raw job can reference release facts instead of
+    silently emitting braces into a job name.
+23. As an infra engineer, I want jobs I do not declare to produce no output at all, so
     that my rendered configuration contains only what my site actually has.
-20. As an infra engineer, I want to switch an individual declared job off with a flag, so
+24. As an infra engineer, I want to switch an individual declared job off with a flag, so
     that I can disable it temporarily without deleting its target list.
-21. As an infra engineer, I want the chart to fail loudly if I declare blackbox jobs
+25. As an infra engineer, I want the chart to fail loudly if I enable a blackbox job
     without giving an exporter address, so that I find out at render time rather than by
     reading a broken config in the cluster.
-22. As an infra engineer upgrading a site to this chart, I want the render to fail with an
+26. As an infra engineer, I want the render to fail if two of my jobs would end up sharing
+    a job name, because Prometheus rejects such a configuration on load and this
+    deployment's reload path turns that rejection into a silent no-op.
+27. As an infra engineer upgrading a site to this chart, I want the render to fail with an
     explanatory message if my values still override the key the chart now owns, so that I
-    cannot accidentally deploy a Prometheus with no service discovery at all.
-23. As an alert author, I want the job names I reference in alert expressions to appear
+    cannot accidentally deploy a Prometheus with no generated jobs at all.
+28. As an alert author, I want the job names I reference in alert expressions to appear
     literally in the values that create them, so that searching for a job name finds both
     its alerts and its definition.
-24. As a chart maintainer, I want our additions grouped under a single clearly-named key,
+29. As a chart maintainer, I want our additions grouped under a single clearly-named key,
     so that a reader can tell at a glance which values are ours and which come from the
     upstream chart.
-25. As a chart maintainer, I want our named templates to sit outside the upstream chart's
+30. As a chart maintainer, I want our named templates to sit outside the upstream chart's
     template namespace, so that a future upstream release cannot silently collide with
     ours.
-26. As a chart maintainer, I want the fixed rule-file paths to live in the chart, so that
+31. As a chart maintainer, I want the fixed rule-file paths out of site-values, so that
     sites do not repeat a list that has no site-specific content.
-27. As an infra engineer migrating an existing site, I want to prove the rendered scrape
+32. As an infra engineer migrating an existing site, I want to prove the rendered
     configuration is unchanged before I deploy, so that a refactor cannot quietly alter
     what is monitored.
-28. As an infra engineer reading a site's values, I want scrape configuration to be
+33. As an infra engineer reading a site's values, I want scrape configuration to be
     findable under a scrape-shaped key rather than mixed into a file named for alerts, so
     that the file layout reflects what the content is.
 
@@ -180,19 +194,23 @@ prometheus:                    # subchart name — mandatory, not a choice
       selfScrape:
         enabled: true
       kubernetes:
-        namespaces: []
+        namespaces: []         # own namespace always included; empty means own only
         pod:
           enabled: true
+          builtinMetricRelabelConfigs: true
           extraMetricRelabelConfigs: []
         service:
           enabled: true
+          builtinMetricRelabelConfigs: true
           extraMetricRelabelConfigs: []
       blackbox:
-        address: ""            # required if any blackbox job is declared
-        jobs: {}
+        address: ""            # required if any blackbox job is enabled
+        jobs: {}               # per job: module, interval, targets,
+                               #          address, enabled, extraConfig
       static:
-        jobs: {}
-      extraJobs: ""            # raw YAML, appended verbatim
+        jobs: {}               # per job: metricsPath, scheme, interval, timeout,
+                               #          honorTimestamps, targets, enabled, extraConfig
+      extraJobs: ""            # raw YAML, templated, appended last
 ```
 
 If an `alias` is ever added to the subchart dependency, the values path changes with it
@@ -207,15 +225,31 @@ when their job maps are empty.
 
 ### Service-discovery jobs
 
-Both service-discovery jobs hardcode own-namespace discovery and receive the same single
-namespace list. The list does not need to repeat the release namespace.
+Both service-discovery jobs receive the same single namespace list. The list does not need
+to repeat the release namespace.
 
-Each carries its own chart-owned `metric_relabel_configs` block: a shared high-cardinality
-label drop, plus the pod job's histogram-bucket drops for the log, trace and collector
-components, and the service job's drops for unused cluster-state metric families. These
-are fixed, not overridable — dropping metrics for a component a site does not run is a
-no-op, so there is no need to let sites replace them. Each job additionally reads its own
-append key so a site can add rules.
+Confinement to the release's own namespaces is an **invariant, not a default**.
+`own_namespace: true` is emitted unconditionally and is not exposed as a value, and no
+combination of inputs can cause the `namespaces` block to be omitted or emitted without it.
+This matters because in Kubernetes service discovery an absent or empty namespace
+restriction means *all* namespaces — and these clusters do not grant the cluster-scoped RBAC
+that would require, so a job that escaped the restriction would not fail loudly, it would
+collect 403s and discover nothing. An empty namespace list therefore means
+own-namespace-only, which is both the default and the floor.
+
+Each job carries its own chart-owned `metric_relabel_configs` block: a shared
+high-cardinality label drop, plus the pod job's histogram-bucket drops for the log, trace
+and collector components, and the service job's drops for unused cluster-state metric
+families.
+
+Each job additionally reads its own append key so a site can add rules. Appended rules run
+**after** the chart's own, which means they can drop further but can never recover a series
+the chart has already dropped — relabelling is one-way. The common case needs nothing more:
+dropping metrics for a component a site does not run is a no-op. But a site that *does* run
+that component and genuinely needs one of the dropped series would otherwise have no
+recourse short of a chart release, or abandoning the generated job entirely. Each discovery
+job therefore also carries a flag that turns the chart-owned block off, at which point the
+append key becomes the whole list. It defaults to on.
 
 ### Blackbox job generator
 
@@ -233,7 +267,15 @@ A target is either a bare string or an object carrying a target and a label map.
 targets carry no labels, so requiring the object form everywhere would cost a line each
 for nothing. Targets with labels become their own static config group.
 
-If any blackbox job is declared and no address is resolvable for it, the render fails.
+Each job also accepts an `extraConfig` map, merged into the generated job, for fields the
+generator does not model — `honor_labels`, parameters beyond the module, per-job
+`metric_relabel_configs`, credentials. Enumerating those one at a time is a losing game, and
+without a passthrough an otherwise-ordinary job has to fall all the way to the raw escape
+hatch over a single line.
+
+If a blackbox job is **enabled** and no address is resolvable for it, the render fails. A
+job that is declared but disabled is not checked: disabling a job is how a site parks one,
+and a parked job should not have to keep satisfying requirements it is not using.
 
 ### Static job generator
 
@@ -241,28 +283,80 @@ Same map-keyed-by-literal-job-name shape. Per job: metrics path, scheme, interva
 timeout, honor-timestamps, targets, enable flag. Targets accept the same string-or-object
 shorthand. The chart adds no relabelling.
 
+Each job also accepts an `extraConfig` map on the same reasoning as the blackbox generator.
+Here the passthrough earns its keep mainly through per-job `metric_relabel_configs`: a
+chatty exporter is the single largest source of cardinality in a deployment like this, and
+without a per-job drop path the only remedy is to abandon the generator for that job.
+
 Proxy exporters that need target relabelling — an exporter scraped via a target query
 parameter, as the blackbox generator does — are **not** covered. The single known instance
 goes in the raw escape hatch. Generalising the blackbox generator to serve both would add
 an address parameter, an optional module and a per-job extra-relabel passthrough to
 dedupe exactly one job; that is the right move only once a second such exporter exists.
 
-### Guard against silent loss of service discovery
+### The raw escape hatch
 
-Because everything now flows through one key that sites previously wrote themselves, a
-site that adopts the chart without rewriting its values would render cleanly, deploy
-cleanly, and come up with no pod or service discovery whatsoever. That is the worst
-available failure mode: silent, and invisible in a diff.
+Raw content is appended last and is passed through `tpl`, so it can reference release facts
+the way every other part of this mechanism does. Note that `tpl` renders the seam string
+once; the value an `include` returns is not re-parsed, so without an explicit `tpl` the
+escape hatch would be the only untemplated corner of an otherwise templated seam — and its
+failure mode is silent, emitting a literal `{{ .Release.Namespace }}` into a job name rather
+than erroring. It renders in the **subchart's** context like everything else here, so
+`.Values` inside it means the subchart's values. A site that needs a literal `{{` in output
+escapes it as `{{ "{{" }}`; that is rare enough not to be worth designing around.
 
-The chart therefore renders a guard that inspects the owned key and fails if it no longer
-contains the chart's own include. A warning was considered and rejected: Helm has no
-warning primitive, so a warning must ride on release notes that scroll past or on a
-rendered marker object, and neither reliably stops the deploy. A hard failure is correct
-here — the escape hatch means no site has a legitimate reason to override the key, so the
-guard should never fire on valid usage.
+The escape hatch is the one place the own-namespace invariant cannot be enforced, since its
+content is opaque to the chart. A cluster-wide discovery job written there would collect
+403s and find nothing rather than do damage, so this is a documentation matter rather than
+something worth guarding.
 
-An accepted consequence: a site cannot adopt this chart incrementally. Taking the new
-chart and rewriting the site's values are one atomic step.
+### Render-time guards
+
+Two things can go wrong in ways a rendered diff will not show, and both are worth failing
+the render over.
+
+**A site overriding the key the chart now owns.** Everything now flows through
+`extraScrapeConfigs`. A site that sets it clobbers the chart's include and loses every
+generated job at once — rendering cleanly and deploying cleanly on the way. The chart
+therefore renders a guard that inspects the owned key and fails if it no longer contains the
+chart's own include; appending to the include rather than replacing it still passes. A
+warning was considered and rejected: Helm has no warning primitive, so a warning must ride
+on release notes that scroll past or on a rendered marker object, and neither reliably stops
+the deploy. A hard failure is correct here — the escape hatch means no site has a legitimate
+reason to override the key, so the guard should never fire on valid usage.
+
+**Two jobs sharing a job name.** Prometheus refuses to load a configuration containing
+duplicate `job_name` values, and the new contract makes collisions reachable: a blackbox job
+key equal to a static job key, or either equal to a job left enabled in the upstream
+`scrapeConfigs` map. Helm renders duplicates perfectly happily. The chart therefore checks
+the assembled job names and fails on a collision.
+
+Why that is worth a guard rather than something to leave to Prometheus: the server has no
+`checksum/config` annotation, so a configuration change does not restart the pod. The
+`prometheus-config-reloader` sidecar watches `/etc/config` and POSTs `/-/reload`; if
+Prometheus rejects the new configuration it **keeps serving the old one**, and the deploy
+looks entirely successful. An invalid generated configuration is therefore not a loud
+failure at all — it is a silent no-op that leaves the cluster running configuration that no
+longer matches the repository.
+
+The render-time check covers the collision case, which is the one this contract introduces.
+It does not cover everything Prometheus validates — a malformed regex, a `scrape_timeout`
+larger than its `scrape_interval`, an invalid relabel action. Validating those properly
+would mean running `promtool` against the rendered configuration from a Helm hook, which was
+considered and rejected: to avoid shipping a second image the hook has to reach into the
+subchart's `server.image` values, whose tag defaults to the subchart's `appVersion`, so the
+umbrella would have to replicate that defaulting and the two charts' `appVersion` fields
+would have to be kept in step by hand indefinitely. That is more machinery, and more
+coupling into subchart internals, than the problem justifies — this chart should stay a thin
+layer over the upstream one. The general case is covered instead by an alert on
+`prometheus_config_last_reload_successful`, which catches every cause of a failed reload
+rather than only the ones this feature introduces and costs the chart nothing. That alert
+lives with the rest of the alert rules; it is a prerequisite for this work rather than part
+of it.
+
+An accepted consequence of the first guard: a site cannot adopt this chart incrementally.
+Taking the new chart and rewriting the site's values are one atomic step. That makes this a
+breaking change for every consumer, and it has to be released as one.
 
 ### Named template naming
 
@@ -275,74 +369,56 @@ The extra segment removes that risk permanently.
 
 ### Also moving into the chart
 
-The rule-file path list moves into the chart. The paths are fixed and contain nothing
-site-specific; it is only in site-values today because it shares a key with alert rules.
+The rule-file path list moves out of site-values. Check before moving it *into* the chart
+rather than simply deleting it: the upstream chart already defaults
+`serverFiles."prometheus.yml".rule_files` to the four `/etc/config` paths, so if the site's
+list matches, the correct change is to stop setting it and inherit the default. Restating it
+here is warranted only if the site's list actually differs. Either way, note that Helm
+replaces lists rather than merging them, so wherever the list ends up living, a site adding
+one path silently drops the rest.
 
-The existing block that disables the upstream chart's own built-in scrape jobs stays
-exactly as it is — those jobs are still unwanted, since the chart now generates its own.
+The block that disables the upstream chart's own built-in scrape jobs moves into the chart,
+and is completed while it moves. Upstream 28.16.0 ships ten built-in jobs; this chart
+disables nine. `kubernetes-services` is not among them and is disabled at deploy time
+instead, so it should be disabled here alongside the others. Independently of the tidying,
+that job does cluster-wide `role: service` discovery with no namespace restriction and
+rewrites `__address__` to a bare `blackbox` host — in these clusters it is not merely
+redundant, it is a job the RBAC cannot serve.
 
-## Testing Decisions
+## Verification
 
-### What makes a good test here
+### No permanent test suite
 
-A good test asserts on what a deployer would observe: the scrape configuration that ends
-up in the rendered server ConfigMap. It should not assert on which helper produced which
-fragment, on indentation, or on the internal structure of the templates. A test that
-breaks when a helper is split in two, without any change to rendered output, is testing
-the wrong thing.
+There is no lint step, no unit-test harness and no tests directory in any chart in this
+repo; CI validates only the `domain` annotation. Building a harness is deliberately not part
+of this work. Recording the decision here so it is not later mistaken for an oversight: what
+stands between a mistake and a bad deploy is the two render-time guards above, plus the
+`prometheus_config_last_reload_successful` alert that covers everything a render-time check
+cannot see.
 
-### The seam
-
-**One seam, and it is the highest available:** render the chart with a given values file,
-extract the Prometheus configuration document from the rendered server ConfigMap, parse it,
-and assert on it as data. Every behaviour in this spec is observable there — the three
-always-on jobs and their flags, both generators, the target shorthand, label groups, the
-namespace list reaching both discovery jobs, escape-hatch ordering, and the fact that
-undeclared jobs produce nothing. The two failure conditions are observable at the same
-seam as a failed render carrying an explanatory message.
-
-No lower seam is needed and none should be introduced. No cluster is required.
-
-### Prior art
-
-There is none in this repo. CI currently validates only the `domain` annotation on each
-chart; there is no lint step, no unit-test harness, and no tests directory in any chart.
-The closest existing practice is the values schema shipped by two other charts, which
-validates input shape but says nothing about rendered output.
-
-The harness is therefore a green-field decision. Whichever is chosen, it should be wired
-into the existing per-chart pull-request matrix so it runs on change.
-
-### Cases to cover
-
-- Defaults only: the three always-on jobs render; no blackbox, static or extra jobs appear.
-- Each enable flag off individually removes exactly its own job and nothing else.
-- The namespace list appears in both discovery jobs, and own-namespace discovery is set on
-  both.
-- Chart-owned drop rules are present on both discovery jobs; the append keys add rules
-  without displacing them, and each append key affects only its own job.
-- A blackbox job renders with the probe path, module parameter, the three relabel rules and
-  the shared address.
-- A per-job address override takes precedence over the shared address.
-- A blackbox job declared with no address available fails the render with a message.
-- Bare-string and labelled-object targets both render, and labelled targets form their own
-  static config groups.
-- A static job renders its path, scheme, interval, timeout and targets, with no relabelling
-  added.
-- Escape-hatch content renders verbatim and last.
-- A per-job enable flag set off removes that job while leaving its siblings.
-- Overriding the chart-owned scrape key fails the render with an explanatory message.
+Worth knowing if this is ever revisited: the natural seam — extract the `prometheus.yml`
+document from the rendered server ConfigMap and assert on it as parsed data — is awkward for
+the obvious Helm harness, because that document is a *string* inside the ConfigMap's `data`
+and helm-unittest can only pattern-match it. Asserting on it as data means rendering with
+`helm template` and parsing the embedded document in a general-purpose runner. A harness
+would also need registry credentials in CI: rendering requires `helm dependency build`,
+which pulls `openshift-routes` from a private ACR that the pull-request workflow has no
+auth for.
 
 ### Migration parity check
 
-Separately from the permanent tests, a one-off check proves the refactor changes nothing.
-Author a values file reproducing the inputs of each environment currently in site-values,
-render, extract the Prometheus configuration, and compare job-by-job as parsed data
-against the currently rendered output: same set of job names, and per job identical static
-configs, relabel configs, metric relabel configs, parameters and intervals. The comparison
-must be order-insensitive, since all generated jobs now render last.
+A one-off check proves the refactor changes nothing. Author a values file reproducing the
+inputs of each environment currently in site-values, render, extract the `prometheus.yml`
+document from the server ConfigMap, and compare it as parsed data against the currently
+rendered output.
 
-This is a throwaway script, not a test to keep. A live check — snapshot a non-production
+Compare the **whole document**, not only the jobs — `rule_files` moves as part of this work,
+and `global` and `alerting` should be proven untouched. Within `scrape_configs`, compare
+job-by-job: same set of job names, and per job identical static configs, relabel configs,
+metric relabel configs, parameters and intervals. The comparison must be order-insensitive,
+since all generated jobs now render last.
+
+This is a throwaway script, not something to keep. A live check — snapshot a non-production
 Prometheus's active targets before the deploy, deploy, snapshot again, compare — is a
 sequential sanity check on top of the parity check, not a substitute for it. Expect churn
 noise in the two discovery jobs; the static and blackbox jobs should match exactly.
@@ -363,8 +439,13 @@ noise in the two discovery jobs; the static and blackbox jobs should match exact
   but rename every job and break roughly forty alert expressions.
 - **Generalising the blackbox generator to cover proxy exporters.** Revisit when a second
   such exporter exists.
+- **The configuration-reload alert.** An alert on `prometheus_config_last_reload_successful`
+  belongs with the rest of the alert rules, not in this chart. It is a prerequisite for this
+  work rather than a part of it — see the guards section for why it matters here.
+- **A permanent test harness for this or any chart.** Decided against; see Verification.
 - **Chart versioning and release mechanics.** Handled by the repo's existing release
-  tooling.
+  tooling. *That* this is a breaking release is a fact of the design and is recorded above;
+  how the version gets cut is not this spec's concern.
 
 ## Further Notes
 
