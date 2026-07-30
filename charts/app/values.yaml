@@ -1,7 +1,4 @@
 global:
-  deploymentFlavor: openshift
-  owner: app
-  currentSubChart: catalog
   enable-services:
     enabled: true
     catalog-app: true
@@ -9,18 +6,6 @@ global:
     mc-web-tools: true
     k8s-services-list: true
     mc-thumbnail-generator: false
-  shared:
-    servedEntityTypes: RECORD_ALL
-    accessToken:
-      attributeName: token
-      injectionType: queryParam
-      tokenValue: TOKEN
-    rasterIngestionFilesStructure: '{"data": {"allowedExt": [".gpkg"], "selectableExt": [".gpkg"], "relativeToAOIDirPath": "./data", "producerFileName": "*", "selectablePattern": "*"}, "product": {"allowedExt": [".shp", ".shx", ".dbf", ".prj", ".sbn", ".sbx", ".xml", ".cpg", ".qix"], "selectableExt": [".shp"], "relativeToAOIDirPath": "./shape", "producerFileName": "Product", "selectablePattern": "Product"}, "shapeMetadata": {"allowedExt": [".shp", ".shx", ".dbf", ".prj", ".sbn", ".sbx", ".xml", ".cpg", ".qix"], "selectableExt": [".shp"], "relativeToAOIDirPath": "./shape", "producerFileName": "ShapeMetadata", "selectablePattern": "ShapeMetadata"}}'
-    sso:
-      enabled: false
-      redirectUrl:
-        ui:
-        tools:
 
 catalog-app:
   configValues:
