@@ -1,6 +1,8 @@
 prometheus:
   fullnameOverride: infra-prometheus
 
+  # Every built-in scrape job of the upstream subchart is disabled here; this chart owns its
+  # scrape configuration. See README.md before re-enabling any of them.
   scrapeConfigs:
     prometheus:
       enabled: false
@@ -15,6 +17,8 @@ prometheus:
     kubernetes-service-endpoints-slow:
       enabled: false
     prometheus-pushgateway:
+      enabled: false
+    kubernetes-services:
       enabled: false
     kubernetes-pods:
       enabled: false
