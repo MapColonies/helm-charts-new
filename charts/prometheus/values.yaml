@@ -1,6 +1,19 @@
 prometheus:
   fullnameOverride: infra-prometheus
 
+  # Chart-owned. This is the upstream chart's only `tpl`-templated scrape seam, so every job
+  # this chart generates flows through it. A site that sets this key loses all of them at
+  # once, and the render still succeeds. Never set it in site-values. See README.md.
+  extraScrapeConfigs: '{{ include "prometheus.mapcolonies.scrapeConfigs" . }}'
+
+  # Inputs to the generated scrape configuration. These must stay under the `prometheus`
+  # subchart key: the seam above is rendered in the subchart's context, so the umbrella's top
+  # level is not visible to it.
+  mapcolonies:
+    scrape:
+      selfScrape:
+        enabled: true
+
   # Every built-in scrape job of the upstream subchart is disabled here; this chart owns its
   # scrape configuration. See README.md before re-enabling any of them.
   scrapeConfigs:
