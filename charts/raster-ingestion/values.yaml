@@ -102,4 +102,4 @@ polygon-parts-worker:
   jobDefinitions:
     tasks:
       validation:
-        reportsDownloadPath: "/validation-reports" 
+        reportsDownloadPath: "/validation-reports"
