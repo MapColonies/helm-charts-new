@@ -130,6 +130,10 @@
       "charts/grafana-datasources": {
         "release-type": "helm",
         "extra-files": ["README.md"]
+      },
+      "charts/app": {
+        "release-type": "helm",
+        "extra-files": ["README.md"]
       }
     }
 }
