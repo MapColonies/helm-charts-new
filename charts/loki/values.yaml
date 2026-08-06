@@ -71,6 +71,7 @@ loki:
       prometheus.io/port: "9150"
 
   chunksCache:
+    # memcached 1.6.41: no gone_limit/lru-reclaim flag exists; 24h expired-unfetched/reclaimed/evicted = 0.
     podAnnotations:
       prometheus.io/scrape: "true"
       prometheus.io/port: "9150"
