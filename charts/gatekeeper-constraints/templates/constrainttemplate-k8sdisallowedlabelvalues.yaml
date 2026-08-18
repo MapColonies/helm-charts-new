@@ -1,0 +1,38 @@
+{{- if .Values.constraints.k8sDisallowedLabelValues.enabled }}
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: k8sdisallowedlabelvalues
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sDisallowedLabelValues
+      validation:
+        openAPIV3Schema:
+          properties:
+            labels:
+              type: array
+              items:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  disallowedValues:
+                    type: array
+                    items:
+                      type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sdisallowedlabelvalues
+
+        violation[{"msg": msg}] {
+          entry := input.parameters.labels[_]
+          value := input.review.object.metadata.labels[entry.key]
+          value == entry.disallowedValues[_]
+          msg := sprintf("Label <%v> has disallowed value <%v>", [entry.key, value])
+        }
+{{- end }}
