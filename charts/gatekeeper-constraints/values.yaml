@@ -21,3 +21,11 @@ constraints:
       - "prometheus.io/path"
       - "prometheus.io/port"
       - "prometheus.io/scrape"
+
+  k8sDisallowedLabelValues:
+    enabled: true
+    enforcementAction: warn
+    labels:
+      - key: "mapcolonies.io/environment"
+        disallowedValues:
+          - "undefined"

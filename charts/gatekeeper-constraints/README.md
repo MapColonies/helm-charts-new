@@ -5,6 +5,7 @@ Helm chart for Gatekeeper rules that make sure Pods have the right **labels** an
 ## ⚙️ What it does
 
 - ✅ Checks Pods for required labels and annotations  
+- 🚫 Checks Pods for placeholder label values (e.g. `mapcolonies.io/environment: undefined`)  
 - ⚠️ Runs in **WARN (audit-only)** mode by default (shows violations, doesn’t block deploys)  
 - 🔧 Fully configurable in `values.yaml`  
 
@@ -26,6 +27,9 @@ Fully configurable in `values.yaml`
 - `mapcolonies.io/environment`
 - `mapcolonies.io/component`
 
+**Disallowed label values**
+- `mapcolonies.io/environment` may not be `undefined`
+
 ## 🔍 See Violations
 
 - In the **OCP console** → open the `Constraint` resource under the `CustomResourceDefinitions` tab.
@@ -33,4 +37,5 @@ Fully configurable in `values.yaml`
   ```bash
   kubectl get K8sRequiredLabels.require-pod-labels -o yaml
   kubectl get K8sRequiredAnnotations.require-pod-annotations -o yaml
+  kubectl get K8sDisallowedLabelValues.disallow-pod-label-values -o yaml
   ```

@@ -1,0 +1,21 @@
+{{- if .Values.constraints.k8sDisallowedLabelValues.enabled }}
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sDisallowedLabelValues
+metadata:
+  name: disallow-pod-label-values
+spec:
+  enforcementAction: {{ .Values.constraints.k8sDisallowedLabelValues.enforcementAction | quote }}
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    {{- if .Values.namespaces }}
+    namespaces:
+      {{ toYaml .Values.namespaces | nindent 6 }}
+    {{- end }}
+  parameters:
+    labels:
+{{- with .Values.constraints.k8sDisallowedLabelValues.labels }}
+{{ toYaml . | nindent 6 }}
+{{- end }}
+{{- end }}
