@@ -36,9 +36,9 @@ exporter-overseer:
     tag: v2.8.0
   configManagement:
     offlineMode: true
-  instanceType: &instanceType "export"
+  instanceType: export
   mclabels:
-    partOf: *instanceType
+    partOf: export
 
 # ====================================================================================================
 # Polygon-Parts-Worker
@@ -47,9 +47,9 @@ exporter-polygon-parts-worker:
   image:
     repository: raster/polygon-parts-worker
     tag: v2.3.0
-  instanceType: &instanceType "export"
+  instanceType: export
   mclabels:
-    partOf: *instanceType
+    partOf: export
   configManagement:
     offlineMode: true
   jobManagement:
