@@ -1,0 +1,38 @@
+apiVersion: v2
+name: core
+description: A Helm chart for Raster core services
+annotations:
+  domain: raster
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+dependencies:
+  - name: raster-catalog-manager
+    version: 7.1.0
+    condition: raster-catalog-manager.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: job-tracker
+    version: 5.0.0
+    condition: job-tracker.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: polygon-parts-worker
+    version: 2.1.7
+    condition: polygon-parts-worker.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: polygon-parts-manager
+    version: 3.1.0
+    condition: polygon-parts-manager.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: files-server
+    version: 2.3.0
+    condition: files-server.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: nginx-s3-gateway
+    version: 3.0.2
+    condition: nginx-s3-gateway.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/common

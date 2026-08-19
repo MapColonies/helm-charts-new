@@ -1,0 +1,40 @@
+apiVersion: v2
+name: export
+description: A Helm chart for Raster export services
+annotations:
+  domain: raster
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+dependencies:
+  - name: gpkg-merger
+    version: 2.2.2
+    condition: exporter-gpkg-merger.enabled
+    alias: exporter-gpkg-merger
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: exporter-trigger
+    version: 3.2.1
+    condition: exporter-trigger.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: overseer
+    version: 2.5.2
+    condition: exporter-overseer.enabled
+    alias: exporter-overseer
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: files-server
+    version: 2.2.2
+    condition: files-server.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: nginx-s3-gateway
+    version: 3.0.2
+    condition: nginx-s3-gateway.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/common
+
+  - name: exporter-cleanup
+    version: 3.0.0
+    condition: exporter-cleanup.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm
