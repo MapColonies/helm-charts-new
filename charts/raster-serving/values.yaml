@@ -1,0 +1,196 @@
+# ====================================================================================================
+# Pycsw
+# ====================================================================================================
+pycsw:
+  image:
+    repository: common/pycsw
+    tag: "v6.4.2"
+
+  filterProductStatus: true
+
+  mclabels:
+    logScraping: true # TODO: fix the key typo in service
+
+  env:
+    uwsgi:
+      processes: 6
+      threads: 2
+    db:
+      schema: RasterCatalogManager
+      requirePassword: true
+
+  nginx:
+    image:
+      repository: common/nginx
+      tag: "v2.1.6"
+    mclabels:
+      partOf: serving
+      owner: raster
+      logScraping: true
+    prometheusExporter:
+       image:
+         repository: common/nginx/nginx-prometheus-exporter
+         tag: 1.4.1
+
+  uwsgiExporter:
+    image:
+      repository: "timonwong/uwsgi-exporter"
+      tag: "latest"
+
+# ====================================================================================================
+# Pycsw-Private
+# ====================================================================================================
+pycsw-private:
+  image:
+    repository: common/pycsw
+    tag: "v6.4.2"
+
+  mclabels:
+    logScraping: true # TODO: fix the key typo in service
+
+  env:
+    uwsgi:
+      processes: 6
+      threads: 2
+    db:
+      schema: RasterCatalogManager
+      requirePassword: true
+
+  nginx:
+    image:
+      repository: common/nginx
+      tag: "v2.1.6"
+    mclabels:
+      partOf: serving
+      owner: raster
+      logScraping: true
+    prometheusExporter:
+       image:
+         repository: common/nginx/nginx-prometheus-exporter
+         tag: 1.4.1
+
+
+  uwsgiExporter:
+    image:
+      repository: "timonwong/uwsgi-exporter"
+      tag: "latest"
+
+
+# ====================================================================================================
+# MapProxy
+# ====================================================================================================
+mapproxy:
+  metrics:
+    enabled: false
+
+  storage:
+    mapproxyConfigProvider: DB
+
+  initContainer:
+    image:
+      repository: mapproxinator
+      tag: "v1.2.5"
+
+  mapproxinator:
+    image:
+      repository: mapproxinator
+      tag: "v1.2.5"
+
+  mapproxy:
+    image:
+      repository: raster/mapproxy
+      tag: "v6.0.1-redis-fix"
+    uwsgi:
+      processes: 6
+      threads: 2
+    env:
+      cors:
+        enabled: true
+        allowedOrigin: "*"
+        allowedHeaders: "*"
+
+  nginx:
+    image:
+      repository: common/nginx
+      tag: "v2.1.5"
+    mclabels:
+      partOf: serving
+      owner: raster
+      logScraping: true
+
+  uwsgiExporter:
+    image:
+      repository: "timonwong/uwsgi-exporter"
+      tag: "latest"
+
+# ====================================================================================================
+# Redis
+# ====================================================================================================
+redis:
+  debug: false
+  architecture: standalone
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/redis
+    tag: 7.2.1
+  commonConfiguration: |-
+    # Enable AOF https:redis.io/topics/persistence#append-only-file
+    appendonly no
+    protected-mode no
+    # Disable RDB https, AOF persistence already enabled.
+    save ""
+  metrics:
+    enabled: true
+    image:
+      registry: docker.io
+      repository: bitnamilegacy/redis-exporter
+      tag: 1.55.0-debian-11-r2
+  master:
+    containerSecurityContext:
+      enabled: false
+    count: 1
+    disableCommands:
+      - FLUSHALL
+    kind: StatefulSet
+    persistence:
+      accessModes:
+        - ReadWriteMany
+      enabled: false
+      size: 1Gi
+      storageClass: nfs
+    podLabels:
+      app: redis
+      role: master
+    podSecurityContext:
+      enabled: false
+    serviceAccount:
+      create: false
+
+# ====================================================================================================
+# PP-Geoserver
+# ====================================================================================================
+pp-geoserver:
+  image:
+    geoserverRepository: geoserver-os
+    geoserverTag: "v2.0.0-2.26.0"
+    sidecarRepository: raster/geoserver-polygon-parts
+    sidecarTag: "v3.2.0"
+
+  nameOverride: "pp-geoserver"
+
+  mclabels:
+    logScraping: true # TODO: fix the key typo in service
+
+  nginx:
+    image:
+      repository: common/nginx
+      tag: "v2.2.1"
+    nameOverride: nginx-pp-geoserver
+    mclabels:
+      partOf: serving
+      owner: raster
+      logScraping: true
+    prometheusExporter:
+      image:
+        repository: common/nginx/nginx-prometheus-exporter
+        tag: 1.4.1

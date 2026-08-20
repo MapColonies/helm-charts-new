@@ -1,0 +1,61 @@
+# ====================================================================================================
+# Exporter-Gpkg-Merger
+# ====================================================================================================
+exporter-gpkg-merger:
+  image:
+    repository: raster/tiles-merger-service
+    tag: "v2.2.3"
+  isExporter: true
+  env:
+    general:
+      validate: false
+    TASK:
+      types:
+        - jobType: "Export"
+          taskType: "tilesExporting"
+      pollingTime: 3000 # TODO: fix default value inside the service
+    heartbeat:
+      intervalMs: 3000 # TODO: fix default value inside the service
+
+# ====================================================================================================
+# Exporter-Trigger
+# ====================================================================================================
+exporter-trigger:
+  image:
+    repository: raster/exporter-trigger
+    tag: v3.3.0
+  configManagement:
+    offlineMode: true
+
+# ====================================================================================================
+# Exporter-Overseer
+# ====================================================================================================
+exporter-overseer:
+  image:
+    repository: raster/overseer
+    tag: v2.8.0
+  configManagement:
+    offlineMode: true
+  instanceType: export
+  mclabels:
+    partOf: export
+
+# ====================================================================================================
+# Polygon-Parts-Worker
+# ====================================================================================================
+exporter-polygon-parts-worker:
+  image:
+    repository: raster/polygon-parts-worker
+    tag: v2.3.0
+  instanceType: export
+  mclabels:
+    partOf: export
+  configManagement:
+    offlineMode: true
+  jobManagement:
+    config:
+      dequeueIntervalMs: 30000
+  jobDefinitions:
+    tasks:
+      validation:
+        reportsDownloadPath: "/validation-reports"

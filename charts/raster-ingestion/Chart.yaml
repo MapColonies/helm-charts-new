@@ -1,0 +1,44 @@
+apiVersion: v2
+name: ingestion
+description: A Helm chart for Raster ingestion services
+annotations:
+  domain: raster
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+dependencies:
+  - name: gpkg-merger
+    version: 2.2.3
+    condition: gpkg-merger.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: mapproxy-api
+    version: 1.13.0
+    condition: mapproxy-api.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: cache-seeder
+    version: 2.3.2
+    condition: cache-seeder.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: ingestion-trigger
+    version: 4.4.0
+    condition: ingestion-trigger.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: overseer
+    version: 2.9.0
+    condition: overseer.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: geoserver-api
+    version: 2.1.0
+    condition: geoserver-api.enabled
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
+
+  - name: polygon-parts-worker
+    version: 2.3.0
+    condition: polygon-parts-worker.enabled
+    alias: polygon-parts-worker
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
