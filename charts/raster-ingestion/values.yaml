@@ -28,7 +28,7 @@ gpkg-merger:
 mapproxy-api:
   image:
     repository: raster/mapproxy-api
-    tag: "v1.13.0"
+    tag: "v1.14.0"
   configManagement:
     offlineMode: true
 
@@ -50,7 +50,7 @@ cache-seeder:
 ingestion-trigger:
   image:
     repository: raster/ingestion-trigger
-    tag: v4.4.0
+    tag: v4.5.1
   configManagement:
     offlineMode: true
   env:
@@ -67,7 +67,7 @@ ingestion-trigger:
 overseer:
   image:
     repository: raster/overseer
-    tag: v2.9.0
+    tag: v2.11.1
   configManagement:
     offlineMode: true
   instanceType: "ingestion"
@@ -92,7 +92,7 @@ geoserver-api:
 polygon-parts-worker:
   image:
     repository: raster/polygon-parts-worker
-    tag: v2.3.0
+    tag: v2.3.1
   instanceType: ingestion
   configManagement:
     offlineMode: true

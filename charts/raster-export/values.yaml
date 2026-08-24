@@ -33,7 +33,7 @@ exporter-trigger:
 exporter-overseer:
   image:
     repository: raster/overseer
-    tag: v2.8.0
+    tag: v2.11.1
   configManagement:
     offlineMode: true
   instanceType: export
@@ -46,16 +46,12 @@ exporter-overseer:
 exporter-polygon-parts-worker:
   image:
     repository: raster/polygon-parts-worker
-    tag: v2.3.0
+    tag: v2.3.1
   instanceType: export
-  mclabels:
-    partOf: export
   configManagement:
     offlineMode: true
+  mclabels:
+    partOf: export
   jobManagement:
     config:
       dequeueIntervalMs: 30000
-  jobDefinitions:
-    tasks:
-      validation:
-        reportsDownloadPath: "/validation-reports"
