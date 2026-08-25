@@ -23,11 +23,11 @@ grafana:
       repository: infra/kiwigrid/k8s-sidecar
     resources:
       limits:
-        cpu: 50m
+        cpu: 200m
         memory: 128Mi
       requests:
         cpu: 50m
-        memory: 32Mi
+        memory: 128Mi
     dashboards:
       enabled: true
       label: "mapcolonies.io/grafana-dashboards"
