@@ -11,6 +11,7 @@ sftpgo:
     mapcolonies.io/component: infrastructure
     mapcolonies.io/part-of: storage
     mapcolonies.io/alloy-api-logs: "true"
+    mapcolonies.io/criticality: "customer"
 
   envVars:
     - name: SFTPGO_DEFAULT_ADMIN_USERNAME

@@ -9,6 +9,7 @@ pgadmin4:
     mapcolonies.io/component: "infrastructure"
     mapcolonies.io/part-of: "web-tools"
     mapcolonies.io/owner: "infra"  
+    mapcolonies.io/criticality: "internal"
 
   # Default is port 80 - in Openshift this will fail (port > 1024)
   containerPorts:

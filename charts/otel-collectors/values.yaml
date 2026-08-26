@@ -8,6 +8,12 @@ otel:
 
   mode: deployment
 
+  podLabels:
+    mapcolonies.io/component: infrastructure
+    mapcolonies.io/owner: infra
+    mapcolonies.io/part-of: monitoring
+    mapcolonies.io/criticality: "internal"
+
   podAnnotations:
     prometheus.io/scrape: "true"
     prometheus.io/port: "8888"
@@ -85,6 +91,12 @@ otel-internal:
     repository: infra/opentelemetry-collector-contrib
 
   mode: deployment
+
+  podLabels:
+    mapcolonies.io/component: infrastructure
+    mapcolonies.io/owner: infra
+    mapcolonies.io/part-of: monitoring
+    mapcolonies.io/criticality: "internal"
 
   service:
     type: ClusterIP

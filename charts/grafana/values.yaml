@@ -3,6 +3,7 @@ grafana:
     mapcolonies.io/component: "infrastructure"
     mapcolonies.io/part-of: "monitoring"
     mapcolonies.io/owner: "infra"
+    mapcolonies.io/criticality: "internal"
   podLabels:
     mapcolonies.io/alloy-api-logs: "true"
   podAnnotations:

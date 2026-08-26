@@ -2,7 +2,14 @@ keycloak:
   global:
     security:
       allowInsecureImages: true
-  
+
+  commonLabels:
+    mapcolonies.io/component: "infrastructure"
+    mapcolonies.io/part-of: "authorization"
+    mapcolonies.io/owner: "infra"
+    mapcolonies.io/alloy-api-logs: "false"
+    mapcolonies.io/criticality: "internal"
+
   serviceAccount:
     create: false
 
