@@ -31,6 +31,8 @@ mapproxy-api:
     tag: "v1.14.0"
   configManagement:
     offlineMode: true
+  db:
+    schema: "MapproxyConfig" # TODO: remove after set this as the default value within service
 
 
 # ====================================================================================================
@@ -83,7 +85,7 @@ geoserver-api:
   configManagement:
     offlineMode: true
   db:
-    schema: "polygon_parts" // TODO: remove after set this as the default value within service
+    schema: "polygon_parts" # TODO: remove after set this as the default value within service
     dbType: "postgis"
 
 # ====================================================================================================
