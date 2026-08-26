@@ -5,7 +5,7 @@ keycloak:
 
   commonLabels:
     mapcolonies.io/component: "infrastructure"
-    mapcolonies.io/part-of: "monitoring" # Is it?
+    mapcolonies.io/part-of: "authorization"
     mapcolonies.io/owner: "infra"
     mapcolonies.io/alloy-api-logs: "false"
     mapcolonies.io/criticality: "internal"

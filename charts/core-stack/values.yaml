@@ -22,7 +22,7 @@ minio:
     mapcolonies.io/component: "infrastructure"
     mapcolonies.io/part-of: "core-stack"
     mapcolonies.io/owner: "infra" 
-    mapcolonies.io/criticality: "internal"
+    mapcolonies.io/criticality: "customer"
 
 redis:
   enabled: true
