@@ -24,7 +24,6 @@ pycsw:
     mclabels:
       partOf: serving
       owner: raster
-
     prometheusExporter:
        image:
          repository: common/nginx/nginx-prometheus-exporter
@@ -62,7 +61,6 @@ pycsw-private:
     mclabels:
       partOf: serving
       owner: raster
-
     prometheusExporter:
        image:
          repository: common/nginx/nginx-prometheus-exporter
@@ -185,7 +183,6 @@ pp-geoserver:
     mclabels:
       partOf: serving
       owner: raster
-
     prometheusExporter:
       image:
         repository: common/nginx/nginx-prometheus-exporter
