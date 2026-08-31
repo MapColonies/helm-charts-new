@@ -6,7 +6,7 @@ raster-catalog-manager:
     repository: raster/raster-catalog-manager
     tag: "v7.4.0"
   configManagement:
-    offlineMode: true
+    offlineMode: true # TODO: remove after set this as the default value within service
 
 # ====================================================================================================
 # Job-Tracker
@@ -16,7 +16,7 @@ job-tracker:
     repository: raster/job-tracker
     tag: "v5.3.1"
   configManagement:
-    offlineMode: true
+    offlineMode: true # TODO: remove after set this as the default value within service
 
   taskFlowManager:
     ingestionTasksFlow:
@@ -45,7 +45,7 @@ polygon-parts-manager:
     tag: v3.5.1
   imagePullPolicy: IfNotPresent # TODO: set the default value in the service as `IfNotPresent`
   configManagement:
-    offlineMode: true
+    offlineMode: true # TODO: remove after set this as the default value within service
   env:
     application:
       entities:
@@ -62,7 +62,7 @@ cleaner:
     repository: raster/cleaner
     tag: "v1.2.1"
   configManagement:
-    offlineMode: true
+    offlineMode: true # TODO: remove after set this as the default value within service
     version: "latest" # TODO: remove after set this as the default value within service
   env:
     targetPort: 8080 # TODO - remove after set this as the default value within service
@@ -89,7 +89,6 @@ files-server:
     nameOverride: files-server
     route:
       rewriteTarget: "/"
-
     prometheusExporter:
       image:
         repository: common/nginx/nginx-prometheus-exporter

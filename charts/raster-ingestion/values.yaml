@@ -30,7 +30,7 @@ mapproxy-api:
     repository: raster/mapproxy-api
     tag: "v1.14.0"
   configManagement:
-    offlineMode: true
+    offlineMode: true # TODO: remove after set this as the default value within service
   db:
     schema: "MapproxyConfig" # TODO: remove after set this as the default value within service
 
@@ -54,7 +54,7 @@ ingestion-trigger:
     repository: raster/ingestion-trigger
     tag: v4.5.1
   configManagement:
-    offlineMode: true
+    offlineMode: true # TODO: remove after set this as the default value within service
   env:
     productReader:
       maxVerticesPerChunk: 20000
@@ -71,7 +71,7 @@ overseer:
     repository: raster/overseer
     tag: v2.11.1
   configManagement:
-    offlineMode: true
+    offlineMode:  # TODO: remove after set this as the default value within service
   instanceType: "ingestion"
 
 
@@ -83,7 +83,7 @@ geoserver-api:
     repository: raster/geoserver-api
     tag: v2.1.0
   configManagement:
-    offlineMode: true
+    offlineMode: true # TODO: remove after set this as the default value within service
   db:
     schema: "polygon_parts" # TODO: remove after set this as the default value within service
     dbType: "postgis"
@@ -97,7 +97,7 @@ polygon-parts-worker:
     tag: v2.3.1
   instanceType: ingestion
   configManagement:
-    offlineMode: true
+    offlineMode: true # TODO: remove after set this as the default value within service
   jobManagement:
     config:
       dequeueIntervalMs: 30000
