@@ -16,6 +16,11 @@ pycsw:
       schema: RasterCatalogManager
       requirePassword: true
 
+  uwsgiExporter:
+    image:
+      repository: "timonwong/uwsgi-exporter"
+      tag: "v1.3.0"
+
   nginx:
     image:
       repository: common/nginx
@@ -29,10 +34,6 @@ pycsw:
          repository: common/nginx/nginx-prometheus-exporter
          tag: 1.4.1
 
-  uwsgiExporter:
-    image:
-      repository: "timonwong/uwsgi-exporter"
-      tag: "latest"
 
 # ====================================================================================================
 # Pycsw-Private
@@ -53,6 +54,11 @@ pycsw-private:
       schema: RasterCatalogManager
       requirePassword: true
 
+  uwsgiExporter:
+    image:
+      repository: "timonwong/uwsgi-exporter"
+      tag: "v1.3.0"
+
   nginx:
     image:
       repository: common/nginx
@@ -66,11 +72,6 @@ pycsw-private:
          repository: common/nginx/nginx-prometheus-exporter
          tag: 1.4.1
 
-  uwsgiExporter:
-    image:
-      repository: "timonwong/uwsgi-exporter"
-      tag: "latest"
-
 
 # ====================================================================================================
 # MapProxy
@@ -80,7 +81,12 @@ mapproxy:
     schema: MapproxyConfig # TODO: remove after set this as the default value within service
 
   metrics:
-    enabled: false
+    enabled: true
+    url: "localhost:8080" # TODO: this is irrelevant for metrics but needed to enabled the metrics, should be removed after handle within service
+
+  mclabels:
+    prometheus:
+      port: 9117 # TODO: remove after update the prometues port within service as default value
 
   storage:
     mapproxyConfigProvider: DB
@@ -103,6 +109,11 @@ mapproxy:
       processes: 6
       threads: 2
 
+  uwsgiExporter:
+    image:
+      repository: "timonwong/uwsgi-exporter"
+      tag: "v1.3.0"
+
   nginx:
     image:
       repository: common/nginx
@@ -112,10 +123,6 @@ mapproxy:
       partOf: serving
       owner: raster
 
-  uwsgiExporter:
-    image:
-      repository: "timonwong/uwsgi-exporter"
-      tag: "latest"
 
 # ====================================================================================================
 # Redis
