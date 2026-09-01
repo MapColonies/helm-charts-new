@@ -4,12 +4,9 @@
 pycsw:
   image:
     repository: common/pycsw
-    tag: "v6.4.2"
+    tag: &pycswVersion "v6.7.2"
 
   filterProductStatus: true
-
-  mclabels:
-    logScraping: true # TODO: fix the key typo in service
 
   env:
     uwsgi:
@@ -19,23 +16,24 @@ pycsw:
       schema: RasterCatalogManager
       requirePassword: true
 
+  uwsgiExporter:
+    image:
+      repository: "timonwong/uwsgi-exporter"
+      tag: "v1.3.0"
+
   nginx:
     image:
       repository: common/nginx
-      tag: "v2.1.6"
+      tag: "v2.3.1"
+    nameOverride: pycsw-nginx
     mclabels:
       partOf: serving
       owner: raster
-      logScraping: true
     prometheusExporter:
        image:
          repository: common/nginx/nginx-prometheus-exporter
          tag: 1.4.1
 
-  uwsgiExporter:
-    image:
-      repository: "timonwong/uwsgi-exporter"
-      tag: "latest"
 
 # ====================================================================================================
 # Pycsw-Private
@@ -43,7 +41,7 @@ pycsw:
 pycsw-private:
   image:
     repository: common/pycsw
-    tag: "v6.4.2"
+    tag: *pycswVersion
 
   mclabels:
     logScraping: true # TODO: fix the key typo in service
@@ -56,32 +54,39 @@ pycsw-private:
       schema: RasterCatalogManager
       requirePassword: true
 
+  uwsgiExporter:
+    image:
+      repository: "timonwong/uwsgi-exporter"
+      tag: "v1.3.0"
+
   nginx:
     image:
       repository: common/nginx
-      tag: "v2.1.6"
+      tag: "v2.3.1"
+    nameOverride: pycsw-private-nginx
     mclabels:
       partOf: serving
       owner: raster
-      logScraping: true
     prometheusExporter:
        image:
          repository: common/nginx/nginx-prometheus-exporter
          tag: 1.4.1
 
 
-  uwsgiExporter:
-    image:
-      repository: "timonwong/uwsgi-exporter"
-      tag: "latest"
-
-
 # ====================================================================================================
 # MapProxy
 # ====================================================================================================
 mapproxy:
+  db:
+    schema: MapproxyConfig # TODO: remove after set this as the default value within service
+
   metrics:
-    enabled: false
+    enabled: true
+    url: "localhost:8080" # TODO: this is irrelevant for metrics but needed to enabled the metrics, should be removed after handle within service
+
+  mclabels:
+    prometheus:
+      port: 9117 # TODO: remove after update the prometues port within service as default value
 
   storage:
     mapproxyConfigProvider: DB
@@ -98,30 +103,26 @@ mapproxy:
 
   mapproxy:
     image:
-      repository: raster/mapproxy
-      tag: "v6.0.1-redis-fix"
+      repository: raster/docker-mapproxy
+      tag: "v2.1.3"
     uwsgi:
       processes: 6
       threads: 2
-    env:
-      cors:
-        enabled: true
-        allowedOrigin: "*"
-        allowedHeaders: "*"
-
-  nginx:
-    image:
-      repository: common/nginx
-      tag: "v2.1.5"
-    mclabels:
-      partOf: serving
-      owner: raster
-      logScraping: true
 
   uwsgiExporter:
     image:
       repository: "timonwong/uwsgi-exporter"
-      tag: "latest"
+      tag: "v1.3.0"
+
+  nginx:
+    image:
+      repository: common/nginx
+      tag: "v2.3.1"
+    nameOverride: mapproxy-nginx
+    mclabels:
+      partOf: serving
+      owner: raster
+
 
 # ====================================================================================================
 # Redis
@@ -174,7 +175,7 @@ pp-geoserver:
     geoserverRepository: geoserver-os
     geoserverTag: "v2.0.0-2.26.0"
     sidecarRepository: raster/geoserver-polygon-parts
-    sidecarTag: "v3.2.0"
+    sidecarTag: "v3.3.1"
 
   nameOverride: "pp-geoserver"
 
@@ -184,12 +185,11 @@ pp-geoserver:
   nginx:
     image:
       repository: common/nginx
-      tag: "v2.2.1"
-    nameOverride: nginx-pp-geoserver
+      tag: "v2.3.1"
+    nameOverride: pp-geoserver-nginx
     mclabels:
       partOf: serving
       owner: raster
-      logScraping: true
     prometheusExporter:
       image:
         repository: common/nginx/nginx-prometheus-exporter

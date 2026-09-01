@@ -4,10 +4,9 @@
 raster-catalog-manager:
   image:
     repository: raster/raster-catalog-manager
-    tag: "v7.2.0"
+    tag: "v7.4.0"
   configManagement:
-    offlineMode: true
-
+    offlineMode: true # TODO: remove after set this as the default value within service
 
 # ====================================================================================================
 # Job-Tracker
@@ -15,9 +14,9 @@ raster-catalog-manager:
 job-tracker:
   image:
     repository: raster/job-tracker
-    tag: "v5.2.0"
+    tag: "v5.3.1"
   configManagement:
-    offlineMode: true
+    offlineMode: true # TODO: remove after set this as the default value within service
 
   taskFlowManager:
     ingestionTasksFlow:
@@ -33,7 +32,9 @@ job-tracker:
       - finalize
     seedTasksFlow:
       - TilesSeeding
-
+    deleteLayerTasksFlow:
+      - delete
+      - tiles-deletion
 
 # ====================================================================================================
 # Polygon-Parts-Manager
@@ -41,10 +42,10 @@ job-tracker:
 polygon-parts-manager:
   image:
     repository: raster/polygon-parts-manager
-    tag: v3.3.1
+    tag: v3.5.1
   imagePullPolicy: IfNotPresent # TODO: set the default value in the service as `IfNotPresent`
   configManagement:
-    offlineMode: true
+    offlineMode: true # TODO: remove after set this as the default value within service
   env:
     application:
       entities:
@@ -53,16 +54,15 @@ polygon-parts-manager:
       validation:
         areaThresholdSquareMeters: 10 # TODO: remove after set this as the default value within service
 
-
 # ====================================================================================================
 # Cleaner
 # ====================================================================================================
 cleaner:
   image:
     repository: raster/cleaner
-    tag: "v1.1.3"
+    tag: "v1.2.1"
   configManagement:
-    offlineMode: true
+    offlineMode: true # TODO: remove after set this as the default value within service
     version: "latest" # TODO: remove after set this as the default value within service
   env:
     targetPort: 8080 # TODO - remove after set this as the default value within service
@@ -74,7 +74,8 @@ cleaner:
         pairs: # TODO - remove after set this as the default value within service
           - job: "Ingestion_Update"
             task: "tiles-deletion"
-
+          - job: "Delete_Layer"
+            task: "tiles-deletion"
 
 # ====================================================================================================
 # Files-Server
@@ -83,17 +84,15 @@ files-server:
   nginx:
     image:
       repository: common/nginx
-      tag: v2.1.5
+      tag: v2.3.1
     imagePullPolicy: IfNotPresent # TODO: set the default value in the service (nginx repo) as `IfNotPresent`
+    nameOverride: files-server
     route:
       rewriteTarget: "/"
-
     prometheusExporter:
       image:
         repository: common/nginx/nginx-prometheus-exporter
         tag: 1.4.1
- 
-  
 
 # ====================================================================================================
 # Nginx-S3-Gateway

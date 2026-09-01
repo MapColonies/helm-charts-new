@@ -19,13 +19,13 @@ dependencies:
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: overseer
-    version: 2.8.0
+    version: 2.11.1
     condition: exporter-overseer.enabled
     alias: exporter-overseer
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: polygon-parts-worker
-    version: 2.3.0
+    version: 2.3.1
     condition: exporter-polygon-parts-worker.enabled
     alias: exporter-polygon-parts-worker
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster

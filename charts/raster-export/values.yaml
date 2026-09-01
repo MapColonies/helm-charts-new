@@ -25,17 +25,17 @@ exporter-trigger:
     repository: raster/exporter-trigger
     tag: v3.3.0
   configManagement:
-    offlineMode: true
-
+    offlineMode: true # TODO: remove after set this as the default value within service
+  
 # ====================================================================================================
 # Exporter-Overseer
 # ====================================================================================================
 exporter-overseer:
   image:
     repository: raster/overseer
-    tag: v2.8.0
+    tag: v2.11.1
   configManagement:
-    offlineMode: true
+    offlineMode: true # TODO: remove after set this as the default value within service
   instanceType: export
   mclabels:
     partOf: export
@@ -46,16 +46,12 @@ exporter-overseer:
 exporter-polygon-parts-worker:
   image:
     repository: raster/polygon-parts-worker
-    tag: v2.3.0
+    tag: v2.3.1
   instanceType: export
+  configManagement:
+    offlineMode: true # TODO: remove after set this as the default value within service
   mclabels:
     partOf: export
-  configManagement:
-    offlineMode: true
   jobManagement:
     config:
       dequeueIntervalMs: 30000
-  jobDefinitions:
-    tasks:
-      validation:
-        reportsDownloadPath: "/validation-reports"

@@ -13,7 +13,7 @@ dependencies:
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: mapproxy-api
-    version: 1.13.0
+    version: 1.14.0
     condition: mapproxy-api.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
@@ -23,12 +23,12 @@ dependencies:
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: ingestion-trigger
-    version: 4.4.0
+    version: 4.5.1
     condition: ingestion-trigger.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: overseer
-    version: 2.9.0
+    version: 2.11.1
     condition: overseer.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
@@ -38,7 +38,7 @@ dependencies:
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: polygon-parts-worker
-    version: 2.3.0
+    version: 2.3.1
     condition: polygon-parts-worker.enabled
     alias: polygon-parts-worker
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
