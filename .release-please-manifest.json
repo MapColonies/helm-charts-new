@@ -19,8 +19,8 @@
     "charts/claude-otel-collector": "1.1.0",
     "charts/grafana-datasources": "1.0.0",
     "charts/app": "2.3.0",
-    "charts/raster-core": "1.0.0",
+    "charts/raster-core": "1.1.0",
     "charts/raster-serving": "1.0.0",
-    "charts/raster-ingestion": "1.0.0",
+    "charts/raster-ingestion": "1.1.0",
     "charts/raster-export": "1.1.0"
 }
