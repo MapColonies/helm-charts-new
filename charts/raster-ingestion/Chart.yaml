@@ -4,7 +4,7 @@ description: A Helm chart for Raster ingestion services
 annotations:
   domain: raster
 type: application
-version: 1.0.0
+version: 1.1.0
 dependencies:
   - name: gpkg-merger
     version: 2.2.3
