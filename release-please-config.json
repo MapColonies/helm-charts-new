@@ -1,139 +1,203 @@
 {
-    "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
-    "changelog-sections": [
-      {
-        "section": "🎉 Features",
-        "type": "feat"
-      },
-      {
-        "section": "🐛 Bug Fixes",
-        "type": "fix"
-      },
-      {
-        "section": "⚡ Performance Improvements",
-        "type": "perf"
-      },
-      {
-        "section": "🔗 Dependencies",
-        "type": "deps"
-      },
-      {
-        "section": "📝 Documentation",
-        "type": "docs"
-      },
-      {
-        "section": "🏗️ Build System",
-        "type": "build"
-      },
-      {
-        "section": "🔧 Miscellaneous Chores",
-        "type": "chore"
-      },
-      {
-        "section": "⏪ Reverts",
-        "type": "revert"
-      },
-      {
-        "section": "✅ Tests",
-        "type": "test"
-      },
-      {
-        "section": "💄 Style",
-        "type": "style"
-      },
-      {
-        "section": "♻️ Code Refactoring",
-        "type": "refactor"
-      },
-      {
-        "section": "Helm Chart Updates",
-        "type": "helm",
-        "hidden": false
-      }
-    ],
-    "draft-pull-request": false,
-    "include-v-in-tag": true,
-    "separate-pull-requests": true,
-    "packages": {
-      "charts/core-stack": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/sftpgo-stack": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/openshift-routes": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/gatekeeper-constraints": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/resource-scaler": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/keycloak": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/grafana": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/prometheus": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/alertmanager": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/tempo": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/alloy": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/hoppscotch": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/pgadmin": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/loki": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/jenkins": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/otel-collectors": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/claude-otel-collector": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/elastic-alertmanager-connector": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/grafana-datasources": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      },
-      "charts/app": {
-        "release-type": "helm",
-        "extra-files": ["README.md"]
-      }
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "changelog-sections": [
+    {
+      "section": "🎉 Features",
+      "type": "feat"
+    },
+    {
+      "section": "🐛 Bug Fixes",
+      "type": "fix"
+    },
+    {
+      "section": "⚡ Performance Improvements",
+      "type": "perf"
+    },
+    {
+      "section": "🔗 Dependencies",
+      "type": "deps"
+    },
+    {
+      "section": "📝 Documentation",
+      "type": "docs"
+    },
+    {
+      "section": "🏗️ Build System",
+      "type": "build"
+    },
+    {
+      "section": "🔧 Miscellaneous Chores",
+      "type": "chore"
+    },
+    {
+      "section": "⏪ Reverts",
+      "type": "revert"
+    },
+    {
+      "section": "✅ Tests",
+      "type": "test"
+    },
+    {
+      "section": "💄 Style",
+      "type": "style"
+    },
+    {
+      "section": "♻️ Code Refactoring",
+      "type": "refactor"
+    },
+    {
+      "section": "Helm Chart Updates",
+      "type": "helm",
+      "hidden": false
     }
+  ],
+  "draft-pull-request": false,
+  "include-v-in-tag": true,
+  "separate-pull-requests": true,
+  "packages": {
+    "charts/core-stack": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/sftpgo-stack": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/openshift-routes": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/gatekeeper-constraints": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/resource-scaler": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/keycloak": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/grafana": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/prometheus": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/alertmanager": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/tempo": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/alloy": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/hoppscotch": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/pgadmin": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/loki": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/jenkins": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/otel-collectors": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/claude-otel-collector": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/elastic-alertmanager-connector": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/grafana-datasources": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/app": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/raster-core": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/raster-serving": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/raster-ingestion": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
+    "charts/raster-export": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    }
+  }
 }
