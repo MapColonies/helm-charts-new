@@ -22,5 +22,5 @@
     "charts/raster-core": "1.0.0",
     "charts/raster-serving": "1.0.0",
     "charts/raster-ingestion": "1.0.0",
-    "charts/raster-export": "1.0.0"
+    "charts/raster-export": "1.1.0"
 }
