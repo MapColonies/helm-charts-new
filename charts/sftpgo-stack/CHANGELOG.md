@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/MapColonies/helm-charts-new/compare/sftpgo-stack-v1.2.2...sftpgo-stack-v1.3.0) (2026-09-02)
+
+
+### 🎉 Features
+
+* add criticality filed to values based releases ([#112](https://github.com/MapColonies/helm-charts-new/issues/112)) ([d100d1e](https://github.com/MapColonies/helm-charts-new/commit/d100d1e1cd98bf70ccf171c074f1a273b0de1412))
+
+
+### 🐛 Bug Fixes
+
+* **sftp:** remove node-exporter service ([#73](https://github.com/MapColonies/helm-charts-new/issues/73)) ([eadeae5](https://github.com/MapColonies/helm-charts-new/commit/eadeae5313b7f18ff9c3c2c61d20eab6571d7377))
+
 ## [1.2.2](https://github.com/MapColonies/helm-charts-test/compare/sftpgo-stack-v1.2.1...sftpgo-stack-v1.2.2) (2026-03-30)
 
 
