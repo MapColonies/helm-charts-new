@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/MapColonies/helm-charts-new/compare/alertmanager-v1.1.0...alertmanager-v1.1.1) (2026-09-02)
+
+
+### 🔧 Miscellaneous Chores
+
+* **master:** release alertmanager 1.1.0 ([#130](https://github.com/MapColonies/helm-charts-new/issues/130)) ([9a3f430](https://github.com/MapColonies/helm-charts-new/commit/9a3f4302abe20cf9734982acf4b701b4ddb43c13))
+
 ## [1.1.0](https://github.com/MapColonies/helm-charts-new/compare/alertmanager-v1.0.0...alertmanager-v1.1.0) (2026-08-26)
 
 
