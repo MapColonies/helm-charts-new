@@ -1,11 +1,10 @@
 apiVersion: v2
-name: core
+name: raster-core
 description: A Helm chart for Raster core services
 annotations:
   domain: raster
 type: application
 version: 1.0.0
-appVersion: "1.0.0"
 dependencies:
   - name: raster-catalog-manager
     version: 7.4.0
