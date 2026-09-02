@@ -12,7 +12,7 @@
     "charts/loki": "1.2.0",
     "charts/alertmanager": "1.1.0",
     "charts/jenkins": "1.1.0",
-    "charts/elastic-alertmanager-connector": "1.0.0",
+    "charts/elastic-alertmanager-connector": "1.1.0",
     "charts/gatekeeper-constraints": "1.0.0",
     "charts/resource-scaler": "1.0.0",
     "charts/datasource-library": "0.1.0",
