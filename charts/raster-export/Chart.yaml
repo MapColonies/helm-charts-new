@@ -1,11 +1,10 @@
 apiVersion: v2
-name: export
+name: raster-export
 description: A Helm chart for Raster export services
 annotations:
   domain: raster
 type: application
 version: 1.0.0
-appVersion: "1.0.0"
 dependencies:
   - name: gpkg-merger
     version: 2.2.3
