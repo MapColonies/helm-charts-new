@@ -1,1 +1,26 @@
-{"charts/openshift-routes":"1.0.2","charts/sftpgo-stack":"1.2.2","charts/grafana":"1.1.0","charts/alloy":"1.2.0","charts/hoppscotch":"1.0.0","charts/keycloak":"1.0.0","charts/pgadmin":"1.0.0","charts/tempo":"1.0.0","charts/otel-collectors":"1.0.0","charts/prometheus":"1.1.0","charts/loki":"1.2.0","charts/alertmanager":"1.1.0","charts/jenkins":"1.1.0","charts/elastic-alertmanager-connector":"1.0.0","charts/gatekeeper-constraints":"1.0.0","charts/resource-scaler":"1.0.0","charts/datasource-library":"0.1.0","charts/claude-otel-collector":"1.1.0","charts/grafana-datasources":"1.0.0","charts/app":"2.3.0"}
+{
+    "charts/openshift-routes": "1.0.2",
+    "charts/sftpgo-stack": "1.2.2",
+    "charts/grafana": "1.1.0",
+    "charts/alloy": "1.2.0",
+    "charts/hoppscotch": "1.0.0",
+    "charts/keycloak": "1.0.0",
+    "charts/pgadmin": "1.0.0",
+    "charts/tempo": "1.0.0",
+    "charts/otel-collectors": "1.0.0",
+    "charts/prometheus": "1.1.0",
+    "charts/loki": "1.2.0",
+    "charts/alertmanager": "1.1.0",
+    "charts/jenkins": "1.1.0",
+    "charts/elastic-alertmanager-connector": "1.0.0",
+    "charts/gatekeeper-constraints": "1.0.0",
+    "charts/resource-scaler": "1.0.0",
+    "charts/datasource-library": "0.1.0",
+    "charts/claude-otel-collector": "1.1.0",
+    "charts/grafana-datasources": "1.0.0",
+    "charts/app": "2.3.0",
+    "charts/raster-core": "1.0.0",
+    "charts/raster-serving": "1.0.0",
+    "charts/raster-ingestion": "1.0.0",
+    "charts/raster-export": "1.0.0"
+}
