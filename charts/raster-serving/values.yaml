@@ -5,6 +5,7 @@ pycsw:
   image:
     repository: common/pycsw
     tag: &pycswVersion "v6.7.2"
+    pullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
 
   filterProductStatus: true
 
@@ -20,6 +21,7 @@ pycsw:
     image:
       repository: "timonwong/uwsgi-exporter"
       tag: "v1.3.0"
+    imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
 
   nginx:
     image:
@@ -42,6 +44,7 @@ pycsw-private:
   image:
     repository: common/pycsw
     tag: *pycswVersion
+    pullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
 
   mclabels:
     logScraping: true # TODO: fix the key typo in service
@@ -58,6 +61,7 @@ pycsw-private:
     image:
       repository: "timonwong/uwsgi-exporter"
       tag: "v1.3.0"
+    imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
 
   nginx:
     image:
@@ -77,6 +81,8 @@ pycsw-private:
 # MapProxy
 # ====================================================================================================
 mapproxy:
+  imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
+
   db:
     schema: MapproxyConfig # TODO: remove after set this as the default value within service
 
@@ -105,6 +111,7 @@ mapproxy:
     image:
       repository: raster/docker-mapproxy
       tag: "v2.1.3"
+    imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
     uwsgi:
       processes: 6
       threads: 2
@@ -113,6 +120,7 @@ mapproxy:
     image:
       repository: "timonwong/uwsgi-exporter"
       tag: "v1.3.0"
+    imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
 
   nginx:
     image:
@@ -147,6 +155,7 @@ redis:
       repository: bitnamilegacy/redis-exporter
       tag: 1.55.0-debian-11-r2
   master:
+    pullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
     containerSecurityContext:
       enabled: false
     count: 1
@@ -176,6 +185,7 @@ pp-geoserver:
     geoserverTag: "v2.0.0-2.26.0"
     sidecarRepository: raster/geoserver-polygon-parts
     sidecarTag: "v3.3.1"
+  imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
 
   nameOverride: "pp-geoserver"
 
@@ -186,6 +196,7 @@ pp-geoserver:
     image:
       repository: common/nginx
       tag: "v2.3.1"
+    imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
     nameOverride: pp-geoserver-nginx
     mclabels:
       partOf: serving

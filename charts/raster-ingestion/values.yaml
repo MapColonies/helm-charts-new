@@ -1,6 +1,7 @@
 # ====================================================================================================
 # Gpkg-Merger
 # ====================================================================================================
+# TODO: no image pull policy set for this container inside service, add when supported by the service helm
 gpkg-merger:
   image:
     repository: raster/tiles-merger-service
@@ -25,6 +26,7 @@ gpkg-merger:
 # ====================================================================================================
 # MapProxy-Api
 # ====================================================================================================
+# TODO: no image pull policy set for this container inside service, add when supported by the service helm
 mapproxy-api:
   image:
     repository: raster/mapproxy-api
@@ -42,6 +44,7 @@ cache-seeder:
   image:
     repository: "raster/cache-seeder"
     tag: "v2.3.2"
+    pullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   env:
     seedConcurrency: 25
 
@@ -53,6 +56,7 @@ ingestion-trigger:
   image:
     repository: raster/ingestion-trigger
     tag: v4.5.1
+  imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
   env:
@@ -70,6 +74,7 @@ overseer:
   image:
     repository: raster/overseer
     tag: v2.11.1
+    pullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   configManagement:
     offlineMode:  # TODO: remove after set this as the default value within service
   instanceType: "ingestion"
@@ -82,6 +87,7 @@ geoserver-api:
   image:
     repository: raster/geoserver-api
     tag: v2.1.0
+  imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
   db:
