@@ -7,6 +7,8 @@ exporter-gpkg-merger:
     repository: raster/tiles-merger-service
     tag: "v2.2.3"
   isExporter: true
+  mclabels:
+    partOf: export
   env:
     general:
       validate: false
@@ -28,7 +30,7 @@ exporter-trigger:
   imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
-  
+
 # ====================================================================================================
 # Exporter-Overseer
 # ====================================================================================================
