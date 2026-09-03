@@ -5,6 +5,16 @@ loki:
   serviceAccount:
       create: false
       name: monitoring
+  # chart 18.x gives gateway/memcached their own ServiceAccounts by default;
+  # pin them to the SCC-bound monitoring SA so OpenShift admits the pods
+  gateway:
+    serviceAccount:
+      create: false
+      name: monitoring
+  memcached:
+    serviceAccount:
+      create: false
+      name: monitoring
   deploymentMode: SimpleScalable
   # this is only for DaemonSet mode
   rbac:
