@@ -46,6 +46,11 @@ polygon-parts-manager:
   imagePullPolicy: IfNotPresent # TODO: set the default value in the service as `IfNotPresent`
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
+  metrics: # TODO: move metrics section into the service
+    enabled: true
+    url: 'http://localhost:8080/metrics'
+    prometheus:
+      scrape: true
   env:
     application:
       entities:
@@ -61,10 +66,17 @@ cleaner:
   image:
     repository: raster/cleaner
     tag: "v1.2.1"
+  mclabels:
+    gisDomain: raster
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
     version: "latest" # TODO: remove after set this as the default value within service
+    serverUrl: "http://localhost:8080/api"
   env:
+    tracing: # TODO: create a merged value from global within the service
+      enabled: true
+    openTelemetryOptions: # TODO: remove this once service supports it by global values 
+      enabled: true
     targetPort: 8080 # TODO - remove after set this as the default value within service
     jobnik:
       worker: # TODO - remove after set this as the default value within service
@@ -87,6 +99,9 @@ files-server:
       tag: v2.3.1
     imagePullPolicy: IfNotPresent # TODO: set the default value in the service (nginx repo) as `IfNotPresent`
     nameOverride: files-server
+    mclabels:
+      partOf: core
+      owner: raster
     route:
       rewriteTarget: "/"
     prometheusExporter:
@@ -101,3 +116,5 @@ nginx-s3-gateway:
   image:
     repository: common/nginx-s3-gateway
     tag: v3.0.2
+  s3:
+    nginxWorkerProcesses: 8
