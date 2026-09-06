@@ -19,7 +19,7 @@ pycsw:
 
   uwsgiExporter:
     image:
-      repository: "timonwong/uwsgi-exporter"
+      repository: "common/timonwong/uwsgi-exporter"
       tag: "v1.3.0"
     imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
 
@@ -59,7 +59,7 @@ pycsw-private:
 
   uwsgiExporter:
     image:
-      repository: "timonwong/uwsgi-exporter"
+      repository: "common/timonwong/uwsgi-exporter"
       tag: "v1.3.0"
     imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
 
@@ -99,12 +99,12 @@ mapproxy:
 
   initContainer:
     image:
-      repository: mapproxinator
+      repository: raster/mapproxinator
       tag: "v1.2.5"
 
   mapproxinator:
     image:
-      repository: mapproxinator
+      repository: raster/mapproxinator
       tag: "v1.2.5"
 
   mapproxy:
@@ -118,7 +118,7 @@ mapproxy:
 
   uwsgiExporter:
     image:
-      repository: "timonwong/uwsgi-exporter"
+      repository: "common/timonwong/uwsgi-exporter"
       tag: "v1.3.0"
     imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
 
