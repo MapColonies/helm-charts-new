@@ -76,7 +76,7 @@ overseer:
     tag: v2.11.1
     pullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   configManagement:
-    offlineMode:  # TODO: remove after set this as the default value within service
+    offlineMode: true # TODO: remove after set this as the default value within service
   instanceType: "ingestion"
 
 
