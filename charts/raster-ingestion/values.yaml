@@ -7,6 +7,9 @@ gpkg-merger:
     repository: raster/tiles-merger-service
     tag: "v2.2.3"
   isExporter: false
+  mclabels:
+    prometheus:
+      port: 9500 # TODO: fix default value inside the service
   env:
     general:
       validate: false
@@ -102,6 +105,8 @@ polygon-parts-worker:
     repository: raster/polygon-parts-worker
     tag: v2.3.1
   instanceType: ingestion
+  mclabels:
+    partOf: ingestion # TODO: remove after set this as the default value within service
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
   jobManagement:
