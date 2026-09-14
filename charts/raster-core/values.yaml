@@ -111,5 +111,3 @@ nginx-s3-gateway:
   image:
     repository: common/nginx-s3-gateway
     tag: v3.0.2
-  s3:
-    nginxWorkerProcesses: 8
