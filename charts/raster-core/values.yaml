@@ -66,7 +66,6 @@ cleaner:
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
     version: "latest" # TODO: remove after set this as the default value within service
-    serverUrl: "http://localhost:8080/api" # TODO: remove after set this as the default value within service
   env:
     tracing: # TODO: create a merged value from global within the service
       enabled: true
