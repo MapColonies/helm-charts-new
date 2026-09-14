@@ -46,10 +46,6 @@ polygon-parts-manager:
   imagePullPolicy: IfNotPresent # TODO: set the default value in the service as `IfNotPresent`
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
-  metrics: # TODO: move metrics section into the service
-    enabled: true
-    prometheus:
-      scrape: true
   env:
     application:
       entities:
