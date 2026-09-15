@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1](https://github.com/MapColonies/helm-charts-new/compare/app-v2.3.0...app-v2.3.1) (2026-09-15)
+
+
+### Helm Chart Updates
+
+* **app:** bump app version - raster revert ability ([#147](https://github.com/MapColonies/helm-charts-new/issues/147)) ([49cdbfa](https://github.com/MapColonies/helm-charts-new/commit/49cdbfa3d000bf298fb76f6ebaf162ba880a5911))
+
 ## [2.3.0](https://github.com/MapColonies/helm-charts-new/compare/app-v2.2.48...app-v2.3.0) (2026-08-09)
 
 
