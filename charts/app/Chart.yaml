@@ -8,11 +8,11 @@ annotations:
   domain: app
 dependencies:
   - name: catalog-app
-    version: 6.5.2
+    version: 6.8.0
     condition: global.enable-services.catalog-app
     repository: oci://acrarolibotnonprod.azurecr.io/helm/app
   - name: catalog-web-app-bff
-    version: 4.3.3
+    version: 4.5.1
     condition: global.enable-services.catalog-web-app-bff
     repository: oci://acrarolibotnonprod.azurecr.io/helm/app
   - name: mc-web-tools
