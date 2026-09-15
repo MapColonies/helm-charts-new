@@ -7,7 +7,7 @@
     "charts/keycloak": "1.0.0",
     "charts/pgadmin": "1.0.0",
     "charts/tempo": "1.0.0",
-    "charts/otel-collectors": "1.0.0",
+    "charts/otel-collectors": "1.1.0",
     "charts/prometheus": "1.1.0",
     "charts/loki": "1.2.0",
     "charts/alertmanager": "1.1.0",
