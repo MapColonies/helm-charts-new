@@ -1,25 +1,12 @@
 {{/*
-Parse a byte size to bytes (float). Accepts Kubernetes quantities (6Gi, 512M) and
-Loki/go-humanize sizes (4GB, 4GiB). Decimal suffixes (K/KB, M/MB, G/GB) are powers of
-1000, binary ones (Ki/KiB, Mi/MiB, Gi/GiB) powers of 1024 — so "4300MB" is ~4.0GiB.
+Parse "<int>MB" / "<int>Mi" to an MB count; Mi treated as MB.
 */}}
-{{- define "loki-wrapper.parseBytes" -}}
+{{- define "loki-wrapper.toMB" -}}
 {{- $raw := toString . | trim -}}
-{{- $parts := regexFindAll "^([0-9]+(?:\\.[0-9]+)?)\\s*([A-Za-z]*)$" $raw -1 -}}
-{{- if not $parts -}}
-{{- fail (printf "loki: cannot parse byte size %q" $raw) -}}
+{{- if not (regexMatch "^[0-9]+(MB|Mi)$" $raw) -}}
+{{- fail (printf "loki: %q must be in MB (e.g. 4300MB) or Mi (e.g. 6144Mi)" $raw) -}}
 {{- end -}}
-{{- $num := regexReplaceAll "^([0-9.]+).*$" $raw "${1}" | float64 -}}
-{{- $unit := regexReplaceAll "^[0-9.]+\\s*" $raw "" | lower | trimSuffix "b" -}}
-{{- $multipliers := dict
-  "" 1.0
-  "k" 1e3 "m" 1e6 "g" 1e9 "t" 1e12
-  "ki" 1024.0 "mi" 1048576.0 "gi" 1073741824.0 "ti" 1099511627776.0
--}}
-{{- if not (hasKey $multipliers $unit) -}}
-{{- fail (printf "loki: unsupported byte size unit in %q" $raw) -}}
-{{- end -}}
-{{- mulf $num (get $multipliers $unit) -}}
+{{- regexReplaceAll "(MB|Mi)$" $raw "" -}}
 {{- end -}}
 
 {{/*
@@ -27,17 +14,18 @@ Fail rendering when the write pod's WAL replay_memory_ceiling exceeds
 walReplayCeilingMaxRatio of its memory limit; replay above that OOM-loops a crashed pod.
 Skipped when write.resources.limits.memory is unset.
 */}}
-{{- define "loki-wrapper.validateWalReplayCeiling" -}}
+{{- define "loki-wrapper.validateWalReplayCeilingMB" -}}
 {{- $limit := dig "write" "resources" "limits" "memory" "" .Values.loki -}}
 {{- if $limit -}}
 {{- $ceiling := dig "loki" "ingester" "wal" "replay_memory_ceiling" "" .Values.loki -}}
 {{- if not $ceiling -}}
 {{- fail "loki: loki.loki.ingester.wal.replay_memory_ceiling must be set when loki.write.resources.limits.memory is set" -}}
 {{- end -}}
+{{- $ceilingMB := include "loki-wrapper.toMB" $ceiling | float64 -}}
+{{- $limitMB := include "loki-wrapper.toMB" $limit | float64 -}}
 {{- $maxRatio := required "walReplayCeilingMaxRatio must be set" .Values.walReplayCeilingMaxRatio | float64 -}}
-{{- $ratio := divf (include "loki-wrapper.parseBytes" $ceiling | float64) (include "loki-wrapper.parseBytes" $limit | float64) -}}
-{{- if gt $ratio $maxRatio -}}
-{{- fail (printf "loki: wal.replay_memory_ceiling %v is %.1f%% of write memory limit %v, max allowed is %.1f%% (walReplayCeilingMaxRatio)" $ceiling (mulf $ratio 100) $limit (mulf $maxRatio 100)) -}}
+{{- if gt (divf $ceilingMB $limitMB) $maxRatio -}}
+{{- fail (printf "loki: wal.replay_memory_ceiling %v exceeds %.0f%% (walReplayCeilingMaxRatio) of write memory limit %v" $ceiling (mulf $maxRatio 100) $limit) -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
