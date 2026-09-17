@@ -1,3 +1,6 @@
+# max loki.loki.ingester.wal.replay_memory_ceiling / loki.write.resources.limits.memory; render fails above it
+walReplayCeilingMaxRatio: 0.7
+
 loki:
   global:
     dnsService: dns-default
