@@ -1,5 +1,6 @@
 {{/*
-Parse "<number>GB" / "<number>Gi" to a GB count; Gi treated as GB.
+Parse "<number>GB" / "<number>Gi" to a GB count. Gi counts as GB, so the ratio below is
+nominal: Loki reads GB as 1e9 and k8s reads Gi as 2^30, making the real byte ratio ~7% lower.
 */}}
 {{- define "loki-wrapper.toGB" -}}
 {{- $raw := toString . | trim -}}
