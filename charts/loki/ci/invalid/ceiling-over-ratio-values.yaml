@@ -1,0 +1,15 @@
+# expect-error: exceeds 70% (walReplayCeilingMaxRatio)
+loki:
+  write:
+    resources:
+      limits:
+        memory: 6Gi
+  loki:
+    ingester:
+      wal:
+        replay_memory_ceiling: 4400MB
+    storage:
+      bucketNames:
+        chunks: ci-loki-chunk
+        ruler: ci-loki-ruler
+        admin: ci-loki-admin
