@@ -1,13 +1,13 @@
 {{/*
-Parse "<number>GB" / "<number>Gi" to a GB count. Gi counts as GB, so the ratio below is
-nominal: Loki reads GB as 1e9 and k8s reads Gi as 2^30, making the real byte ratio ~7% lower.
+Parse "<int>Mi" to a MiB count. Mi only: it is the one unit both k8s quantities and
+Loki's byte parser accept, so the ratio below compares like with like.
 */}}
-{{- define "loki-wrapper.toGB" -}}
+{{- define "loki-wrapper.toMi" -}}
 {{- $raw := toString . | trim -}}
-{{- if not (regexMatch "^[0-9]+(\\.[0-9]+)?(GB|Gi)$" $raw) -}}
-{{- fail (printf "loki: %q must be in GB (e.g. 4.2GB) or Gi (e.g. 6Gi)" $raw) -}}
+{{- if not (regexMatch "^[0-9]+Mi$" $raw) -}}
+{{- fail (printf "loki: %q must be in Mi (e.g. 4300Mi)" $raw) -}}
 {{- end -}}
-{{- regexReplaceAll "(GB|Gi)$" $raw "" -}}
+{{- trimSuffix "Mi" $raw -}}
 {{- end -}}
 
 {{/*
@@ -15,18 +15,17 @@ Fail rendering when the write pod's WAL replay_memory_ceiling exceeds
 walReplayCeilingMaxRatio of its memory limit; replay above that OOM-loops a crashed pod.
 Skipped when write.resources.limits.memory is unset.
 */}}
-{{- define "loki-wrapper.validateWalReplayCeilingGB" -}}
+{{- define "loki-wrapper.validateWalReplayCeilingMi" -}}
 {{- $limit := dig "write" "resources" "limits" "memory" "" .Values.loki -}}
 {{- if $limit -}}
 {{- $ceiling := dig "loki" "ingester" "wal" "replay_memory_ceiling" "" .Values.loki -}}
 {{- if not $ceiling -}}
 {{- fail "loki: loki.loki.ingester.wal.replay_memory_ceiling must be set when loki.write.resources.limits.memory is set" -}}
 {{- end -}}
-{{- $ceilingGB := include "loki-wrapper.toGB" $ceiling | float64 -}}
-{{- $limitGB := include "loki-wrapper.toGB" $limit | float64 -}}
+{{- $ceilingMi := include "loki-wrapper.toMi" $ceiling | float64 -}}
+{{- $limitMi := include "loki-wrapper.toMi" $limit | float64 -}}
 {{- $maxRatio := required "walReplayCeilingMaxRatio must be set" .Values.walReplayCeilingMaxRatio | float64 -}}
-{{- /* rounded so an exact ratio like 4.2/6 (0.7000000000000001) passes */ -}}
-{{- if gt (round (divf $ceilingGB $limitGB) 6) $maxRatio -}}
+{{- if gt (round (divf $ceilingMi $limitMi) 6) $maxRatio -}}
 {{- fail (printf "loki: wal.replay_memory_ceiling %v exceeds %.0f%% (walReplayCeilingMaxRatio) of write memory limit %v" $ceiling (mulf $maxRatio 100) $limit) -}}
 {{- end -}}
 {{- end -}}
