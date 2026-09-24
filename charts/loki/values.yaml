@@ -1,8 +1,19 @@
+# max loki.loki.ingester.wal.replay_memory_ceiling (MB/GB, Loki units) / loki.write.resources.limits.memory (Mi/Gi); render fails above it
+walReplayCeilingMaxRatio: 0.7
+
 loki:
   global:
     dnsService: dns-default
     dnsNamespace: openshift-dns
   serviceAccount:
+      create: false
+      name: monitoring
+  gateway:
+    serviceAccount:
+      create: false
+      name: monitoring
+  memcached:
+    serviceAccount:
       create: false
       name: monitoring
   deploymentMode: SimpleScalable
@@ -70,8 +81,14 @@ loki:
     podAnnotations:
       prometheus.io/scrape: "true"
       prometheus.io/port: "9150"
+    # upstream podDisruptionBudget null defaults override the deprecated maxUnavailable, leaving a PDB that allows 0 disruptions
+    podDisruptionBudget:
+      maxUnavailable: 1
 
   chunksCache:
     podAnnotations:
       prometheus.io/scrape: "true"
       prometheus.io/port: "9150"
+    # upstream podDisruptionBudget null defaults override the deprecated maxUnavailable, leaving a PDB that allows 0 disruptions
+    podDisruptionBudget:
+      maxUnavailable: 1
