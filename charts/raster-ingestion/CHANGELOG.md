@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/MapColonies/helm-charts-new/compare/raster-ingestion-v1.1.0...raster-ingestion-v1.1.1) (2026-09-24)
+
+
+### 🐛 Bug Fixes
+
+* **raster-core,raster-serving,raster-export,raster-ingestion:** update raster values (MAPCO-11635) ([#146](https://github.com/MapColonies/helm-charts-new/issues/146)) ([c3a75ba](https://github.com/MapColonies/helm-charts-new/commit/c3a75ba892fc23895c9fa960ce26b58ddad18427))
+
 ## [1.1.0](https://github.com/MapColonies/helm-charts-new/compare/raster-ingestion-v1.0.0...raster-ingestion-v1.1.0) (2026-09-02)
 
 
