@@ -1,0 +1,12 @@
+# expect-error: replay_memory_ceiling must be set
+loki:
+  write:
+    resources:
+      limits:
+        memory: 6144Mi
+  loki:
+    storage:
+      bucketNames:
+        chunks: ci-loki-chunk
+        ruler: ci-loki-ruler
+        admin: ci-loki-admin

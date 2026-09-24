@@ -36,3 +36,23 @@ jobs:
         uses: MapColonies/shared-workflows/actions/validate-domain@validate-domain-v1.0.0
         with:
           chart-file: ${{ matrix.chart }}
+
+  render_charts:
+    name: Lint and render chart
+    needs: discover_charts
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        chart: ${{ fromJSON(needs.discover_charts.outputs.charts) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Lint and render ${{ matrix.chart }}
+        env:
+          CHART_FILE: ${{ matrix.chart }}
+        run: .github/scripts/render-chart.sh "$(dirname "$CHART_FILE")"
