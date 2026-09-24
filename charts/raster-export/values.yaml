@@ -1,11 +1,14 @@
 # ====================================================================================================
 # Exporter-Gpkg-Merger
 # ====================================================================================================
+# TODO: image pull policy hardcoded to Always for this container inside service
 exporter-gpkg-merger:
   image:
     repository: raster/tiles-merger-service
     tag: "v2.2.3"
   isExporter: true
+  mclabels:
+    partOf: export
   env:
     general:
       validate: false
@@ -24,9 +27,10 @@ exporter-trigger:
   image:
     repository: raster/exporter-trigger
     tag: v3.3.0
+  imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
-  
+
 # ====================================================================================================
 # Exporter-Overseer
 # ====================================================================================================
@@ -34,6 +38,7 @@ exporter-overseer:
   image:
     repository: raster/overseer
     tag: v2.11.1
+    pullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
   instanceType: export
