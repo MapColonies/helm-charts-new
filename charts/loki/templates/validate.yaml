@@ -1,1 +1,1 @@
-{{- include "loki-wrapper.validateWalReplayCeilingMi" . -}}
+{{- include "loki-wrapper.validateWalReplayCeiling" . -}}

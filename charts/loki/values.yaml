@@ -1,4 +1,4 @@
-# max loki.loki.ingester.wal.replay_memory_ceiling / loki.write.resources.limits.memory (both in Mi); render fails above it
+# max loki.loki.ingester.wal.replay_memory_ceiling (MB/GB, Loki units) / loki.write.resources.limits.memory (Mi/Gi); render fails above it
 walReplayCeilingMaxRatio: 0.7
 
 loki:
