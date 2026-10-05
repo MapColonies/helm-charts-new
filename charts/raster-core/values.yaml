@@ -72,17 +72,6 @@ cleaner:
     openTelemetryOptions: # TODO: remove this once service supports it by global values
       enabled: true
     targetPort: 8080 # TODO - remove after set this as the default value within service
-    worker:
-      capabilities:
-        pairs:
-          - job: "Ingestion_Update"
-            task: "tiles-deletion"
-          - job: "Delete_Layer"
-            task: "tiles-deletion"
-          - job: "Update_Delete_Cache"
-            task: "tiles-deletion"
-          - job: "Swap_Delete_Cache"
-            task: "tiles-deletion"
 
 # ====================================================================================================
 # Files-Server
