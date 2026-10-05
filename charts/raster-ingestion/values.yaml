@@ -25,7 +25,6 @@ gpkg-merger:
     heartbeat:
       intervalMs: 3000 # TODO: fix default value inside the service
 
-
 # ====================================================================================================
 # MapProxy-Api
 # ====================================================================================================
@@ -33,12 +32,11 @@ gpkg-merger:
 mapproxy-api:
   image:
     repository: raster/mapproxy-api
-    tag: "v1.14.0"
+    tag: "v1.15.0"
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
   db:
     schema: "MapproxyConfig" # TODO: remove after set this as the default value within service
-
 
 # ====================================================================================================
 # Cache-Seeder
@@ -50,7 +48,6 @@ cache-seeder:
     pullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   env:
     seedConcurrency: 25
-
 
 # ====================================================================================================
 # Ingestion-Trigger
@@ -69,19 +66,17 @@ ingestion-trigger:
       - productType: "RasterVectorBest"
         productSubType: "עבירות"
 
-
 # ====================================================================================================
 # Overseer
 # ====================================================================================================
 overseer:
   image:
     repository: raster/overseer
-    tag: v2.11.1
+    tag: v3.0.1
     pullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
   instanceType: "ingestion"
-
 
 # ====================================================================================================
 # Geoserver-Api
