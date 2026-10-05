@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/MapColonies/helm-charts-new/compare/raster-ingestion-v1.1.1...raster-ingestion-v1.2.0) (2026-10-05)
+
+
+### 🎉 Features
+
+* **raster-core,raster-ingestion:** cache deletion flow(MAPCO-11263) ([#156](https://github.com/MapColonies/helm-charts-new/issues/156)) ([ba978ae](https://github.com/MapColonies/helm-charts-new/commit/ba978ae78dcfd111398f8f14bf79669e79b3b629))
+
 ## [1.1.1](https://github.com/MapColonies/helm-charts-new/compare/raster-ingestion-v1.1.0...raster-ingestion-v1.1.1) (2026-09-24)
 
 
