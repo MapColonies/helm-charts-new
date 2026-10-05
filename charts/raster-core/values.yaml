@@ -69,7 +69,7 @@ cleaner:
   env:
     tracing: # TODO: create a merged value from global within the service
       enabled: true
-    openTelemetryOptions: # TODO: remove this once service supports it by global values 
+    openTelemetryOptions: # TODO: remove this once service supports it by global values
       enabled: true
     targetPort: 8080 # TODO - remove after set this as the default value within service
     worker:
@@ -79,7 +79,6 @@ cleaner:
             task: "tiles-deletion"
           - job: "Delete_Layer"
             task: "tiles-deletion"
-          # Redis cache invalidation jobs created by overseer after an ingestion finalizes
           - job: "Update_Delete_Cache"
             task: "tiles-deletion"
           - job: "Swap_Delete_Cache"
