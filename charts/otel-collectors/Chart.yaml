@@ -2,7 +2,7 @@ apiVersion: v2
 name: otel-collectors
 description: A wrapper otel Helm chart for grouping both external and internal collectors
 type: application
-version: 1.0.0
+version: 1.1.0
 appVersion: 0.115.1
 annotations:
   domain: infra
