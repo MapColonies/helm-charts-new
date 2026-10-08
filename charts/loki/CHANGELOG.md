@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/MapColonies/helm-charts-new/compare/loki-v1.2.0...loki-v1.3.0) (2026-10-08)
+
+
+### 🎉 Features
+
+* add criticality filed to values based releases ([#112](https://github.com/MapColonies/helm-charts-new/issues/112)) ([d100d1e](https://github.com/MapColonies/helm-charts-new/commit/d100d1e1cd98bf70ccf171c074f1a273b0de1412))
+* **loki:** upgrade chart to 18.1.1 MAPCO-10930 ([#116](https://github.com/MapColonies/helm-charts-new/issues/116)) ([fe4dd2d](https://github.com/MapColonies/helm-charts-new/commit/fe4dd2d570b401b308c97b35d84ede7d815bfa72))
+
 ## [1.2.0](https://github.com/MapColonies/helm-charts-new/compare/loki-v1.1.0...loki-v1.2.0) (2026-06-22)
 
 
