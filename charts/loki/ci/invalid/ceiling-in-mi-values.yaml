@@ -1,0 +1,15 @@
+# expect-error: must be in MB or GB
+loki:
+  write:
+    resources:
+      limits:
+        memory: 6144Mi
+  loki:
+    ingester:
+      wal:
+        replay_memory_ceiling: 4300Mi
+    storage:
+      bucketNames:
+        chunks: ci-loki-chunk
+        ruler: ci-loki-ruler
+        admin: ci-loki-admin

@@ -1,0 +1,48 @@
+# Shaped like site-values infra/loki (base + dev), without secrets.
+loki:
+  loki:
+    ingester:
+      wal:
+        replay_memory_ceiling: 4300MB
+        flush_on_shutdown: true
+    storage:
+      type: s3
+      s3:
+        endpoint: http://s3.example:9000
+        accessKeyId: ci
+        secretAccessKey: ci
+        s3ForcePathStyle: true
+        insecure: true
+      bucketNames:
+        chunks: ci-loki-chunk
+        ruler: ci-loki-ruler
+        admin: ci-loki-admin
+  backend:
+    replicas: 3
+    autoscaling:
+      enabled: true
+    resources:
+      limits:
+        memory: 2Gi
+  read:
+    replicas: 3
+    autoscaling:
+      enabled: true
+    resources:
+      limits:
+        memory: 2Gi
+  write:
+    replicas: 3
+    autoscaling:
+      enabled: true
+    resources:
+      requests:
+        memory: 6144Mi
+      limits:
+        memory: 6144Mi
+  resultsCache:
+    replicas: 2
+    allocatedMemory: 256
+  chunksCache:
+    replicas: 2
+    allocatedMemory: 1024
