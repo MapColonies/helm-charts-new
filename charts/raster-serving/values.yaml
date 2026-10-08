@@ -181,8 +181,8 @@ redis:
 # ====================================================================================================
 pp-geoserver:
   image:
-    geoserverRepository: geoserver-os
-    geoserverTag: "v2.0.0-2.26.0"
+    geoserverRepository: raster/geoserver-os
+    geoserverTag: "v3.0.0-3.0.1"
     sidecarRepository: raster/geoserver-polygon-parts
     sidecarTag: "v3.3.1"
   imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
