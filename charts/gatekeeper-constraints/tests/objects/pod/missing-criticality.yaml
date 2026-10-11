@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: missing-criticality
+  namespace: test
+  labels:
+    app.kubernetes.io/name: web
+    app.kubernetes.io/instance: web
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+    mapcolonies.io/part-of: web
+    mapcolonies.io/owner: app
+    mapcolonies.io/environment: dev
+    mapcolonies.io/component: frontend
+spec:
+  containers:
+    - name: app
+      image: nginx
