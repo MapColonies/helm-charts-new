@@ -1,0 +1,26 @@
+# The API server's canonical form of 0.0625 cores is 62500u.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canonical-micro
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: canonical-micro
+  template:
+    metadata:
+      labels:
+        app: canonical-micro
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        resources:
+          requests:
+            cpu: 62500u
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 128Mi

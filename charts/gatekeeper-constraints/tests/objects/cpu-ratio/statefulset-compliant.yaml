@@ -1,0 +1,27 @@
+# StatefulSet with 250m request, 1 core limit.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: statefulset-compliant
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: statefulset-compliant
+  template:
+    metadata:
+      labels:
+        app: statefulset-compliant
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        resources:
+          requests:
+            cpu: 250m
+            memory: 128Mi
+          limits:
+            cpu: '1'
+            memory: 128Mi
+  serviceName: statefulset-compliant

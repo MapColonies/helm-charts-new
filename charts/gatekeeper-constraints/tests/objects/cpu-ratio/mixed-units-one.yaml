@@ -1,0 +1,26 @@
+# "1" core request, 4000m limit.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mixed-units-one
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mixed-units-one
+  template:
+    metadata:
+      labels:
+        app: mixed-units-one
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        resources:
+          requests:
+            cpu: '1'
+            memory: 128Mi
+          limits:
+            cpu: 4000m
+            memory: 128Mi

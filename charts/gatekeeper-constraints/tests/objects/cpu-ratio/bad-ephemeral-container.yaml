@@ -1,0 +1,29 @@
+# Non-compliant ephemeral container is ignored.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bad-ephemeral-container
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bad-ephemeral-container
+  template:
+    metadata:
+      labels:
+        app: bad-ephemeral-container
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        resources:
+          requests:
+            cpu: 500m
+            memory: 128Mi
+          limits:
+            cpu: '2'
+            memory: 128Mi
+      ephemeralContainers:
+      - name: debug
+        image: busybox

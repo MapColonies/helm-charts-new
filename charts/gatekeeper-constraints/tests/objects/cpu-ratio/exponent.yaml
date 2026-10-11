@@ -1,0 +1,26 @@
+# Decimal exponent form: 2e-1 cores request, 800m limit.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exponent
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: exponent
+  template:
+    metadata:
+      labels:
+        app: exponent
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        resources:
+          requests:
+            cpu: 2e-1
+            memory: 128Mi
+          limits:
+            cpu: 800m
+            memory: 128Mi

@@ -1,0 +1,26 @@
+# Limit is 10x the request.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratio-10x
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ratio-10x
+  template:
+    metadata:
+      labels:
+        app: ratio-10x
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: '1'
+            memory: 128Mi

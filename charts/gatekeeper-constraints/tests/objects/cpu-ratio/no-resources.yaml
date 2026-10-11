@@ -1,0 +1,19 @@
+# No resources at all.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: no-resources
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: no-resources
+  template:
+    metadata:
+      labels:
+        app: no-resources
+    spec:
+      containers:
+      - name: app
+        image: nginx

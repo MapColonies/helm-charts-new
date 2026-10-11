@@ -1,0 +1,36 @@
+# Compliant main container, non-compliant init container.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bad-init-container
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bad-init-container
+  template:
+    metadata:
+      labels:
+        app: bad-init-container
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        resources:
+          requests:
+            cpu: 500m
+            memory: 128Mi
+          limits:
+            cpu: '2'
+            memory: 128Mi
+      initContainers:
+      - name: migrate
+        image: nginx
+        resources:
+          requests:
+            cpu: 500m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 128Mi

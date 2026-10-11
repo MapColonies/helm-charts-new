@@ -1,0 +1,26 @@
+# 500m request, 2 cores limit: exactly 4x.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: compliant
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: compliant
+  template:
+    metadata:
+      labels:
+        app: compliant
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        resources:
+          requests:
+            cpu: 500m
+            memory: 128Mi
+          limits:
+            cpu: '2'
+            memory: 128Mi
