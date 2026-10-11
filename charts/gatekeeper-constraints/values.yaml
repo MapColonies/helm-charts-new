@@ -30,3 +30,19 @@ constraints:
       - key: "mapcolonies.io/environment"
         disallowedValues:
           - "undefined"
+
+# Workload policies: rules for apps/v1 Deployments and StatefulSets, read from
+# their Pod template (see README).
+workloadPolicies:
+  # Namespaces where a violation is a warning (warn Constraints) and where it
+  # rejects the request (deny Constraints). Gatekeeper globs such as "*-dev"
+  # work. Unlike Gatekeeper, an empty list matches nothing: its Constraints are
+  # not rendered.
+  warnNamespaces: []
+  enforcedNamespaces: []
+
+  cpuRatio:
+    enabled: true
+
+  mclabels:
+    enabled: true

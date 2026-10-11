@@ -1,0 +1,6 @@
+# The enforced list is deliberately empty, so no deny Constraint is rendered and
+# objects in prod (not in the warn list) get no violation at all.
+workloadPolicies:
+  warnNamespaces:
+    - "*-dev"
+  enforcedNamespaces: []
