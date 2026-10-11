@@ -1,13 +1,6 @@
-# Chart tests: render the chart with the test values and evaluate the rendered
-# ConstraintTemplates and Constraints with gator against sample objects.
-#
-#   make test     run every gator Suite under tests/suites, every
-#                 tests/gator-test/<case> (see tests/expect-gator-test.sh)
-#                 and every tests/render-failures/<values> (see
-#                 tests/expect-render-failure.sh)
-#
-# gator is pinned to the upstream Gatekeeper version this chart wraps.
-# It is downloaded into .bin/ unless GATOR points at an existing binary.
+# make test: render the chart with tests/values.yaml, then run tests/suites,
+# tests/gator-test and tests/render-failures.
+# gator matches the wrapped Gatekeeper version; set GATOR to use your own binary.
 
 GATOR_VERSION ?= v3.22.0
 GATOR ?= $(CURDIR)/.bin/gator

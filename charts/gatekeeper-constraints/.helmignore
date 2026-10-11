@@ -2,7 +2,7 @@
 .DS_Store
 .git/
 .gitignore
-# Chart tests and tooling, not part of the released chart
+# Tests and tooling
 Makefile
 .bin/
 tests/

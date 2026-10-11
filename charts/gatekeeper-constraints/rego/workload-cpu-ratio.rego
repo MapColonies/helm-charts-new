@@ -2,9 +2,7 @@ package k8sworkloadcpuratio
 
 import data.lib.workload
 
-# Every container and init container of a workload's Pod template must set a CPU
-# request and a CPU limit of exactly 4x that request. Ephemeral containers and
-# memory are not checked. One violation per offending container.
+# Containers and init containers need CPU limit == 4x request. One violation per container.
 
 violation[{"msg": msg}] {
 	workload.evaluate
@@ -50,10 +48,8 @@ expected_limit(container) = s {
 	s := format_nanocores(4 * nanocores(cpu(container, "requests")))
 } else = "4x the request"
 
-# nanocores converts a CPU quantity (a YAML number or a Kubernetes quantity
-# string such as "500m", "62500u", "2" or "1e3") to an exact integer number of
-# nanocores. Fractions below a nanocore round up, as Kubernetes does. Undefined
-# when the value is not a quantity.
+# CPU quantity (number or string, e.g. "500m", "62500u") as exact integer nanocores,
+# rounded up like Kubernetes. Undefined if invalid.
 nanocores(q) = n {
 	is_number(q)
 	n := parse_quantity(sprintf("%v", [q]))
@@ -90,7 +86,7 @@ suffix_scale(suffix) = [power, 1] {
 
 zeros := "0000000000000000000000000000000000000000000000000000000000000000"
 
-# scale_digits returns the integer value of digits * 10^shift, rounded up.
+# digits * 10^shift, rounded up.
 scale_digits(digits, shift) = n {
 	shift >= 0
 	shift <= count(zeros)

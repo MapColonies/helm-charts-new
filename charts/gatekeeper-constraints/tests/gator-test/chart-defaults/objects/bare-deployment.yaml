@@ -1,4 +1,4 @@
-# Breaks every workload rule: no mclabels and no CPU resources.
+# Breaks both workload rules.
 apiVersion: apps/v1
 kind: Deployment
 metadata:

@@ -1,4 +1,4 @@
-# Both rules, warn and enforced: CREATE, audit and Pod template changes are evaluated; scaling and workload metadata updates are not.
+# Which operations get evaluated, both rules, warn and enforced.
 apiVersion: test.gatekeeper.sh/v1alpha1
 kind: Suite
 metadata:

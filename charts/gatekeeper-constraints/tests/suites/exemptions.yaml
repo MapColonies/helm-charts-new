@@ -1,4 +1,4 @@
-# Both rules, warn and enforced: exemption list entries (tests/values.yaml) and workload annotations.
+# Exemption list and annotations, both rules, warn and enforced.
 apiVersion: test.gatekeeper.sh/v1alpha1
 kind: Suite
 metadata:

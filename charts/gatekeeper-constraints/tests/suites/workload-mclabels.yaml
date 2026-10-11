@@ -3,7 +3,7 @@ kind: Suite
 metadata:
   name: workload-mclabels
 tests:
-  # Label rules, checked against the warn Constraint (test namespace app-dev).
+  # Label rules (warn Constraint, app-dev).
   - name: mclabels-rules
     template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-mclabels.yaml
     constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-mclabels-warn.yaml
@@ -83,7 +83,7 @@ tests:
           - violations: 1
             message: '^Deployment app-dev/several-bad: Pod template mclabels are missing or invalid: mapcolonies\.io/component \(missing\), mapcolonies\.io/environment \("undefined" is not allowed\), mapcolonies\.io/owner \("nobody" is not one of 3d, app, automation, common, dem, infra, raster, vector\), mapcolonies\.io/part-of \(missing\)\. To exempt this workload, add it to the site-values exemption list or set the mapcolonies\.io/exempt-mclabels annotation to a reason\.$'
 
-  # The same non-compliant StatefulSet in a warn, an enforced and an unlisted namespace.
+  # Same workload in warn, enforced and unlisted namespaces.
   - name: mclabels-warn-constraint
     template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-mclabels.yaml
     constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-mclabels-warn.yaml

@@ -1,15 +1,8 @@
 #!/usr/bin/env bash
 # Usage: expect-gator-test.sh <case-dir>
-#
-# Renders the chart with <case-dir>/values.yaml (and nothing else) and runs every
-# object in <case-dir>/objects against all rendered ConstraintTemplates and
-# Constraints with `gator test`. <case-dir>/expect names the outcome:
-#   nothing        no violation of any enforcement action, e.g. because an empty
-#                  namespace list renders no Constraint
-#   warnings-only  violations, none of them deny
-#   denials        at least one deny violation
-# This covers what a gator Suite can't: which Constraints the chart renders at
-# all, and with which enforcement action.
+# Renders the chart with <case-dir>/values.yaml, runs <case-dir>/objects through
+# `gator test` and checks the outcome in <case-dir>/expect:
+# nothing | warnings-only | denials.
 set -euo pipefail
 
 case_dir=${1%/}
@@ -21,7 +14,7 @@ trap 'rm -rf "$render_dir"' EXIT
 helm template gatekeeper-constraints "$chart_dir" -f "$case_dir/values.yaml" --output-dir "$render_dir" > /dev/null
 files=(-f "$render_dir/gatekeeper-constraints/templates" -f "$case_dir/objects")
 
-# gator test reads stdin when given no objects, and exits non-zero on deny violations.
+# gator test reads stdin without objects and exits non-zero on deny.
 all=$("${GATOR:-gator}" test "${files[@]}" 2>&1 < /dev/null || true)
 denied=$("${GATOR:-gator}" test --deny-only "${files[@]}" 2>&1 < /dev/null || true)
 

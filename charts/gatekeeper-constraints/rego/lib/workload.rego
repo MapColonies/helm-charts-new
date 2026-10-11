@@ -1,11 +1,8 @@
 package lib.workload
 
-# Shared by the workload rules (CPU ratio and mclabels).
+# Shared by the workload rules.
 
-# evaluate is true when a rule should check this review. CREATE and audit (no
-# operation, no old object) always evaluate. An UPDATE evaluates only when it
-# changes the Pod template, i.e. creates a new revision, so scaling a grandfathered
-# workload or patching its own metadata is never blocked.
+# Evaluate CREATE and audit always, UPDATE only when the Pod template changed.
 evaluate {
 	object.get(input.review, "operation", "") != "UPDATE"
 }
@@ -22,8 +19,7 @@ pod_template_changed {
 	object.get(input.review.oldObject, ["spec", "template"], null) != object.get(input.review.object, ["spec", "template"], null)
 }
 
-# exempt is true when the workload is in the Constraint's exemption list, or its
-# own metadata (not the Pod template) carries a non-empty <annotation>.
+# Exempt via the exemption list or a non-empty <annotation> on the workload's own metadata.
 exempt(annotation) {
 	entry := input.parameters.exemptions[_]
 	entry.namespace == namespace

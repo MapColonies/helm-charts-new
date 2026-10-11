@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # Usage: expect-render-failure.sh <values-file>
-#
-# Renders the chart with <values-file> and fails unless rendering fails with an
-# error matching the regex on the file's first line, "# expect-error: <regex>".
+# Passes if rendering fails with the error in the file's "# expect-error: <regex>" line.
 set -euo pipefail
 
 values=$1

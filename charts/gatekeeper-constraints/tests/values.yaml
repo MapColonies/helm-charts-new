@@ -1,5 +1,4 @@
-# Values the chart tests render the chart with (see Makefile).
-# Test namespaces: app-dev (warn), prod (enforced), sandbox (unlisted).
+# Test values. Namespaces: app-dev (warn), prod (enforced), sandbox (unlisted).
 workloadPolicies:
   warnNamespaces:
     - "*-dev"

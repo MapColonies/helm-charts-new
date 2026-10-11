@@ -2,8 +2,7 @@ package k8sworkloadmclabels
 
 import data.lib.workload
 
-# mclabels of a workload's Pod template: the Pods emit the logs and metrics, so
-# labels on the workload's own metadata don't count.
+# Reads Pod template labels only; workload metadata labels don't count.
 
 required_labels := ["mapcolonies.io/owner", "mapcolonies.io/environment", "mapcolonies.io/part-of", "mapcolonies.io/component"]
 

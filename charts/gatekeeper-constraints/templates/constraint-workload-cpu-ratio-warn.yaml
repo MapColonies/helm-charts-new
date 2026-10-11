@@ -1,6 +1,6 @@
 {{- if .Values.workloadPolicies.cpuRatio.enabled }}
 {{- $exemptions := include "gatekeeper-constraints.workloadExemptions" (dict "root" . "rule" "cpuRatio") | fromYamlArray }}
-{{- /* An empty list would match every namespace in Gatekeeper, so render nothing. */}}
+{{- /* Skip when empty: Gatekeeper would match every namespace. */}}
 {{- with .Values.workloadPolicies.warnNamespaces }}
 apiVersion: constraints.gatekeeper.sh/v1beta1
 kind: K8sWorkloadCpuRatio

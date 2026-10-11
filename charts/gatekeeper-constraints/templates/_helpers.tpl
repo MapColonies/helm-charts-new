@@ -1,10 +1,5 @@
 {{/*
-workloadExemptions validates workloadPolicies.exemptions and returns, as a YAML
-list, the entries that exempt a workload from <rule>. Rendering fails on an entry
-without a namespace, kind, name or reason, with an unknown kind, or with an
-unknown or empty rules list.
-
-Usage:
+Validates workloadPolicies.exemptions and returns <rule>'s entries as a YAML list.
   {{- $exemptions := include "gatekeeper-constraints.workloadExemptions" (dict "root" . "rule" "cpuRatio") | fromYamlArray }}
 */}}
 {{- define "gatekeeper-constraints.workloadExemptions" -}}
@@ -38,10 +33,7 @@ Usage:
 {{- end -}}
 
 {{/*
-enforcementAction returns the enforcementAction of <rule>'s Constraint for enforced
-namespaces, and fails unless it is deny, warn or dryrun.
-
-Usage:
+Returns <rule>'s enforcementAction for enforced namespaces: deny, warn or dryrun.
   {{- $action := include "gatekeeper-constraints.enforcementAction" (dict "root" . "rule" "cpuRatio") }}
 */}}
 {{- define "gatekeeper-constraints.enforcementAction" -}}

@@ -1,7 +1,7 @@
 {{- if .Values.workloadPolicies.mclabels.enabled }}
 {{- $action := include "gatekeeper-constraints.enforcementAction" (dict "root" . "rule" "mclabels") }}
 {{- $exemptions := include "gatekeeper-constraints.workloadExemptions" (dict "root" . "rule" "mclabels") | fromYamlArray }}
-{{- /* An empty list would match every namespace in Gatekeeper, so render nothing. */}}
+{{- /* Skip when empty: Gatekeeper would match every namespace. */}}
 {{- with .Values.workloadPolicies.enforcedNamespaces }}
 apiVersion: constraints.gatekeeper.sh/v1beta1
 kind: K8sWorkloadMcLabels

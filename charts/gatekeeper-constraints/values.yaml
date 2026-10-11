@@ -31,21 +31,16 @@ constraints:
         disallowedValues:
           - "undefined"
 
-# Workload policies: rules for apps/v1 Deployments and StatefulSets, read from
-# their Pod template (see README).
+# Workload rules for Deployments and StatefulSets (see README).
 workloadPolicies:
-  # Namespaces where a violation is a warning (warn Constraints) and where it
-  # gets each rule's enforcementAction, deny by default (enforced Constraints).
-  # Gatekeeper globs such as "*-dev" work. Unlike Gatekeeper, an empty list
-  # matches nothing: its Constraints are not rendered.
+  # Globs like "*-dev" work. An empty list renders no Constraint (Gatekeeper
+  # would match every namespace).
   warnNamespaces: []
   enforcedNamespaces: []
 
-  # Workloads exempt from a rule, reviewed by PR. namespace, kind and name match
-  # exactly (no wildcards); rules is cpuRatio, mclabels or both; reason is
-  # required, and rendering fails without it. A workload can also exempt itself
-  # with a non-empty mapcolonies.io/exempt-cpu-ratio or
-  # mapcolonies.io/exempt-mclabels annotation on its own metadata.
+  # Exact namespace/kind/name, rules: cpuRatio and/or mclabels, reason required.
+  # Workloads can also self-exempt with a non-empty mapcolonies.io/exempt-cpu-ratio
+  # or mapcolonies.io/exempt-mclabels annotation.
   exemptions: []
   # - namespace: raster-prod
   #   kind: Deployment
@@ -55,10 +50,10 @@ workloadPolicies:
 
   cpuRatio:
     enabled: true
-    # Action in enforced namespaces: deny, warn or dryrun.
+    # In enforced namespaces: deny, warn or dryrun.
     enforcementAction: deny
 
   mclabels:
     enabled: true
-    # Action in enforced namespaces: deny, warn or dryrun.
+    # In enforced namespaces: deny, warn or dryrun.
     enforcementAction: deny

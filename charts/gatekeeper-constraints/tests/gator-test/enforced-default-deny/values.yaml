@@ -1,5 +1,4 @@
-# enforcementAction is left at its default, so a workload that breaks the rules
-# in an enforced namespace is rejected.
+# Default enforcementAction: violations in prod are denied.
 workloadPolicies:
   enforcedNamespaces:
     - prod
