@@ -31,7 +31,7 @@ spec:
     - target: admission.k8s.gatekeeper.sh
       libs:
         - |
-          {{- include "gatekeeper-constraints.workloadRego" (dict "root" . "path" "rego/lib/workload.rego") | nindent 10 }}
+          {{- .Files.Get "rego/lib/workload.rego" | required "chart file rego/lib/workload.rego is missing or empty" | nindent 10 }}
       rego: |
-        {{- include "gatekeeper-constraints.workloadRego" (dict "root" . "path" "rego/workload-mclabels.rego") | nindent 8 }}
+        {{- .Files.Get "rego/workload-mclabels.rego" | required "chart file rego/workload-mclabels.rego is missing or empty" | nindent 8 }}
 {{- end }}

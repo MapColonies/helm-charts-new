@@ -1,3 +1,24 @@
 {{- if .Values.workloadPolicies.cpuRatio.enabled }}
-{{- include "gatekeeper-constraints.workloadConstraint" (dict "root" . "rule" "cpuRatio" "kind" "K8sWorkloadCpuRatio" "name" "workload-cpu-ratio" "action" "warn") }}
+{{- $exemptions := include "gatekeeper-constraints.workloadExemptions" (dict "root" . "rule" "cpuRatio") | fromYamlArray }}
+{{- /* An empty list would match every namespace in Gatekeeper, so render nothing. */}}
+{{- with .Values.workloadPolicies.warnNamespaces }}
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sWorkloadCpuRatio
+metadata:
+  name: workload-cpu-ratio-warn
+spec:
+  enforcementAction: "warn"
+  match:
+    scope: Namespaced
+    kinds:
+      - apiGroups: ["apps"]
+        kinds: ["Deployment", "StatefulSet"]
+    namespaces:
+      {{- toYaml . | nindent 6 }}
+  parameters:
+    exemptions: {{- if $exemptions }}
+      {{- toYaml $exemptions | nindent 6 }}
+    {{- else }} []
+    {{- end }}
+{{- end }}
 {{- end }}

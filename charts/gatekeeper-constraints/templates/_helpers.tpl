@@ -1,41 +1,4 @@
 {{/*
-workloadConstraint renders one Constraint of a workload rule for Deployments and
-StatefulSets, matched to the namespaces of its enforcement action, with the
-exemption list entries of that rule as parameters. It renders nothing when that
-namespace list is empty, because an empty list would match every namespace in
-Gatekeeper.
-
-Usage:
-  {{- include "gatekeeper-constraints.workloadConstraint" (dict "root" . "rule" "cpuRatio" "kind" "K8sWorkloadCpuRatio" "name" "workload-cpu-ratio" "action" "warn") }}
-*/}}
-{{- define "gatekeeper-constraints.workloadConstraint" -}}
-{{- $policies := .root.Values.workloadPolicies -}}
-{{- $namespaces := ternary $policies.warnNamespaces $policies.enforcedNamespaces (eq .action "warn") -}}
-{{- $exemptions := include "gatekeeper-constraints.workloadExemptions" (dict "root" .root "rule" .rule) | fromYamlArray -}}
-{{- if $namespaces }}
-apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: {{ .kind }}
-metadata:
-  name: {{ .name }}-{{ .action }}
-spec:
-  enforcementAction: {{ .action | quote }}
-  match:
-    scope: Namespaced
-    kinds:
-      - apiGroups: ["apps"]
-        kinds: ["Deployment", "StatefulSet"]
-    namespaces:
-      {{- toYaml $namespaces | nindent 6 }}
-  parameters:
-    exemptions:
-      {{- if $exemptions }}
-      {{- toYaml $exemptions | nindent 6 }}
-      {{- else }} []
-      {{- end }}
-{{- end }}
-{{- end -}}
-
-{{/*
 workloadExemptions validates workloadPolicies.exemptions and returns, as a YAML
 list, the entries that exempt a workload from <rule>. Rendering fails on an entry
 without a namespace, kind, name or reason, with an unknown kind, or with an
@@ -74,14 +37,3 @@ Usage:
 {{- toYaml $entries -}}
 {{- end -}}
 
-
-{{/*
-workloadRego returns a chart file holding Rego, and fails when it is missing or
-empty, so a wrong path can't render a ConstraintTemplate without its policy.
-
-Usage:
-  {{- include "gatekeeper-constraints.workloadRego" (dict "root" . "path" "rego/workload-cpu-ratio.rego") | nindent 8 }}
-*/}}
-{{- define "gatekeeper-constraints.workloadRego" -}}
-{{- .root.Files.Get .path | required (printf "chart file %s is missing or empty" .path) -}}
-{{- end -}}
