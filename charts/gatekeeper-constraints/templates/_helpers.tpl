@@ -37,3 +37,17 @@ Usage:
 {{- toYaml $entries -}}
 {{- end -}}
 
+{{/*
+enforcementAction returns the enforcementAction of <rule>'s Constraint for enforced
+namespaces, and fails unless it is deny, warn or dryrun.
+
+Usage:
+  {{- $action := include "gatekeeper-constraints.enforcementAction" (dict "root" . "rule" "cpuRatio") }}
+*/}}
+{{- define "gatekeeper-constraints.enforcementAction" -}}
+{{- $action := index .root.Values.workloadPolicies .rule "enforcementAction" -}}
+{{- if not (has $action (list "deny" "warn" "dryrun")) -}}
+{{- fail (printf "workloadPolicies.%s.enforcementAction must be deny, warn or dryrun, got %q" .rule $action) -}}
+{{- end -}}
+{{- $action -}}
+{{- end -}}

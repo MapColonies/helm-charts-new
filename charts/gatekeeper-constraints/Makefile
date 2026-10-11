@@ -2,7 +2,7 @@
 # ConstraintTemplates and Constraints with gator against sample objects.
 #
 #   make test     run every gator Suite under tests/suites, every
-#                 tests/no-violations/<case> (see tests/expect-no-violations.sh)
+#                 tests/gator-test/<case> (see tests/expect-gator-test.sh)
 #                 and every tests/render-failures/<values> (see
 #                 tests/expect-render-failure.sh)
 #
@@ -22,7 +22,7 @@ ARCH := $(shell uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/')
 
 test: render $(GATOR)
 	cd tests && $(GATOR) verify ./suites/...
-	for case in tests/no-violations/*/; do GATOR=$(GATOR) tests/expect-no-violations.sh $$case || exit 1; done
+	for case in tests/gator-test/*/; do GATOR=$(GATOR) tests/expect-gator-test.sh $$case || exit 1; done
 	for values in tests/render-failures/*.yaml; do tests/expect-render-failure.sh $$values || exit 1; done
 
 render:

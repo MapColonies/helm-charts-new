@@ -1,4 +1,4 @@
-# Both rules, warn and deny: exemption list entries (tests/values.yaml) and workload annotations.
+# Both rules, warn and enforced: exemption list entries (tests/values.yaml) and workload annotations.
 apiVersion: test.gatekeeper.sh/v1alpha1
 kind: Suite
 metadata:
@@ -44,9 +44,9 @@ tests:
     object: ../objects/exemptions/app-dev/annotated-pod-template.yaml
     assertions:
     - violations: 'yes'
-- name: cpu-ratio-deny
+- name: cpu-ratio-enforced
   template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-cpu-ratio.yaml
-  constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-cpu-ratio-deny.yaml
+  constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-cpu-ratio-enforced.yaml
   cases:
   - name: listed-for-this-rule
     object: ../objects/exemptions/prod/listed-cpu-ratio.yaml
@@ -124,9 +124,9 @@ tests:
     object: ../objects/exemptions/app-dev/annotated-pod-template.yaml
     assertions:
     - violations: 'yes'
-- name: mclabels-deny
+- name: mclabels-enforced
   template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-mclabels.yaml
-  constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-mclabels-deny.yaml
+  constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-mclabels-enforced.yaml
   cases:
   - name: listed-for-this-rule
     object: ../objects/exemptions/prod/listed-mclabels.yaml

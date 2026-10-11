@@ -103,9 +103,9 @@ tests:
         assertions:
           - violations: no
 
-  - name: mclabels-deny-constraint
+  - name: mclabels-enforced-constraint
     template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-mclabels.yaml
-    constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-mclabels-deny.yaml
+    constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-mclabels-enforced.yaml
     cases:
       - name: enforced-namespace
         object: ../objects/mclabels/non-compliant-enforced-ns.yaml

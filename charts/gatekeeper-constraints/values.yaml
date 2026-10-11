@@ -35,9 +35,9 @@ constraints:
 # their Pod template (see README).
 workloadPolicies:
   # Namespaces where a violation is a warning (warn Constraints) and where it
-  # rejects the request (deny Constraints). Gatekeeper globs such as "*-dev"
-  # work. Unlike Gatekeeper, an empty list matches nothing: its Constraints are
-  # not rendered.
+  # gets each rule's enforcementAction, deny by default (enforced Constraints).
+  # Gatekeeper globs such as "*-dev" work. Unlike Gatekeeper, an empty list
+  # matches nothing: its Constraints are not rendered.
   warnNamespaces: []
   enforcedNamespaces: []
 
@@ -55,6 +55,10 @@ workloadPolicies:
 
   cpuRatio:
     enabled: true
+    # Action in enforced namespaces: deny, warn or dryrun.
+    enforcementAction: deny
 
   mclabels:
     enabled: true
+    # Action in enforced namespaces: deny, warn or dryrun.
+    enforcementAction: deny

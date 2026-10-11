@@ -1,0 +1,9 @@
+# Both rules are downgraded to warn in enforced namespaces, so a workload that
+# breaks them in prod gets warnings but is not rejected.
+workloadPolicies:
+  enforcedNamespaces:
+    - prod
+  cpuRatio:
+    enforcementAction: warn
+  mclabels:
+    enforcementAction: warn

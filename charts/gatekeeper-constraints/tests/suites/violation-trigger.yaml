@@ -1,4 +1,4 @@
-# Both rules, warn and deny: CREATE, audit and Pod template changes are evaluated; scaling and workload metadata updates are not.
+# Both rules, warn and enforced: CREATE, audit and Pod template changes are evaluated; scaling and workload metadata updates are not.
 apiVersion: test.gatekeeper.sh/v1alpha1
 kind: Suite
 metadata:
@@ -32,9 +32,9 @@ tests:
     object: ../objects/trigger/app-dev/update-image.yaml
     assertions:
     - violations: 'yes'
-- name: cpu-ratio-deny
+- name: cpu-ratio-enforced
   template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-cpu-ratio.yaml
-  constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-cpu-ratio-deny.yaml
+  constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-cpu-ratio-enforced.yaml
   cases:
   - name: create
     object: ../objects/trigger/prod/create.yaml
@@ -88,9 +88,9 @@ tests:
     object: ../objects/trigger/app-dev/update-image.yaml
     assertions:
     - violations: 'yes'
-- name: mclabels-deny
+- name: mclabels-enforced
   template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-mclabels.yaml
-  constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-mclabels-deny.yaml
+  constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-mclabels-enforced.yaml
   cases:
   - name: create
     object: ../objects/trigger/prod/create.yaml

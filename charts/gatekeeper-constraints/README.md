@@ -10,7 +10,7 @@ Helm chart for the Gatekeeper rules of the cluster. It wraps upstream Gatekeeper
 - **Workload**: an `apps/v1` Deployment or StatefulSet. The workload rules read its Pod template (`spec.template`), because the Pods are what run, log and emit metrics.
 - **mclabels**: the four MapColonies labels a workload's Pod template must carry: `mapcolonies.io/environment`, `mapcolonies.io/part-of`, `mapcolonies.io/owner` and `mapcolonies.io/component`.
 - **Warn namespace**: a namespace in `workloadPolicies.warnNamespaces`. A violation is applied anyway, and the client sees a warning.
-- **Enforced namespace**: a namespace in `workloadPolicies.enforcedNamespaces`. A violation rejects the request.
+- **Enforced namespace**: a namespace in `workloadPolicies.enforcedNamespaces`. A violation rejects the request, unless that rule's `enforcementAction` is set to `warn` or `dryrun`.
 - **Unlisted namespace**: a namespace in neither list. The workload rules don't apply there.
 - **Violation trigger**: the requests the workload rules check at admission. These are a CREATE, or an UPDATE that changes the Pod template, i.e. a new revision (`helm upgrade` with changed Pod values, `kubectl rollout restart`, a new image). An UPDATE that only scales the workload or changes its own metadata is never checked, so existing non-compliant workloads keep running, scaling and being patched. Gatekeeper audit always checks every workload.
 - **Exemption**: excludes one workload from one rule, in both warn and enforced namespaces. It comes from either the exemption list or the workload annotation (see below).
@@ -71,8 +71,8 @@ A workload is exempt from a rule if either of these applies:
 ```yaml
 workloadPolicies:
   # Gatekeeper namespace globs work, e.g. "*-dev".
-  warnNamespaces: []      # warn Constraints (enforcementAction: warn)
-  enforcedNamespaces: []  # deny Constraints (enforcementAction: deny)
+  warnNamespaces: []      # <rule>-warn Constraints, always enforcementAction: warn
+  enforcedNamespaces: []  # <rule>-enforced Constraints, with <rule>.enforcementAction
   exemptions:
     - namespace: raster-prod      # exact match, no wildcards
       kind: Deployment            # Deployment or StatefulSet, exact match
@@ -81,12 +81,15 @@ workloadPolicies:
       reason: Guaranteed QoS      # required
   cpuRatio:
     enabled: true
+    enforcementAction: deny       # in enforced namespaces: deny, warn or dryrun
   mclabels:
     enabled: true
+    enforcementAction: deny
 ```
 
 - **An empty namespace list means its Constraints are not rendered.** This differs from Gatekeeper, where an empty list matches every namespace. The defaults are empty lists, so the chart renders no workload Constraints until they are set.
-- **Rendering fails** on an exemption entry without a `namespace`, `kind`, `name` or `reason`, or with an unknown kind or rule.
+- `<rule>.enforcementAction` lets site-values downgrade one rule in enforced namespaces, e.g. to `warn`, without moving namespaces between the lists.
+- **Rendering fails** on an exemption entry without a `namespace`, `kind`, `name` or `reason`, on an unknown kind or rule, or on an `enforcementAction` other than `deny`, `warn` or `dryrun`.
 - `<rule>.enabled: false` removes that rule's ConstraintTemplate and Constraints.
 
 ## 📝 Operational notes
@@ -114,7 +117,7 @@ make -C charts/gatekeeper-constraints test
 ```
 
 This renders the chart with `tests/values.yaml` and runs the gator Suites in `tests/suites` against the sample objects in `tests/objects`. gator is pinned to the wrapped Gatekeeper version and downloaded into `.bin/`. The target also runs these checks:
-- `tests/no-violations/<case>`: renders the chart with the case's values and checks that its objects get no violation at all, e.g. that an empty namespace list really renders no Constraint.
+- `tests/gator-test/<case>`: renders the chart with the case's values, runs its objects through `gator test` and checks the outcome named in the case's `expect` file: `nothing`, `warnings-only` or `denials`. These cases cover which Constraints get rendered and with which enforcement action, e.g. that an empty namespace list really renders no Constraint.
 - `tests/render-failures/<values>`: checks that rendering fails with the error named on the file's first line.
 
 The PR workflow runs the same target when files under this chart change.

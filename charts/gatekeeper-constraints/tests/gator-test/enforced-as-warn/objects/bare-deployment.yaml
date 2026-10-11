@@ -1,0 +1,19 @@
+# Breaks every workload rule: no mclabels and no CPU resources.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bare
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bare
+  template:
+    metadata:
+      labels:
+        app: bare
+    spec:
+      containers:
+        - name: app
+          image: nginx

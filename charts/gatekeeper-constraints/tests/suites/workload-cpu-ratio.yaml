@@ -5,7 +5,7 @@ metadata:
 tests:
   - name: cpu-ratio-rule
     template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-cpu-ratio.yaml
-    constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-cpu-ratio-deny.yaml
+    constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-cpu-ratio-enforced.yaml
     cases:
       - name: compliant
         object: ../objects/cpu-ratio/compliant.yaml
@@ -115,9 +115,9 @@ tests:
         assertions:
           - violations: no
 
-  - name: cpu-ratio-deny-constraint
+  - name: cpu-ratio-enforced-constraint
     template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-cpu-ratio.yaml
-    constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-cpu-ratio-deny.yaml
+    constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-cpu-ratio-enforced.yaml
     cases:
       - name: warn-namespace
         object: ../objects/cpu-ratio/bad-in-app-dev.yaml
