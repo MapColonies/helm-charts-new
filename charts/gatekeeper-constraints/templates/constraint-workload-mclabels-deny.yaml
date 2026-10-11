@@ -1,0 +1,3 @@
+{{- if .Values.workloadPolicies.mclabels.enabled }}
+{{- include "gatekeeper-constraints.workloadConstraint" (dict "root" . "kind" "K8sWorkloadMcLabels" "name" "workload-mclabels" "action" "deny") }}
+{{- end }}

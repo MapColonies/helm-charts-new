@@ -1,0 +1,123 @@
+apiVersion: test.gatekeeper.sh/v1alpha1
+kind: Suite
+metadata:
+  name: workload-mclabels
+tests:
+  # Label rules, checked against the warn Constraint (test namespace app-dev).
+  - name: mclabels-rules
+    template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-mclabels.yaml
+    constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-mclabels-warn.yaml
+    cases:
+      - name: all-mclabels-valid-without-optional-labels
+        object: ../objects/mclabels/valid.yaml
+        assertions:
+          - violations: no
+      - name: all-mclabels-valid-statefulset
+        object: ../objects/mclabels/valid-statefulset.yaml
+        assertions:
+          - violations: no
+      - name: missing-owner
+        object: ../objects/mclabels/missing-owner.yaml
+        assertions:
+          - violations: 1
+          - violations: 1
+            message: '^Deployment app-dev/missing-owner: Pod template mclabels are missing or invalid: mapcolonies\.io/owner \(missing\)\. '
+      - name: missing-environment
+        object: ../objects/mclabels/missing-environment.yaml
+        assertions:
+          - violations: 1
+          - violations: 1
+            message: '^Deployment app-dev/missing-environment: Pod template mclabels are missing or invalid: mapcolonies\.io/environment \(missing\)\. '
+      - name: missing-part-of
+        object: ../objects/mclabels/missing-part-of.yaml
+        assertions:
+          - violations: 1
+          - violations: 1
+            message: '^Deployment app-dev/missing-part-of: Pod template mclabels are missing or invalid: mapcolonies\.io/part-of \(missing\)\. '
+      - name: missing-component
+        object: ../objects/mclabels/missing-component.yaml
+        assertions:
+          - violations: 1
+          - violations: 1
+            message: '^Deployment app-dev/missing-component: Pod template mclabels are missing or invalid: mapcolonies\.io/component \(missing\)\. '
+      - name: owner-not-a-domain
+        object: ../objects/mclabels/owner-not-a-domain.yaml
+        assertions:
+          - violations: 1
+          - violations: 1
+            message: 'mapcolonies\.io/owner \("frontend-team" is not one of 3d, app, automation, common, dem, infra, raster, vector\)'
+      - name: environment-undefined
+        object: ../objects/mclabels/environment-undefined.yaml
+        assertions:
+          - violations: 1
+          - violations: 1
+            message: 'mapcolonies\.io/environment \("undefined" is not allowed\)'
+      - name: environment-empty
+        object: ../objects/mclabels/environment-empty.yaml
+        assertions:
+          - violations: 1
+          - violations: 1
+            message: 'mapcolonies\.io/environment \(empty\)'
+      - name: part-of-empty
+        object: ../objects/mclabels/part-of-empty.yaml
+        assertions:
+          - violations: 1
+          - violations: 1
+            message: 'mapcolonies\.io/part-of \(empty\)'
+      - name: component-empty
+        object: ../objects/mclabels/component-empty.yaml
+        assertions:
+          - violations: 1
+          - violations: 1
+            message: 'mapcolonies\.io/component \(empty\)'
+      - name: labels-on-workload-metadata-only
+        object: ../objects/mclabels/labels-on-workload-only.yaml
+        assertions:
+          - violations: 1
+          - violations: 1
+            message: 'mapcolonies\.io/component \(missing\), mapcolonies\.io/environment \(missing\), mapcolonies\.io/owner \(missing\), mapcolonies\.io/part-of \(missing\)'
+      - name: several-bad-labels-in-one-message
+        object: ../objects/mclabels/several-bad.yaml
+        assertions:
+          - violations: 1
+          - violations: 1
+            message: '^Deployment app-dev/several-bad: Pod template mclabels are missing or invalid: mapcolonies\.io/component \(missing\), mapcolonies\.io/environment \("undefined" is not allowed\), mapcolonies\.io/owner \("nobody" is not one of 3d, app, automation, common, dem, infra, raster, vector\), mapcolonies\.io/part-of \(missing\)\. To exempt this workload, add it to the site-values exemption list or set the mapcolonies\.io/exempt-mclabels annotation to a reason\.$'
+
+  # The same non-compliant StatefulSet in a warn, an enforced and an unlisted namespace.
+  - name: mclabels-warn-constraint
+    template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-mclabels.yaml
+    constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-mclabels-warn.yaml
+    cases:
+      - name: warn-namespace
+        object: ../objects/mclabels/non-compliant-warn-ns.yaml
+        assertions:
+          - violations: 1
+          - violations: 1
+            message: '^StatefulSet app-dev/non-compliant: .*To exempt this workload, add it to the site-values exemption list or set the mapcolonies\.io/exempt-mclabels annotation to a reason\.$'
+      - name: enforced-namespace
+        object: ../objects/mclabels/non-compliant-enforced-ns.yaml
+        assertions:
+          - violations: no
+      - name: unlisted-namespace
+        object: ../objects/mclabels/non-compliant-unlisted-ns.yaml
+        assertions:
+          - violations: no
+
+  - name: mclabels-deny-constraint
+    template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-mclabels.yaml
+    constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-mclabels-deny.yaml
+    cases:
+      - name: enforced-namespace
+        object: ../objects/mclabels/non-compliant-enforced-ns.yaml
+        assertions:
+          - violations: 1
+          - violations: 1
+            message: '^StatefulSet prod/non-compliant: Pod template mclabels are missing or invalid: mapcolonies\.io/owner \(missing\)\. To exempt this workload, add it to the site-values exemption list or set the mapcolonies\.io/exempt-mclabels annotation to a reason\.$'
+      - name: warn-namespace
+        object: ../objects/mclabels/non-compliant-warn-ns.yaml
+        assertions:
+          - violations: no
+      - name: unlisted-namespace
+        object: ../objects/mclabels/non-compliant-unlisted-ns.yaml
+        assertions:
+          - violations: no
