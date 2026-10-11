@@ -31,7 +31,7 @@ spec:
     - target: admission.k8s.gatekeeper.sh
       libs:
         - |
-          {{- .Files.Get "rego/lib/workload.rego" | nindent 10 }}
+          {{- include "gatekeeper-constraints.workloadRego" (dict "root" . "path" "rego/lib/workload.rego") | nindent 10 }}
       rego: |
-        {{- .Files.Get "rego/workload-mclabels.rego" | nindent 8 }}
+        {{- include "gatekeeper-constraints.workloadRego" (dict "root" . "path" "rego/workload-mclabels.rego") | nindent 8 }}
 {{- end }}
