@@ -1,0 +1,118 @@
+# Both rules, warn and deny: CREATE, audit and Pod template changes are evaluated; scaling and workload metadata updates are not.
+apiVersion: test.gatekeeper.sh/v1alpha1
+kind: Suite
+metadata:
+  name: violation-trigger
+tests:
+- name: cpu-ratio-warn
+  template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-cpu-ratio.yaml
+  constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-cpu-ratio-warn.yaml
+  cases:
+  - name: create
+    object: ../objects/trigger/app-dev/create.yaml
+    assertions:
+    - violations: 'yes'
+  - name: audit
+    object: ../objects/trigger/app-dev/audit.yaml
+    assertions:
+    - violations: 'yes'
+  - name: update-replicas-only
+    object: ../objects/trigger/app-dev/update-replicas.yaml
+    assertions:
+    - violations: 'no'
+  - name: update-workload-metadata-only
+    object: ../objects/trigger/app-dev/update-workload-metadata.yaml
+    assertions:
+    - violations: 'no'
+  - name: update-restarted-at
+    object: ../objects/trigger/app-dev/update-restarted-at.yaml
+    assertions:
+    - violations: 'yes'
+  - name: update-image
+    object: ../objects/trigger/app-dev/update-image.yaml
+    assertions:
+    - violations: 'yes'
+- name: cpu-ratio-deny
+  template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-cpu-ratio.yaml
+  constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-cpu-ratio-deny.yaml
+  cases:
+  - name: create
+    object: ../objects/trigger/prod/create.yaml
+    assertions:
+    - violations: 'yes'
+  - name: audit
+    object: ../objects/trigger/prod/audit.yaml
+    assertions:
+    - violations: 'yes'
+  - name: update-replicas-only
+    object: ../objects/trigger/prod/update-replicas.yaml
+    assertions:
+    - violations: 'no'
+  - name: update-workload-metadata-only
+    object: ../objects/trigger/prod/update-workload-metadata.yaml
+    assertions:
+    - violations: 'no'
+  - name: update-restarted-at
+    object: ../objects/trigger/prod/update-restarted-at.yaml
+    assertions:
+    - violations: 'yes'
+  - name: update-image
+    object: ../objects/trigger/prod/update-image.yaml
+    assertions:
+    - violations: 'yes'
+- name: mclabels-warn
+  template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-mclabels.yaml
+  constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-mclabels-warn.yaml
+  cases:
+  - name: create
+    object: ../objects/trigger/app-dev/create.yaml
+    assertions:
+    - violations: 'yes'
+  - name: audit
+    object: ../objects/trigger/app-dev/audit.yaml
+    assertions:
+    - violations: 'yes'
+  - name: update-replicas-only
+    object: ../objects/trigger/app-dev/update-replicas.yaml
+    assertions:
+    - violations: 'no'
+  - name: update-workload-metadata-only
+    object: ../objects/trigger/app-dev/update-workload-metadata.yaml
+    assertions:
+    - violations: 'no'
+  - name: update-restarted-at
+    object: ../objects/trigger/app-dev/update-restarted-at.yaml
+    assertions:
+    - violations: 'yes'
+  - name: update-image
+    object: ../objects/trigger/app-dev/update-image.yaml
+    assertions:
+    - violations: 'yes'
+- name: mclabels-deny
+  template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-mclabels.yaml
+  constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-mclabels-deny.yaml
+  cases:
+  - name: create
+    object: ../objects/trigger/prod/create.yaml
+    assertions:
+    - violations: 'yes'
+  - name: audit
+    object: ../objects/trigger/prod/audit.yaml
+    assertions:
+    - violations: 'yes'
+  - name: update-replicas-only
+    object: ../objects/trigger/prod/update-replicas.yaml
+    assertions:
+    - violations: 'no'
+  - name: update-workload-metadata-only
+    object: ../objects/trigger/prod/update-workload-metadata.yaml
+    assertions:
+    - violations: 'no'
+  - name: update-restarted-at
+    object: ../objects/trigger/prod/update-restarted-at.yaml
+    assertions:
+    - violations: 'yes'
+  - name: update-image
+    object: ../objects/trigger/prod/update-image.yaml
+    assertions:
+    - violations: 'yes'

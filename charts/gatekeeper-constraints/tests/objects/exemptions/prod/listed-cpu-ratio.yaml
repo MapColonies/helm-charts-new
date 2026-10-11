@@ -1,0 +1,19 @@
+# In the exemption list for cpuRatio only.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: listed-cpu-ratio
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: listed-cpu-ratio
+  template:
+    metadata:
+      labels:
+        app: listed-cpu-ratio
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.26

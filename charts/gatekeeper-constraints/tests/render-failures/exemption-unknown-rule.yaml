@@ -1,0 +1,8 @@
+# expect-error: workloadPolicies\.exemptions\[0\]: unknown rule "cpu-ratio"
+workloadPolicies:
+  exemptions:
+    - namespace: prod
+      kind: Deployment
+      name: web
+      rules: [cpu-ratio]
+      reason: Guaranteed QoS on purpose

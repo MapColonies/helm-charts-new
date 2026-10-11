@@ -41,6 +41,18 @@ workloadPolicies:
   warnNamespaces: []
   enforcedNamespaces: []
 
+  # Workloads exempt from a rule, reviewed by PR. namespace, kind and name match
+  # exactly (no wildcards); rules is cpuRatio, mclabels or both; reason is
+  # required, and rendering fails without it. A workload can also exempt itself
+  # with a non-empty mapcolonies.io/exempt-cpu-ratio or
+  # mapcolonies.io/exempt-mclabels annotation on its own metadata.
+  exemptions: []
+  # - namespace: raster-prod
+  #   kind: Deployment
+  #   name: mapproxy
+  #   rules: [cpuRatio]
+  #   reason: Guaranteed QoS, request == limit on purpose
+
   cpuRatio:
     enabled: true
 

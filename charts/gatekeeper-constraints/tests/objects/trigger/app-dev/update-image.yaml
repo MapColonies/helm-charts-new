@@ -1,0 +1,56 @@
+# UPDATE that changes a container image.
+apiVersion: admission.k8s.io/v1
+kind: AdmissionReview
+request:
+  uid: "1"
+  operation: UPDATE
+  kind:
+    group: apps
+    version: v1
+    kind: Deployment
+  resource:
+    group: apps
+    version: v1
+    resource: deployments
+  name: web
+  namespace: app-dev
+  userInfo:
+    username: tester
+  object:
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: web
+      namespace: app-dev
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: web
+      template:
+        metadata:
+          labels:
+            app: web
+        spec:
+          containers:
+          - name: app
+            image: nginx:1.27
+  oldObject:
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: web
+      namespace: app-dev
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: web
+      template:
+        metadata:
+          labels:
+            app: web
+        spec:
+          containers:
+          - name: app
+            image: nginx:1.26

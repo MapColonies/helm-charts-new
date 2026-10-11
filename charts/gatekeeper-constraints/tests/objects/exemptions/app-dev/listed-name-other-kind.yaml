@@ -1,0 +1,20 @@
+# Same name as a listed Deployment, but a StatefulSet.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: listed-cpu-ratio
+  namespace: app-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: listed-cpu-ratio
+  template:
+    metadata:
+      labels:
+        app: listed-cpu-ratio
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.26
+  serviceName: listed-cpu-ratio

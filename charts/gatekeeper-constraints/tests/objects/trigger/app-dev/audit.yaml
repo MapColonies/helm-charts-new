@@ -1,0 +1,19 @@
+# Audit input: a plain object, no operation and no old object.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: app-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.26

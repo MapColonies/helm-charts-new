@@ -1,3 +1,3 @@
 {{- if .Values.workloadPolicies.cpuRatio.enabled }}
-{{- include "gatekeeper-constraints.workloadConstraint" (dict "root" . "kind" "K8sWorkloadCpuRatio" "name" "workload-cpu-ratio" "action" "warn") }}
+{{- include "gatekeeper-constraints.workloadConstraint" (dict "root" . "rule" "cpuRatio" "kind" "K8sWorkloadCpuRatio" "name" "workload-cpu-ratio" "action" "warn") }}
 {{- end }}

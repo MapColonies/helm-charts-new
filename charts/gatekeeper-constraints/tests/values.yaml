@@ -7,3 +7,34 @@ workloadPolicies:
   enforcedNamespaces:
     - prod
     - integration
+  exemptions:
+    - namespace: app-dev
+      kind: Deployment
+      name: listed-cpu-ratio
+      rules: [cpuRatio]
+      reason: Guaranteed QoS on purpose
+    - namespace: prod
+      kind: Deployment
+      name: listed-cpu-ratio
+      rules: [cpuRatio]
+      reason: Guaranteed QoS on purpose
+    - namespace: app-dev
+      kind: Deployment
+      name: listed-mclabels
+      rules: [mclabels]
+      reason: Third-party chart, labels not configurable
+    - namespace: prod
+      kind: Deployment
+      name: listed-mclabels
+      rules: [mclabels]
+      reason: Third-party chart, labels not configurable
+    - namespace: app-dev
+      kind: Deployment
+      name: listed-both
+      rules: [cpuRatio, mclabels]
+      reason: Legacy workload, being replaced
+    - namespace: prod
+      kind: Deployment
+      name: listed-both
+      rules: [cpuRatio, mclabels]
+      reason: Legacy workload, being replaced

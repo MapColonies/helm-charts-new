@@ -1,13 +1,17 @@
 package k8sworkloadcpuratio
 
+import data.lib.workload
+
 # Every container and init container of a workload's Pod template must set a CPU
 # request and a CPU limit of exactly 4x that request. Ephemeral containers and
 # memory are not checked. One violation per offending container.
 
 violation[{"msg": msg}] {
+	workload.evaluate
+	not workload.exempt("mapcolonies.io/exempt-cpu-ratio")
 	container := pod_containers[_]
 	not compliant(container)
-	msg := sprintf("%v %v/%v container %q: CPU limit must be exactly 4x the CPU request (%v). To exempt this workload, add it to the site-values exemption list or set the mapcolonies.io/exempt-cpu-ratio annotation to a reason.", [input.review.object.kind, namespace, input.review.object.metadata.name, container.name, details(container)])
+	msg := sprintf("%v %v/%v container %q: CPU limit must be exactly 4x the CPU request (%v). To exempt this workload, add it to the site-values exemption list or set the mapcolonies.io/exempt-cpu-ratio annotation to a reason.", [input.review.object.kind, workload.namespace, input.review.object.metadata.name, container.name, details(container)])
 }
 
 pod_containers[c] {
@@ -16,13 +20,6 @@ pod_containers[c] {
 
 pod_containers[c] {
 	c := input.review.object.spec.template.spec.initContainers[_]
-}
-
-namespace = ns {
-	ns := input.review.object.metadata.namespace
-	ns != ""
-} else = ns {
-	ns := object.get(input.review, "namespace", "")
 }
 
 cpu(container, field) = q {

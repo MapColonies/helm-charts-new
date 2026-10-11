@@ -1,8 +1,10 @@
 # Chart tests: render the chart with the test values and evaluate the rendered
 # ConstraintTemplates and Constraints with gator against sample objects.
 #
-#   make test     run every gator Suite under tests/suites, then every
+#   make test     run every gator Suite under tests/suites, every
 #                 tests/no-violations/<case> (see tests/expect-no-violations.sh)
+#                 and every tests/render-failures/<values> (see
+#                 tests/expect-render-failure.sh)
 #
 # gator is pinned to the upstream Gatekeeper version this chart wraps.
 # It is downloaded into .bin/ unless GATOR points at an existing binary.
@@ -21,6 +23,7 @@ ARCH := $(shell uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/')
 test: render $(GATOR)
 	cd tests && $(GATOR) verify ./suites/...
 	for case in tests/no-violations/*/; do GATOR=$(GATOR) tests/expect-no-violations.sh $$case || exit 1; done
+	for values in tests/render-failures/*.yaml; do tests/expect-render-failure.sh $$values || exit 1; done
 
 render:
 	ls charts/*.tgz > /dev/null 2>&1 || helm dependency build .

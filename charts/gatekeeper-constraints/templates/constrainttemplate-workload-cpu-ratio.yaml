@@ -10,8 +10,28 @@ spec:
     spec:
       names:
         kind: K8sWorkloadCpuRatio
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            exemptions:
+              type: array
+              items:
+                type: object
+                properties:
+                  namespace:
+                    type: string
+                  kind:
+                    type: string
+                  name:
+                    type: string
+                  reason:
+                    type: string
   targets:
     - target: admission.k8s.gatekeeper.sh
+      libs:
+        - |
+          {{- .Files.Get "rego/lib/workload.rego" | nindent 10 }}
       rego: |
         {{- .Files.Get "rego/workload-cpu-ratio.rego" | nindent 8 }}
 {{- end }}
