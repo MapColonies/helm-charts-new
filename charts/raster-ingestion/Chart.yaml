@@ -37,7 +37,7 @@ dependencies:
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: polygon-parts-worker
-    version: 2.3.1
+    version: 3.0.0
     condition: polygon-parts-worker.enabled
     alias: polygon-parts-worker
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster

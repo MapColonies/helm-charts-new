@@ -51,7 +51,7 @@ exporter-overseer:
 exporter-polygon-parts-worker:
   image:
     repository: raster/polygon-parts-worker
-    tag: v2.3.1
+    tag: v3.0.0
   instanceType: export
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
