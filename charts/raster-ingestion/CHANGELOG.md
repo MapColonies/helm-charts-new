@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/MapColonies/helm-charts-new/compare/raster-ingestion-v1.2.0...raster-ingestion-v1.3.0) (2026-10-12)
+
+
+### 🎉 Features
+
+* upgrade polygon-parts-worker to 3.0.0 (MAPCO-11818) ([#160](https://github.com/MapColonies/helm-charts-new/issues/160)) ([56271c9](https://github.com/MapColonies/helm-charts-new/commit/56271c9c7963329fafd072fc00a2ce64fd2fcda1))
+
 ## [1.2.0](https://github.com/MapColonies/helm-charts-new/compare/raster-ingestion-v1.1.1...raster-ingestion-v1.2.0) (2026-10-05)
 
 
