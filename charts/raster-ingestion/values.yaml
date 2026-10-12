@@ -98,7 +98,7 @@ geoserver-api:
 polygon-parts-worker:
   image:
     repository: raster/polygon-parts-worker
-    tag: v2.3.1
+    tag: v3.0.0
   instanceType: ingestion
   mclabels:
     partOf: ingestion # TODO: remove after set this as the default value within service
