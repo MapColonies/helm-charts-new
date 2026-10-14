@@ -1,0 +1,7 @@
+# expect-error: workloadPolicies\.exemptions\[0\]: reason is required
+workloadPolicies:
+  exemptions:
+    - namespace: prod
+      kind: Deployment
+      name: web
+      rules: [cpuRatio]

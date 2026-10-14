@@ -1,0 +1,19 @@
+# Same name and kind as a listed Deployment, in a namespace the entry does not name.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: listed-cpu-ratio
+  namespace: integration
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: listed-cpu-ratio
+  template:
+    metadata:
+      labels:
+        app: listed-cpu-ratio
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.26

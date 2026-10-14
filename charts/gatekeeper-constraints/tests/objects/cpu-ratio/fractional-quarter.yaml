@@ -1,0 +1,26 @@
+# Fractional cores as in raster values: 0.0625 request, 250m limit.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fractional-quarter
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fractional-quarter
+  template:
+    metadata:
+      labels:
+        app: fractional-quarter
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        resources:
+          requests:
+            cpu: 0.0625
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 128Mi

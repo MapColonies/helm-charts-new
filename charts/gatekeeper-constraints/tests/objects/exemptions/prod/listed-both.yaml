@@ -1,0 +1,19 @@
+# In the exemption list for both rules.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: listed-both
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: listed-both
+  template:
+    metadata:
+      labels:
+        app: listed-both
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.26

@@ -1,0 +1,21 @@
+# Exempts itself from the CPU ratio rule.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: annotated-cpu-ratio
+  namespace: app-dev
+  annotations:
+    mapcolonies.io/exempt-cpu-ratio: Guaranteed QoS on purpose
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: annotated-cpu-ratio
+  template:
+    metadata:
+      labels:
+        app: annotated-cpu-ratio
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.26

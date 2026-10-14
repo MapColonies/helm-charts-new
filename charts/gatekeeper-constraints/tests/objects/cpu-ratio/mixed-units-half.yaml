@@ -1,0 +1,26 @@
+# 0.5 cores request, 2000m limit.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mixed-units-half
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mixed-units-half
+  template:
+    metadata:
+      labels:
+        app: mixed-units-half
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        resources:
+          requests:
+            cpu: 0.5
+            memory: 128Mi
+          limits:
+            cpu: 2000m
+            memory: 128Mi

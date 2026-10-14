@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: missing-component
+  namespace: app-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: missing-component
+  template:
+    metadata:
+      labels:
+        mapcolonies.io/owner: app
+        mapcolonies.io/environment: dev
+        mapcolonies.io/part-of: web
+        app: missing-component
+    spec:
+      containers:
+      - name: app
+        image: nginx

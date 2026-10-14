@@ -1,0 +1,4 @@
+# Default enforcementAction: violations in prod are denied.
+workloadPolicies:
+  enforcedNamespaces:
+    - prod

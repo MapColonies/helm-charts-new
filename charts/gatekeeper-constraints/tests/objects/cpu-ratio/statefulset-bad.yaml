@@ -1,0 +1,27 @@
+# Non-compliant StatefulSet.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: statefulset-bad
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: statefulset-bad
+  template:
+    metadata:
+      labels:
+        app: statefulset-bad
+    spec:
+      containers:
+      - name: db
+        image: nginx
+        resources:
+          requests:
+            cpu: '1'
+            memory: 128Mi
+          limits:
+            cpu: '2'
+            memory: 128Mi
+  serviceName: statefulset-bad

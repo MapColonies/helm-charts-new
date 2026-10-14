@@ -1,0 +1,166 @@
+# Exemption list and annotations, both rules, warn and enforced.
+apiVersion: test.gatekeeper.sh/v1alpha1
+kind: Suite
+metadata:
+  name: exemptions
+tests:
+- name: cpu-ratio-warn
+  template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-cpu-ratio.yaml
+  constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-cpu-ratio-warn.yaml
+  cases:
+  - name: listed-for-this-rule
+    object: ../objects/exemptions/app-dev/listed-cpu-ratio.yaml
+    assertions:
+    - violations: 'no'
+  - name: listed-for-other-rule
+    object: ../objects/exemptions/app-dev/listed-mclabels.yaml
+    assertions:
+    - violations: 'yes'
+  - name: listed-for-both-rules
+    object: ../objects/exemptions/app-dev/listed-both.yaml
+    assertions:
+    - violations: 'no'
+  - name: listed-name-other-kind
+    object: ../objects/exemptions/app-dev/listed-name-other-kind.yaml
+    assertions:
+    - violations: 'yes'
+  - name: listed-name-other-namespace
+    object: ../objects/exemptions/app-dev/listed-name-other-namespace.yaml
+    assertions:
+    - violations: 'yes'
+  - name: annotated-for-this-rule
+    object: ../objects/exemptions/app-dev/annotated-cpu-ratio.yaml
+    assertions:
+    - violations: 'no'
+  - name: annotated-for-other-rule
+    object: ../objects/exemptions/app-dev/annotated-mclabels.yaml
+    assertions:
+    - violations: 'yes'
+  - name: annotated-empty
+    object: ../objects/exemptions/app-dev/annotated-empty.yaml
+    assertions:
+    - violations: 'yes'
+  - name: annotated-on-pod-template
+    object: ../objects/exemptions/app-dev/annotated-pod-template.yaml
+    assertions:
+    - violations: 'yes'
+- name: cpu-ratio-enforced
+  template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-cpu-ratio.yaml
+  constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-cpu-ratio-enforced.yaml
+  cases:
+  - name: listed-for-this-rule
+    object: ../objects/exemptions/prod/listed-cpu-ratio.yaml
+    assertions:
+    - violations: 'no'
+  - name: listed-for-other-rule
+    object: ../objects/exemptions/prod/listed-mclabels.yaml
+    assertions:
+    - violations: 'yes'
+  - name: listed-for-both-rules
+    object: ../objects/exemptions/prod/listed-both.yaml
+    assertions:
+    - violations: 'no'
+  - name: listed-name-other-kind
+    object: ../objects/exemptions/prod/listed-name-other-kind.yaml
+    assertions:
+    - violations: 'yes'
+  - name: listed-name-other-namespace
+    object: ../objects/exemptions/prod/listed-name-other-namespace.yaml
+    assertions:
+    - violations: 'yes'
+  - name: annotated-for-this-rule
+    object: ../objects/exemptions/prod/annotated-cpu-ratio.yaml
+    assertions:
+    - violations: 'no'
+  - name: annotated-for-other-rule
+    object: ../objects/exemptions/prod/annotated-mclabels.yaml
+    assertions:
+    - violations: 'yes'
+  - name: annotated-empty
+    object: ../objects/exemptions/prod/annotated-empty.yaml
+    assertions:
+    - violations: 'yes'
+  - name: annotated-on-pod-template
+    object: ../objects/exemptions/prod/annotated-pod-template.yaml
+    assertions:
+    - violations: 'yes'
+- name: mclabels-warn
+  template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-mclabels.yaml
+  constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-mclabels-warn.yaml
+  cases:
+  - name: listed-for-this-rule
+    object: ../objects/exemptions/app-dev/listed-mclabels.yaml
+    assertions:
+    - violations: 'no'
+  - name: listed-for-other-rule
+    object: ../objects/exemptions/app-dev/listed-cpu-ratio.yaml
+    assertions:
+    - violations: 'yes'
+  - name: listed-for-both-rules
+    object: ../objects/exemptions/app-dev/listed-both.yaml
+    assertions:
+    - violations: 'no'
+  - name: listed-name-other-kind
+    object: ../objects/exemptions/app-dev/listed-name-other-kind.yaml
+    assertions:
+    - violations: 'yes'
+  - name: listed-name-other-namespace
+    object: ../objects/exemptions/app-dev/listed-name-other-namespace.yaml
+    assertions:
+    - violations: 'yes'
+  - name: annotated-for-this-rule
+    object: ../objects/exemptions/app-dev/annotated-mclabels.yaml
+    assertions:
+    - violations: 'no'
+  - name: annotated-for-other-rule
+    object: ../objects/exemptions/app-dev/annotated-cpu-ratio.yaml
+    assertions:
+    - violations: 'yes'
+  - name: annotated-empty
+    object: ../objects/exemptions/app-dev/annotated-empty.yaml
+    assertions:
+    - violations: 'yes'
+  - name: annotated-on-pod-template
+    object: ../objects/exemptions/app-dev/annotated-pod-template.yaml
+    assertions:
+    - violations: 'yes'
+- name: mclabels-enforced
+  template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-mclabels.yaml
+  constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-mclabels-enforced.yaml
+  cases:
+  - name: listed-for-this-rule
+    object: ../objects/exemptions/prod/listed-mclabels.yaml
+    assertions:
+    - violations: 'no'
+  - name: listed-for-other-rule
+    object: ../objects/exemptions/prod/listed-cpu-ratio.yaml
+    assertions:
+    - violations: 'yes'
+  - name: listed-for-both-rules
+    object: ../objects/exemptions/prod/listed-both.yaml
+    assertions:
+    - violations: 'no'
+  - name: listed-name-other-kind
+    object: ../objects/exemptions/prod/listed-name-other-kind.yaml
+    assertions:
+    - violations: 'yes'
+  - name: listed-name-other-namespace
+    object: ../objects/exemptions/prod/listed-name-other-namespace.yaml
+    assertions:
+    - violations: 'yes'
+  - name: annotated-for-this-rule
+    object: ../objects/exemptions/prod/annotated-mclabels.yaml
+    assertions:
+    - violations: 'no'
+  - name: annotated-for-other-rule
+    object: ../objects/exemptions/prod/annotated-cpu-ratio.yaml
+    assertions:
+    - violations: 'yes'
+  - name: annotated-empty
+    object: ../objects/exemptions/prod/annotated-empty.yaml
+    assertions:
+    - violations: 'yes'
+  - name: annotated-on-pod-template
+    object: ../objects/exemptions/prod/annotated-pod-template.yaml
+    assertions:
+    - violations: 'yes'

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: owner-not-a-domain
+  namespace: app-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: owner-not-a-domain
+  template:
+    metadata:
+      labels:
+        mapcolonies.io/owner: frontend-team
+        mapcolonies.io/environment: dev
+        mapcolonies.io/part-of: web
+        mapcolonies.io/component: frontend
+        app: owner-not-a-domain
+    spec:
+      containers:
+      - name: app
+        image: nginx

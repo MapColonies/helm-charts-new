@@ -1,0 +1,8 @@
+# Both rules set to warn: violations in prod warn, not deny.
+workloadPolicies:
+  enforcedNamespaces:
+    - prod
+  cpuRatio:
+    enforcementAction: warn
+  mclabels:
+    enforcementAction: warn

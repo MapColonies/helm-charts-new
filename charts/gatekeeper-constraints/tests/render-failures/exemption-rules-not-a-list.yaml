@@ -1,0 +1,8 @@
+# expect-error: workloadPolicies\.exemptions\[0\]: rules must be a list
+workloadPolicies:
+  exemptions:
+    - namespace: prod
+      kind: Deployment
+      name: web
+      rules: cpuRatio
+      reason: Guaranteed QoS on purpose

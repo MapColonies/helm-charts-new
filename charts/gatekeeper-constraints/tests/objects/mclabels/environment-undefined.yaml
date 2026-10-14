@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: environment-undefined
+  namespace: app-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: environment-undefined
+  template:
+    metadata:
+      labels:
+        mapcolonies.io/owner: app
+        mapcolonies.io/environment: undefined
+        mapcolonies.io/part-of: web
+        mapcolonies.io/component: frontend
+        app: environment-undefined
+    spec:
+      containers:
+      - name: app
+        image: nginx

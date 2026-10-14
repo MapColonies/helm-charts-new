@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: labels-on-workload-only
+  namespace: app-dev
+  labels:
+    mapcolonies.io/owner: app
+    mapcolonies.io/environment: dev
+    mapcolonies.io/part-of: web
+    mapcolonies.io/component: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: labels-on-workload-only
+  template:
+    metadata:
+      labels:
+        app: labels-on-workload-only
+    spec:
+      containers:
+      - name: app
+        image: nginx

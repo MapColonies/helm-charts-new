@@ -1,0 +1,22 @@
+# Exemption annotations without a reason are ignored.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: annotated-empty
+  namespace: prod
+  annotations:
+    mapcolonies.io/exempt-cpu-ratio: ""
+    mapcolonies.io/exempt-mclabels: ""
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: annotated-empty
+  template:
+    metadata:
+      labels:
+        app: annotated-empty
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.26

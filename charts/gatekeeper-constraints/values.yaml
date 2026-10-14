@@ -30,3 +30,30 @@ constraints:
       - key: "mapcolonies.io/environment"
         disallowedValues:
           - "undefined"
+
+# Workload rules for Deployments and StatefulSets (see README).
+workloadPolicies:
+  # Globs like "*-dev" work. An empty list renders no Constraint (Gatekeeper
+  # would match every namespace).
+  warnNamespaces: []
+  enforcedNamespaces: []
+
+  # Exact namespace/kind/name, rules: cpuRatio and/or mclabels, reason required.
+  # Workloads can also self-exempt with a non-empty mapcolonies.io/exempt-cpu-ratio
+  # or mapcolonies.io/exempt-mclabels annotation.
+  exemptions: []
+  # - namespace: raster-prod
+  #   kind: Deployment
+  #   name: mapproxy
+  #   rules: [cpuRatio]
+  #   reason: Guaranteed QoS, request == limit on purpose
+
+  cpuRatio:
+    enabled: true
+    # In enforced namespaces: deny, warn or dryrun.
+    enforcementAction: deny
+
+  mclabels:
+    enabled: true
+    # In enforced namespaces: deny, warn or dryrun.
+    enforcementAction: deny

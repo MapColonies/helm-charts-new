@@ -1,0 +1,18 @@
+apiVersion: test.gatekeeper.sh/v1alpha1
+kind: Suite
+metadata:
+  name: pod-labels
+tests:
+  - name: required-pod-labels
+    template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-k8srequiredlabels.yaml
+    constraint: ../rendered/gatekeeper-constraints/templates/constraint-k8srequiredlabels.yaml
+    cases:
+      - name: all-labels-present
+        object: ../objects/pod/labeled.yaml
+        assertions:
+          - violations: no
+      - name: missing-criticality
+        object: ../objects/pod/missing-criticality.yaml
+        assertions:
+          - violations: 1
+            message: "Missing required label: mapcolonies.io/criticality"

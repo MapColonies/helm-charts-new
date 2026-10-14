@@ -1,0 +1,25 @@
+# CPU limit without a request.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: missing-request
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: missing-request
+  template:
+    metadata:
+      labels:
+        app: missing-request
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        resources:
+          limits:
+            cpu: '1'
+            memory: 128Mi
+          requests:
+            memory: 128Mi

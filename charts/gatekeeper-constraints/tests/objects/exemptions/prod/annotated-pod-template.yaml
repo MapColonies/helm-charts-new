@@ -1,0 +1,22 @@
+# Exemption annotations on the Pod template instead of the workload metadata are ignored.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: annotated-pod-template
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: annotated-pod-template
+  template:
+    metadata:
+      labels:
+        app: annotated-pod-template
+      annotations:
+        mapcolonies.io/exempt-cpu-ratio: wrong place
+        mapcolonies.io/exempt-mclabels: wrong place
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.26

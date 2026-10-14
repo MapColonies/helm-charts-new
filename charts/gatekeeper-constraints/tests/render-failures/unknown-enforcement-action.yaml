@@ -1,0 +1,4 @@
+# expect-error: workloadPolicies\.cpuRatio\.enforcementAction must be deny, warn or dryrun, got "block"
+workloadPolicies:
+  cpuRatio:
+    enforcementAction: block

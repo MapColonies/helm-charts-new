@@ -1,0 +1,24 @@
+{{- if .Values.workloadPolicies.mclabels.enabled }}
+{{- $exemptions := include "gatekeeper-constraints.workloadExemptions" (dict "root" . "rule" "mclabels") | fromYamlArray }}
+{{- /* Skip when empty: Gatekeeper would match every namespace. */}}
+{{- with .Values.workloadPolicies.warnNamespaces }}
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sWorkloadMcLabels
+metadata:
+  name: workload-mclabels-warn
+spec:
+  enforcementAction: "warn"
+  match:
+    scope: Namespaced
+    kinds:
+      - apiGroups: ["apps"]
+        kinds: ["Deployment", "StatefulSet"]
+    namespaces:
+      {{- toYaml . | nindent 6 }}
+  parameters:
+    exemptions: {{- if $exemptions }}
+      {{- toYaml $exemptions | nindent 6 }}
+    {{- else }} []
+    {{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: several-bad
+  namespace: app-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: several-bad
+  template:
+    metadata:
+      labels:
+        mapcolonies.io/owner: nobody
+        mapcolonies.io/environment: undefined
+        app: several-bad
+    spec:
+      containers:
+      - name: app
+        image: nginx

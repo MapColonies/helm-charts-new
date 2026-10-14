@@ -1,0 +1,134 @@
+apiVersion: test.gatekeeper.sh/v1alpha1
+kind: Suite
+metadata:
+  name: workload-cpu-ratio
+tests:
+  - name: cpu-ratio-rule
+    template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-cpu-ratio.yaml
+    constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-cpu-ratio-enforced.yaml
+    cases:
+      - name: compliant
+        object: ../objects/cpu-ratio/compliant.yaml
+        assertions:
+          - violations: no
+      - name: mixed-units-half-core-and-millicores
+        object: ../objects/cpu-ratio/mixed-units-half.yaml
+        assertions:
+          - violations: no
+      - name: mixed-units-one-core-and-millicores
+        object: ../objects/cpu-ratio/mixed-units-one.yaml
+        assertions:
+          - violations: no
+      - name: fractional-quarter
+        object: ../objects/cpu-ratio/fractional-quarter.yaml
+        assertions:
+          - violations: no
+      - name: fractional-three-quarters
+        object: ../objects/cpu-ratio/fractional-three-quarters.yaml
+        assertions:
+          - violations: no
+      - name: canonical-microcores
+        object: ../objects/cpu-ratio/canonical-micro.yaml
+        assertions:
+          - violations: no
+      - name: decimal-exponent
+        object: ../objects/cpu-ratio/exponent.yaml
+        assertions:
+          - violations: no
+      - name: statefulset-compliant
+        object: ../objects/cpu-ratio/statefulset-compliant.yaml
+        assertions:
+          - violations: no
+      - name: request-equals-limit
+        object: ../objects/cpu-ratio/request-equals-limit.yaml
+        assertions:
+          - violations: 1
+            message: 'request: 1, limit: 1, expected limit: 4\)'
+      - name: ratio-10x
+        object: ../objects/cpu-ratio/ratio-10x.yaml
+        assertions:
+          - violations: 1
+            message: 'request: 100m, limit: 1, expected limit: 400m\)'
+      - name: missing-request
+        object: ../objects/cpu-ratio/missing-request.yaml
+        assertions:
+          - violations: 1
+            message: 'request: none, limit: 1, expected limit: 4x the request\)'
+      - name: missing-limit
+        object: ../objects/cpu-ratio/missing-limit.yaml
+        assertions:
+          - violations: 1
+            message: 'request: 100m, limit: none, expected limit: 400m\)'
+      - name: no-resources
+        object: ../objects/cpu-ratio/no-resources.yaml
+        assertions:
+          - violations: 1
+            message: 'request: none, limit: none, expected limit: 4x the request\)'
+      - name: unparseable-request
+        object: ../objects/cpu-ratio/unparseable.yaml
+        assertions:
+          - violations: 1
+            message: '"lots" is not a valid CPU quantity'
+      - name: bad-init-container
+        object: ../objects/cpu-ratio/bad-init-container.yaml
+        assertions:
+          - violations: 1
+            message: 'container "migrate"'
+          - violations: 0
+            message: 'container "app"'
+      - name: bad-ephemeral-container-ignored
+        object: ../objects/cpu-ratio/bad-ephemeral-container.yaml
+        assertions:
+          - violations: no
+      - name: multi-container-reports-only-bad-one
+        object: ../objects/cpu-ratio/multi-container.yaml
+        assertions:
+          - violations: 1
+          - violations: 1
+            message: 'container "sidecar"'
+      - name: statefulset-non-compliant
+        object: ../objects/cpu-ratio/statefulset-bad.yaml
+        assertions:
+          - violations: 1
+            message: '^StatefulSet prod/statefulset-bad container "db"'
+      - name: full-message
+        object: ../objects/cpu-ratio/ratio-10x.yaml
+        assertions:
+          - violations: 1
+            message: '^Deployment prod/ratio-10x container "app": CPU limit must be exactly 4x the CPU request \(request: 100m, limit: 1, expected limit: 400m\)\. To exempt this workload, add it to the site-values exemption list or set the mapcolonies\.io/exempt-cpu-ratio annotation to a reason\.$'
+
+  - name: cpu-ratio-warn-constraint
+    template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-cpu-ratio.yaml
+    constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-cpu-ratio-warn.yaml
+    cases:
+      - name: warn-namespace
+        object: ../objects/cpu-ratio/bad-in-app-dev.yaml
+        assertions:
+          - violations: 1
+            message: '^Deployment app-dev/bad container "app"'
+      - name: enforced-namespace
+        object: ../objects/cpu-ratio/bad-in-prod.yaml
+        assertions:
+          - violations: no
+      - name: unlisted-namespace
+        object: ../objects/cpu-ratio/bad-in-sandbox.yaml
+        assertions:
+          - violations: no
+
+  - name: cpu-ratio-enforced-constraint
+    template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-workload-cpu-ratio.yaml
+    constraint: ../rendered/gatekeeper-constraints/templates/constraint-workload-cpu-ratio-enforced.yaml
+    cases:
+      - name: warn-namespace
+        object: ../objects/cpu-ratio/bad-in-app-dev.yaml
+        assertions:
+          - violations: no
+      - name: enforced-namespace
+        object: ../objects/cpu-ratio/bad-in-prod.yaml
+        assertions:
+          - violations: 1
+            message: '^Deployment prod/bad container "app"'
+      - name: unlisted-namespace
+        object: ../objects/cpu-ratio/bad-in-sandbox.yaml
+        assertions:
+          - violations: no
