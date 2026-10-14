@@ -14,7 +14,7 @@
     "charts/jenkins": "1.1.0",
     "charts/elastic-alertmanager-connector": "1.0.0",
     "charts/gatekeeper-constraints": "1.0.0",
-    "charts/resource-scaler": "1.0.0",
+    "charts/resource-scaler": "1.1.0",
     "charts/datasource-library": "0.1.0",
     "charts/claude-otel-collector": "1.1.0",
     "charts/grafana-datasources": "1.0.0",
