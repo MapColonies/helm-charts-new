@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0](https://github.com/MapColonies/helm-charts-new/compare/gatekeeper-constraints-v1.0.0...gatekeeper-constraints-v1.1.0) (2026-10-14)
+
+
+### 🎉 Features
+
+* add criticality filed to values based releases ([#112](https://github.com/MapColonies/helm-charts-new/issues/112)) ([d100d1e](https://github.com/MapColonies/helm-charts-new/commit/d100d1e1cd98bf70ccf171c074f1a273b0de1412))
+* **gatekeeper-constraints:** CPU ratio and mclabels rules for workloads ([#159](https://github.com/MapColonies/helm-charts-new/issues/159)) ([ec0f2a4](https://github.com/MapColonies/helm-charts-new/commit/ec0f2a4e60ac2e46bbc55146ecbdaaaa3da06c42))
+* **gatekeeper-constraints:** warn on placeholder label values MAPCO-8745 ([#117](https://github.com/MapColonies/helm-charts-new/issues/117)) ([de81dcc](https://github.com/MapColonies/helm-charts-new/commit/de81dccbbcd6b4d056f74bc62b7eea623e989929))
+
 ## 1.0.0 (2026-04-29)
 
 
