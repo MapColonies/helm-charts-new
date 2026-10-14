@@ -4,7 +4,7 @@
     "charts/grafana": "1.1.0",
     "charts/alloy": "1.2.0",
     "charts/hoppscotch": "1.0.0",
-    "charts/keycloak": "1.0.0",
+    "charts/keycloak": "1.1.0",
     "charts/pgadmin": "1.0.0",
     "charts/tempo": "1.0.0",
     "charts/otel-collectors": "1.0.0",
