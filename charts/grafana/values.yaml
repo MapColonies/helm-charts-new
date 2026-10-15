@@ -48,6 +48,9 @@ grafana:
   # Alerting Teams Webhooks
   # List of teams that get a contact point `<team>-alerts` (receiver type: alertingReceiverType).
   # Each contact point reads its webhook URL from the env var `<TEAM>_WEBHOOK` (team upper-cased).
+  # Every team also gets `<team>-alerts-no-resolve`: same webhook, no "resolved" messages. The
+  # notification policy sends alerts labelled `notify_resolved="false"` there (one notification
+  # per alert); all other alerts keep `<team>-alerts` and their resolved messages.
   #
   # Preferred: keep URLs out of values. List only the team and create the Secret yourself,
   # outside the chart, with one key per team:

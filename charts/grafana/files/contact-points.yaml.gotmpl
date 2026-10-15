@@ -10,5 +10,15 @@ contactPoints:
         settings:
           url: {{ printf "${%s_WEBHOOK}" (upper .team) | quote }}
         disableResolveMessage: false
+  # Same webhook, but never sends a "resolved" message. For alerts labelled
+  # notify_resolved="false", e.g. log-based alerts that resolve once their window passes.
+  - orgId: 1
+    name: {{ .team }}-alerts-no-resolve
+    receivers:
+      - uid: {{ .team }}-receiver-no-resolve
+        type: {{ $.Values.grafana.alertingReceiverType }}
+        settings:
+          url: {{ printf "${%s_WEBHOOK}" (upper .team) | quote }}
+        disableResolveMessage: true
 {{- end }}
 {{- end }}
