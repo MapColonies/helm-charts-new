@@ -75,6 +75,25 @@ loki.source.kubernetes "pod_logs" {
         older_than          = "1h"
         drop_counter_reason = "too_old"
     }
+{{- /* logFilters: values-driven keep/drop by log line content. Selector = namespace matcher + LogQL line filter, each regex JSON-quoted twice (LogQL string, then Alloy string). */}}
+{{- range $filter := .Values.logFilters }}
+{{- $ns := $filter.namespace | default "" }}
+{{- $matcher := ternary (printf "k8s_namespace_name=%s" ($ns | toJson)) `k8s_namespace_name=~".+"` (ne $ns "") }}
+{{- range $re := $filter.keep }}
+    stage.match {
+        selector = {{ printf "{%s} !~ %s" $matcher ($re | toJson) | toJson }}
+        action   = "drop"
+        drop_counter_reason = "log_filter_keep"
+    }
+{{- end }}
+{{- range $re := $filter.drop }}
+    stage.match {
+        selector = {{ printf "{%s} |~ %s" $matcher ($re | toJson) | toJson }}
+        action   = "drop"
+        drop_counter_reason = "log_filter_drop"
+    }
+{{- end }}
+{{- end }}
 }
 
 otelcol.receiver.loki "default" {

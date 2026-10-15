@@ -43,3 +43,11 @@ Returns <rule>'s enforcementAction for enforced namespaces: deny, warn or dryrun
 {{- end -}}
 {{- $action -}}
 {{- end -}}
+
+{{/* Namespace glob (* and ?) as a Loki regex. */}}
+{{- define "gatekeeper-constraints.nsRegex" -}}
+{{- if not (regexMatch "^[a-z0-9*?-]+$" (toString .)) }}
+{{- fail (printf "namespace %q must only contain a-z, 0-9, -, * and ?" (toString .)) }}
+{{- end }}
+{{- . | replace "*" ".*" | replace "?" "." -}}
+{{- end }}

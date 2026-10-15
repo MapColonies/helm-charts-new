@@ -1,0 +1,68 @@
+- uid: __UID__
+  title: __TITLE__
+  condition: C
+  data:
+    - refId: A
+      queryType: instant
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: loki
+      model:
+        datasource:
+          type: loki
+          uid: loki
+        editorMode: code
+        expr: "sum by (resource_namespace, resource_kind, resource_name, constraint_name, request_username, msg) (count_over_time({k8s_namespace_name=\"gatekeeper-system\"} | json | process=\"admission\" | event_type=\"violation\" | constraint_name=~\"workload-.*\" | resource_namespace=~\"__NAMESPACE_REGEX__\"__ENTRY_FILTERS__ [10m]))"
+        instant: true
+        queryType: instant
+        intervalMs: 1000
+        maxDataPoints: 43200
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        reducer: last
+        type: reduce
+        settings:
+          mode: dropNN
+        intervalMs: 1000
+        maxDataPoints: 43200
+        refId: B
+    - refId: C
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: B
+        type: threshold
+        conditions:
+          - evaluator:
+              params: [0]
+              type: gt
+        intervalMs: 1000
+        maxDataPoints: 43200
+        refId: C
+  noDataState: OK
+  execErrState: OK
+  for: 0s
+  labels:
+    severity: warning
+    alert_team: __TEAM__
+    notify_resolved: "false"
+  annotations:
+    summary: "{{ $labels.resource_kind }} {{ $labels.resource_namespace }}/{{ $labels.resource_name }} breaks {{ $labels.constraint_name }}"
+    description: "{{ $labels.msg }}"
+    deployed_by: "{{ $labels.request_username }}"
+    how_to_exempt: "Either add the workload to workloadPolicies.exemptions in the gatekeeper-constraints values (namespace, kind, name, rules, reason), or set the annotation mapcolonies.io/exempt-cpu-ratio or mapcolonies.io/exempt-mclabels on the workload metadata with the reason as its value."
