@@ -98,13 +98,19 @@ workloadPolicies:
 deployAlerts:
   enabled: false                    # off by default: no ConfigMap is rendered
   includeEnforcedNamespaces: false  # also alert in workloadPolicies.enforcedNamespaces
-  defaultTeam: infra                # alert_team label of every alert
+  defaultTeam: infra                # alert_team of namespaces namespaceTeams does not mention
+
+namespaceTeams:                     # namespace -> owning team (exact name or glob)
+  - { namespace: raster-dev, team: raster }
+  - { namespace: dem-dev, team: 3d }
+  - { namespace: gateway-dev, silence: true }   # mapped to no team: no alert
 ```
 
-- **What it renders.** With `deployAlerts.enabled`, a ConfigMap `<release>-deploy-alerts` labelled `mapcolonies.io/grafana-alerts` holds a Grafana-managed alert rule on the Loki datasource (uid `loki`). It counts the `workload-*` violation lines Gatekeeper logs at admission over 10 minutes and fires once per namespace, kind, name, Constraint, deploying user and message. Redeploying the same broken workload in that window gives no extra alert. Labels: `severity=warning`, `alert_team=<defaultTeam>`.
+- **What it renders.** With `deployAlerts.enabled`, a ConfigMap `<release>-deploy-alerts` labelled `mapcolonies.io/grafana-alerts` holds a Grafana-managed alert rule on the Loki datasource (uid `loki`). It counts the `workload-*` violation lines Gatekeeper logs at admission over 10 minutes and fires once per namespace, kind, name, Constraint, deploying user and message. Redeploying the same broken workload in that window gives no extra alert. Labels: `severity=warning`, `alert_team=<owning team>`, `notify_resolved=false` (Grafana routes these to contact points that send no "resolved" message).
+- **Team mapping.** `namespaceTeams` maps an exact namespace or glob to a team. The chart renders one rule per mapped namespace, each carrying its `alert_team`, because a Loki query can't take a team label from a lookup. An exact namespace beats a glob; among globs the first listed wins. A namespace no entry matches goes to `defaultTeam`, so nothing is dropped silently. `silence: true` maps a namespace to no team: it is excluded from every rule, so it raises no alert. The value names teams, not channels, and is not specific to alerts, so other consumers can read it.
 - **Scope.** The namespace filter is built from `workloadPolicies.warnNamespaces`, with `*` and `?` globs turned into a regex. `enforcedNamespaces` are added only with `includeEnforcedNamespaces: true`.
 - **Annotations are plain text** (workload and rule, the rule's message, the deploying user, how to exempt), so they read the same in Slack or Teams.
-- **Rendering fails** if no namespace is in scope, if a namespace has characters other than `a-z`, `0-9`, `-`, `*`, `?`, or if `defaultTeam` is not a plain team name.
+- **Rendering fails** if no namespace is in scope, if a namespace has characters other than `a-z`, `0-9`, `-`, `*`, `?`, if `defaultTeam` or a mapped `team` is not a plain team name, or if a `namespaceTeams` entry sets both or neither of `team` and `silence`.
 - **Prerequisites outside this chart.** `gatekeeper.logDenies: true`, the Alloy log pipeline collecting `gatekeeper-system` (keeping only `workload-*` violations), and Grafana's alert sidecar searching the release namespace (`grafana.sidecar.alerts.searchNamespace`).
 
 ## 📝 Operational notes

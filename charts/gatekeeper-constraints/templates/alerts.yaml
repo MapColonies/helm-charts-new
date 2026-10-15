@@ -7,20 +7,55 @@
 {{- if not $scope }}
 {{- fail "deployAlerts needs at least one namespace: set workloadPolicies.warnNamespaces (or enforcedNamespaces with deployAlerts.includeEnforcedNamespaces)" }}
 {{- end }}
-{{- $team := .Values.deployAlerts.defaultTeam }}
-{{- if not (regexMatch "^[a-z0-9_-]+$" (toString $team)) }}
-{{- fail (printf "deployAlerts.defaultTeam must be a team name like \"infra\", got %q" (toString $team)) }}
+{{- $teamRe := "^[a-z0-9_-]+$" }}
+{{- $defaultTeam := .Values.deployAlerts.defaultTeam }}
+{{- if not (regexMatch $teamRe (toString $defaultTeam)) }}
+{{- fail (printf "deployAlerts.defaultTeam must be a team name like \"infra\", got %q" (toString $defaultTeam)) }}
 {{- end }}
 {{- /* Namespace globs (* and ?) become a Loki regex; Loki anchors label regexes. */}}
 {{- $parts := list }}
 {{- range $scope }}
-{{- if not (regexMatch "^[a-z0-9*?-]+$" (toString .)) }}
-{{- fail (printf "deployAlerts namespace %q must only contain a-z, 0-9, -, * and ?" (toString .)) }}
+{{- $parts = append $parts (include "gatekeeper-constraints.nsRegex" .) }}
 {{- end }}
-{{- $parts = append $parts (. | replace "*" ".*" | replace "?" ".") }}
+{{- $scopeRegex := printf "(%s)" (join "|" $parts) }}
+{{- /* Mapping entries, validated. Exact namespaces come before globs so they win; among
+       globs the first listed wins. Each entry later excludes the entries before it. */}}
+{{- $entries := list }}
+{{- range $i, $e := .Values.namespaceTeams | default list }}
+{{- if not (regexMatch "^[a-z0-9*?-]+$" (toString $e.namespace)) }}
+{{- fail (printf "namespaceTeams[%d].namespace %q must only contain a-z, 0-9, -, * and ?" $i (toString $e.namespace)) }}
 {{- end }}
-{{- $regex := printf "(%s)" (join "|" $parts) }}
-{{- $rule := .Files.Get "files/alerts/gatekeeper-deploy.yaml" | replace "__NAMESPACE_REGEX__" $regex | replace "__TEAM__" $team }}
+{{- if or (and $e.team $e.silence) (not (or $e.team $e.silence)) }}
+{{- fail (printf "namespaceTeams[%d]: set either team or silence: true" $i) }}
+{{- end }}
+{{- if and $e.team (not (regexMatch $teamRe (toString $e.team))) }}
+{{- fail (printf "namespaceTeams[%d].team must be a team name like \"raster\", got %q" $i (toString $e.team)) }}
+{{- end }}
+{{- end }}
+{{- $ordered := list }}
+{{- range $e := .Values.namespaceTeams | default list }}
+{{- if not (contains "*" $e.namespace | or (contains "?" $e.namespace)) }}{{ $ordered = append $ordered $e }}{{ end }}
+{{- end }}
+{{- range $e := .Values.namespaceTeams | default list }}
+{{- if contains "*" $e.namespace | or (contains "?" $e.namespace) }}{{ $ordered = append $ordered $e }}{{ end }}
+{{- end }}
+{{- $q := "\\\"" }}
+{{- $base := .Files.Get "files/alerts/gatekeeper-deploy.yaml" | replace "__NAMESPACE_REGEX__" $scopeRegex }}
+{{- $rules := list }}
+{{- $seen := list }}
+{{- range $i, $e := $ordered }}
+{{- $mine := printf "(%s)" (include "gatekeeper-constraints.nsRegex" $e.namespace) }}
+{{- if $e.team }}
+{{- $filters := printf " | resource_namespace=~%s%s%s" $q $mine $q }}
+{{- if $seen }}{{ $filters = printf "%s | resource_namespace!~%s(%s)%s" $filters $q (join "|" $seen) $q }}{{ end }}
+{{- $rules = append $rules ($base | replace "__ENTRY_FILTERS__" $filters | replace "__UID__" (printf "gk-deploy-%s-%d" $e.team $i) | replace "__TITLE__" (printf "WorkloadPolicyViolationOnDeploy-%s-%d" $e.team $i) | replace "__TEAM__" $e.team) }}
+{{- end }}
+{{- $seen = append $seen (include "gatekeeper-constraints.nsRegex" $e.namespace) }}
+{{- end }}
+{{- /* Namespaces no entry matches go to the default team. */}}
+{{- $filters := "" }}
+{{- if $seen }}{{ $filters = printf " | resource_namespace!~%s(%s)%s" $q (join "|" $seen) $q }}{{ end }}
+{{- $rules = append $rules ($base | replace "__ENTRY_FILTERS__" $filters | replace "__UID__" "gk-deploy-violation" | replace "__TITLE__" "WorkloadPolicyViolationOnDeploy" | replace "__TEAM__" $defaultTeam) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -30,5 +65,14 @@ metadata:
     mapcolonies.io/grafana-alerts: "true"
 data:
   gatekeeper-deploy.yaml: |
-{{ $rule | indent 4 }}
+    apiVersion: 1
+    groups:
+      - orgId: 1
+        name: gatekeeper_deploy
+        folder: Gatekeeper
+        interval: 1m
+        rules:
+{{- range $rules }}
+{{ . | indent 10 }}
+{{- end }}
 {{- end }}

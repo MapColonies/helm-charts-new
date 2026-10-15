@@ -65,5 +65,14 @@ deployAlerts:
   # Namespaces come from workloadPolicies.warnNamespaces. Enforced namespaces
   # are alerted on only when this is true.
   includeEnforcedNamespaces: false
-  # Becomes the alert_team label. A namespace-to-team mapping will extend this.
+  # alert_team of namespaces that namespaceTeams does not mention.
   defaultTeam: infra
+
+# Which team owns which namespace. Used by deployAlerts to set alert_team, and meant
+# to be shared with other consumers (e.g. the daily violation report). Entries:
+#   - namespace: raster-dev   # exact name or glob (* and ?)
+#     team: raster            # alert_team
+#   - namespace: gateway-dev
+#     silence: true           # mapped to no team: no alert
+# Exact namespaces win over globs; among globs the first listed wins.
+namespaceTeams: []
