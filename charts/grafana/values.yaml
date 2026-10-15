@@ -46,12 +46,24 @@ grafana:
       searchNamespace: null
 
   # Alerting Teams Webhooks
-  # This is a list of teams and their corresponding webhook URLs for Grafana alerting.
-  # Example:
-  # alertingTeamsWebhooks:
+  # List of teams that get a contact point `<team>-alerts` (receiver type: alertingReceiverType).
+  # Each contact point reads its webhook URL from the env var `<TEAM>_WEBHOOK` (team upper-cased).
+  #
+  # Preferred: keep URLs out of values. List only the team and create the Secret yourself,
+  # outside the chart, with one key per team:
+  #   kubectl create secret generic grafana-webhooks -n <ns> \
+  #     --from-literal=INFRA_WEBHOOK='<webhook url>' --from-literal=RAS_WEBHOOK='<webhook url>'
+  #   alertingTeamsWebhooks:
+  #     - team: "infra"
+  # The Secret is loaded through envFromSecrets (default name: grafana-webhooks, optional). For
+  # another name, override envFromSecrets with that name. The chart creates no Secret when no
+  # team sets `url`, so an external Secret named grafana-webhooks does not collide.
+  #
+  # Legacy: set `url` inline. The chart then creates Secret grafana-webhooks itself
+  # (do not also create one with that name):
   #   - team: "infra"
-  #     url: "https://hooks.slack.com/services/T00000000/B000
-  alertingTeamsWebhooks: {}
+  #     url: "https://example.com/webhook"
+  alertingTeamsWebhooks: []
 
   # Alerting Receiver Type
   # This is the type of receiver to use for Grafana alerting.
