@@ -92,6 +92,21 @@ workloadPolicies:
 - **Rendering fails** on an exemption entry without a `namespace`, `kind`, `name` or `reason`, on an unknown kind or rule, or on an `enforcementAction` other than `deny`, `warn` or `dryrun`.
 - `<rule>.enabled: false` removes that rule's ConstraintTemplate and Constraints.
 
+### Deploy alerts
+
+```yaml
+deployAlerts:
+  enabled: false                    # off by default: no ConfigMap is rendered
+  includeEnforcedNamespaces: false  # also alert in workloadPolicies.enforcedNamespaces
+  defaultTeam: infra                # alert_team label of every alert
+```
+
+- **What it renders.** With `deployAlerts.enabled`, a ConfigMap `<release>-deploy-alerts` labelled `mapcolonies.io/grafana-alerts` holds a Grafana-managed alert rule on the Loki datasource (uid `loki`). It counts the `workload-*` violation lines Gatekeeper logs at admission over 10 minutes and fires once per namespace, kind, name, Constraint, deploying user and message. Redeploying the same broken workload in that window gives no extra alert. Labels: `severity=warning`, `alert_team=<defaultTeam>`.
+- **Scope.** The namespace filter is built from `workloadPolicies.warnNamespaces`, with `*` and `?` globs turned into a regex. `enforcedNamespaces` are added only with `includeEnforcedNamespaces: true`.
+- **Annotations are plain text** (workload and rule, the rule's message, the deploying user, how to exempt), so they read the same in Slack or Teams.
+- **Rendering fails** if no namespace is in scope, if a namespace has characters other than `a-z`, `0-9`, `-`, `*`, `?`, or if `defaultTeam` is not a plain team name.
+- **Prerequisites outside this chart.** `gatekeeper.logDenies: true`, the Alloy log pipeline collecting `gatekeeper-system` (keeping only `workload-*` violations), and Grafana's alert sidecar searching the release namespace (`grafana.sidecar.alerts.searchNamespace`).
+
 ## 📝 Operational notes
 
 - `helm upgrade --force` does not bypass the workload rules. Its delete-and-recreate goes through admission as a CREATE.
@@ -117,6 +132,7 @@ make -C charts/gatekeeper-constraints test
 ```
 
 This renders the chart with `tests/values.yaml` and runs the gator Suites in `tests/suites` against the sample objects in `tests/objects`. gator is pinned to the wrapped Gatekeeper version and downloaded into `.bin/`. The target also runs these checks:
+- `tests/deploy-alerts.sh`: `helm template` assertions on the deploy-alert ConfigMap (off by default, namespace scope, labels, plain-text annotations, failure on empty scope).
 - `tests/gator-test/<case>`: renders the chart with the case's values, runs its objects through `gator test` and checks the outcome named in the case's `expect` file: `nothing`, `warnings-only` or `denials`. These cases cover which Constraints get rendered and with which enforcement action, e.g. that an empty namespace list really renders no Constraint.
 - `tests/render-failures/<values>`: checks that rendering fails with the error named on the file's first line.
 

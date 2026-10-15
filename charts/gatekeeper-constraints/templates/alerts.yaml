@@ -1,0 +1,34 @@
+{{- if .Values.deployAlerts.enabled }}
+{{- $wp := .Values.workloadPolicies }}
+{{- $scope := $wp.warnNamespaces | default list }}
+{{- if .Values.deployAlerts.includeEnforcedNamespaces }}
+{{- $scope = concat $scope ($wp.enforcedNamespaces | default list) }}
+{{- end }}
+{{- if not $scope }}
+{{- fail "deployAlerts needs at least one namespace: set workloadPolicies.warnNamespaces (or enforcedNamespaces with deployAlerts.includeEnforcedNamespaces)" }}
+{{- end }}
+{{- $team := .Values.deployAlerts.defaultTeam }}
+{{- if not (regexMatch "^[a-z0-9_-]+$" (toString $team)) }}
+{{- fail (printf "deployAlerts.defaultTeam must be a team name like \"infra\", got %q" (toString $team)) }}
+{{- end }}
+{{- /* Namespace globs (* and ?) become a Loki regex; Loki anchors label regexes. */}}
+{{- $parts := list }}
+{{- range $scope }}
+{{- if not (regexMatch "^[a-z0-9*?-]+$" (toString .)) }}
+{{- fail (printf "deployAlerts namespace %q must only contain a-z, 0-9, -, * and ?" (toString .)) }}
+{{- end }}
+{{- $parts = append $parts (. | replace "*" ".*" | replace "?" ".") }}
+{{- end }}
+{{- $regex := printf "(%s)" (join "|" $parts) }}
+{{- $rule := .Files.Get "files/alerts/gatekeeper-deploy.yaml" | replace "__NAMESPACE_REGEX__" $regex | replace "__TEAM__" $team }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-deploy-alerts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    mapcolonies.io/grafana-alerts: "true"
+data:
+  gatekeeper-deploy.yaml: |
+{{ $rule | indent 4 }}
+{{- end }}

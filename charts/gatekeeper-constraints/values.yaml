@@ -57,3 +57,13 @@ workloadPolicies:
     enabled: true
     # In enforced namespaces: deny, warn or dryrun.
     enforcementAction: deny
+
+# Grafana alert for workload-rule violations seen at admission (see README).
+# Needs gatekeeper.logDenies and the Alloy log pipeline for gatekeeper-system.
+deployAlerts:
+  enabled: false
+  # Namespaces come from workloadPolicies.warnNamespaces. Enforced namespaces
+  # are alerted on only when this is true.
+  includeEnforcedNamespaces: false
+  # Becomes the alert_team label. A namespace-to-team mapping will extend this.
+  defaultTeam: infra
