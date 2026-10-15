@@ -1,6 +1,7 @@
 {{- if .Values.deployAlerts.enabled }}
 {{- $wp := .Values.workloadPolicies }}
 {{- $scope := $wp.warnNamespaces | default list }}
+{{- $teams := .Values.namespaceTeams | default list }}
 {{- if .Values.deployAlerts.includeEnforcedNamespaces }}
 {{- $scope = concat $scope ($wp.enforcedNamespaces | default list) }}
 {{- end }}
@@ -21,7 +22,7 @@
 {{- /* Mapping entries, validated. Exact namespaces come before globs so they win; among
        globs the first listed wins. Each entry later excludes the entries before it. */}}
 {{- $entries := list }}
-{{- range $i, $e := .Values.namespaceTeams | default list }}
+{{- range $i, $e := $teams }}
 {{- if not (regexMatch "^[a-z0-9*?-]+$" (toString $e.namespace)) }}
 {{- fail (printf "namespaceTeams[%d].namespace %q must only contain a-z, 0-9, -, * and ?" $i (toString $e.namespace)) }}
 {{- end }}
@@ -32,13 +33,12 @@
 {{- fail (printf "namespaceTeams[%d].team must be a team name like \"raster\", got %q" $i (toString $e.team)) }}
 {{- end }}
 {{- end }}
-{{- $ordered := list }}
-{{- range $e := .Values.namespaceTeams | default list }}
-{{- if not (contains "*" $e.namespace | or (contains "?" $e.namespace)) }}{{ $ordered = append $ordered $e }}{{ end }}
+{{- $exact := list }}
+{{- $globs := list }}
+{{- range $e := $teams }}
+{{- if or (contains "*" $e.namespace) (contains "?" $e.namespace) }}{{ $globs = append $globs $e }}{{ else }}{{ $exact = append $exact $e }}{{ end }}
 {{- end }}
-{{- range $e := .Values.namespaceTeams | default list }}
-{{- if contains "*" $e.namespace | or (contains "?" $e.namespace) }}{{ $ordered = append $ordered $e }}{{ end }}
-{{- end }}
+{{- $ordered := concat $exact $globs }}
 {{- $q := "\\\"" }}
 {{- $base := .Files.Get "files/alerts/gatekeeper-deploy.yaml" | replace "__NAMESPACE_REGEX__" $scopeRegex }}
 {{- $rules := list }}
