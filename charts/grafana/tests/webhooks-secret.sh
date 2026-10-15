@@ -32,4 +32,19 @@ out=$(render --set grafana.alertingReceiverType=slack \
   --set 'grafana.envFromSecrets[0].name=my-webhooks')
 grep -q 'name: my-webhooks' <<<"$out" || fail "custom secret name not in envFrom"
 
+# 5. Team names that would give an invalid env var name: a leading digit gets a TEAM_ prefix
+#    (the same key in the contact points and the inline Secret); other teams keep <TEAM>_WEBHOOK.
+out=$(render --set grafana.alertingReceiverType=slack \
+  --set 'grafana.alertingTeamsWebhooks[0].team=3d' \
+  --set 'grafana.alertingTeamsWebhooks[0].url=https://example.invalid/3d' \
+  --set 'grafana.alertingTeamsWebhooks[1].team=my-team')
+grep -qF 'url: "${TEAM_3D_WEBHOOK}"' <<<"$out" || fail "3d: contact point must use \${TEAM_3D_WEBHOOK}"
+grep -q 'TEAM_3D_WEBHOOK: "https://example.invalid/3d"' <<<"$out" || fail "3d: Secret key must be TEAM_3D_WEBHOOK"
+grep -qF '${3D_WEBHOOK}' <<<"$out" && fail "3d: invalid env var name rendered"
+grep -qF 'url: "${MY_TEAM_WEBHOOK}"' <<<"$out" || fail "my-team: hyphen must become underscore"
+
+# 6. A team name that cannot map to an env var fails loudly.
+err=$(render --set grafana.alertingReceiverType=slack --set 'grafana.alertingTeamsWebhooks[0].team=Bad Team' 2>&1 || true)
+grep -q 'team "Bad Team" must only contain' <<<"$err" || fail "bad team name must fail"
+
 echo "PASS"
