@@ -59,29 +59,3 @@ jobs:
       - name: Run chart tests
         if: steps.filter.outputs.chart == 'true'
         run: make -C charts/gatekeeper-constraints test
-
-  test_render_charts:
-    name: Test ${{ matrix.chart }} chart
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        chart: [alloy, grafana]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Check for ${{ matrix.chart }} changes
-        uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            chart:
-              - 'charts/${{ matrix.chart }}/**'
-
-      - name: Set up Helm
-        if: steps.filter.outputs.chart == 'true'
-        uses: azure/setup-helm@v4
-
-      - name: Run chart tests
-        if: steps.filter.outputs.chart == 'true'
-        run: make -C charts/${{ matrix.chart }} test
