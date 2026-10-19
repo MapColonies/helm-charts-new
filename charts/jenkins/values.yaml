@@ -12,6 +12,8 @@ jenkins:
 
     image:
       repository: "infra/jenkins/jenkins"
+      # upstream switched the default to jdk25 in 5.9.68
+      tagLabel: jdk21
 
 
     initContainerEnv:
@@ -36,6 +38,11 @@ jenkins:
         welcome-message: |
           jenkins:
             systemMessage: Welcome to our MapColonies CI\CD server. This Jenkins is configured and managed 'as code'.
+
+  agent:
+    image:
+      # Jenkins >= 2.555 requires agents on Java 21+; upstream default is jdk25
+      tag: "3385.vf1123fb_515da_-1-jdk21"
 
   rbac:
     readSecrets: true
