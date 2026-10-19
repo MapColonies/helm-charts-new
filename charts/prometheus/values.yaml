@@ -20,6 +20,49 @@ prometheus:
       enabled: false
     kubernetes-pods-slow:
       enabled: false
+    # Upstream default probe job; sends probes to a non-existent "blackbox" host. Replaced by blackbox-services.
+    kubernetes-services:
+      enabled: false
+    # Blackbox probes for Services annotated with prometheus.io/probe: "true" (see blackbox-lib).
+    blackbox-services:
+      metrics_path: /probe
+      kubernetes_sd_configs:
+        - role: service
+      relabel_configs:
+        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_probe]
+          action: keep
+          regex: "true"
+        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_probe_host]
+          action: keep
+          regex: .+
+        - target_label: __param_module
+          replacement: http_2xx
+        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_probe_module]
+          regex: (.+)
+          target_label: __param_module
+        - target_label: __tmp_probe_scheme
+          replacement: http
+        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_probe_scheme]
+          regex: (https?)
+          target_label: __tmp_probe_scheme
+        - source_labels:
+            - __tmp_probe_scheme
+            - __meta_kubernetes_service_annotation_prometheus_io_probe_host
+            - __meta_kubernetes_service_annotation_prometheus_io_probe_path
+          regex: (.+);(.+);(.*)
+          replacement: $1://$2$3
+          target_label: __param_target
+        - target_label: __address__
+          replacement: infra-blackbox-exporter:9115
+        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_probe_exporter]
+          regex: (.+)
+          target_label: __address__
+        - source_labels: [__param_target]
+          target_label: instance
+        - source_labels: [__meta_kubernetes_namespace]
+          target_label: namespace
+        - source_labels: [__meta_kubernetes_service_name]
+          target_label: service
 
 
   commonMetaLabels:
