@@ -15,18 +15,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      # One job for all charts instead of a per-chart matrix: each job is billed at least a minute.
       - name: Validate domain annotation
-        env:
-          # Keep in sync with MapColonies/shared-workflows actions/validate-domain.
-          ALLOWED_DOMAINS: "raster,vector,infra,3d,app,dem,common"
-        run: |
-          failed=0
-          for chart in charts/*/Chart.yaml; do
-            domain=$(yq e '.annotations.domain' "$chart")
-            if ! tr ',' '\n' <<< "$ALLOWED_DOMAINS" | grep -qx "$domain"; then
-              echo "::error file=$chart::Invalid domain: $domain"
-              failed=1
-            fi
-          done
-          exit $failed
+        # shortcut: pinned to MapColonies/shared-workflows#118 head; switch to validate-domain-v1.1.0 once released.
+        uses: MapColonies/shared-workflows/actions/validate-domain@1b6868d2dc1de7a4bc920cb02253d52dcaa04320
+        with:
+          chart-file: charts/*/Chart.yaml
