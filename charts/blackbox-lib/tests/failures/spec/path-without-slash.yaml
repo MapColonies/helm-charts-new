@@ -1,0 +1,5 @@
+# expect-error: blackbox\.target\.path must start with "/", got "liveness"
+blackbox:
+  enabled: true
+  target:
+    path: liveness

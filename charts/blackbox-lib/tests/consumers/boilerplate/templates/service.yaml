@@ -1,0 +1,34 @@
+{{- $releaseName := .Release.Name -}}
+{{- $chartName := include "ts-server-boilerplate.name" . -}}
+{{- $cloudProviderFlavor := include "ts-server-boilerplate.cloudProviderFlavor" . -}}
+{{- $server := .Values.server -}}
+{{- if .Values.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ts-server-boilerplate.fullname" . }}
+  labels:
+    app: {{ $chartName }}
+    component: {{ $chartName }}
+    release: {{ $releaseName }}
+    {{- include "ts-server-boilerplate.labels" . | nindent 4 }}
+  annotations:
+    {{- include "blackbox-lib.serviceAnnotations" (dict "ctx" . "name" (include "ts-server-boilerplate.fullname" .) "port" .Values.server.port) | nindent 4 }}
+spec:
+  {{- if eq $cloudProviderFlavor "minikube" }}
+  type: NodePort
+  {{- end }}
+  ports:
+    - port: {{ $server.port }}
+      targetPort: {{ $server.targetPort }}
+      protocol: {{ $server.protocol }}
+      name: http
+      {{- if eq $cloudProviderFlavor "minikube" }}
+      nodePort: {{ .Values.nodePort }}
+      {{- end }}
+  selector:
+    app: {{ $chartName }}
+    release: {{ $releaseName }}
+    run: {{ include "ts-server-boilerplate.fullname" . }}
+    {{- include "ts-server-boilerplate.selectorLabels" . | nindent 4 }}
+{{- end }}

@@ -1,0 +1,5 @@
+# target.port overrides the Service port
+blackbox:
+  enabled: true
+  target:
+    port: 9090

@@ -1,0 +1,11 @@
+---
+# Source: spec/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-api
+  annotations:
+    
+spec:
+  ports:
+    - port: 8080

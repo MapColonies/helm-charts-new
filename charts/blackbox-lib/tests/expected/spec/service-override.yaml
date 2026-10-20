@@ -1,0 +1,14 @@
+---
+# Source: spec/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-api
+  annotations:
+    prometheus.io/probe: "true"
+    prometheus.io/probe-host: "infra-loki-gateway.team-dev.svc:80"
+    prometheus.io/probe-scheme: "http"
+    prometheus.io/probe-path: "/"
+spec:
+  ports:
+    - port: 8080

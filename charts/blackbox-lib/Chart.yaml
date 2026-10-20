@@ -1,0 +1,7 @@
+apiVersion: v2
+name: blackbox-lib
+description: Library chart that turns a blackbox values block into Prometheus probe annotations on a Service
+type: library
+version: 0.0.1
+annotations:
+  domain: common

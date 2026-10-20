@@ -1,0 +1,5 @@
+# expect-error: blackbox\.customExporter\.moduleName is required
+blackbox:
+  enabled: true
+  customExporter:
+    enabled: true

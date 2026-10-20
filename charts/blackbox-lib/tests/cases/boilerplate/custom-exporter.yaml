@@ -1,0 +1,6 @@
+# custom exporter
+blackbox:
+  enabled: true
+  customExporter:
+    enabled: true
+    moduleName: my_module

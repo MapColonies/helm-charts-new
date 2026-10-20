@@ -1,0 +1,24 @@
+# Reference only: a library chart's values are not merged into the parent's `blackbox:` block.
+# The defaults that apply are defined in templates/_helpers.tpl ("blackbox-lib.defaults")
+# and are kept in sync with this file.
+blackbox:
+  enabled: false
+  # Service name/port used for the internal probe address. Take priority over
+  # .Values.service.name/.port and over the explicit "name"/"port" arguments.
+  serviceName: ""
+  servicePort: ""
+  target:
+    # Empty: probe the internal address <service>.<namespace>.svc:<port>.
+    # Set: probe this host (e.g. the OpenShift Route host); no port is added.
+    host: ""
+    # http | https. Empty: https when target.host is set, otherwise http.
+    scheme: ""
+    path: /liveness
+    # Empty: the Service port.
+    port: ""
+  customExporter:
+    enabled: false
+    moduleName: ""
+    port: 9115
+  alerts:
+    enabled: false

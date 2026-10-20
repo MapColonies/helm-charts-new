@@ -1,0 +1,6 @@
+# custom exporter: adds probe-exporter and probe-module
+blackbox:
+  enabled: true
+  customExporter:
+    enabled: true
+    moduleName: payment_json_validation

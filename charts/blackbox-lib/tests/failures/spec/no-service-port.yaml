@@ -1,0 +1,5 @@
+# expect-error: blackbox: Service port is unknown
+service:
+  port: null
+blackbox:
+  enabled: true

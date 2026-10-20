@@ -73,6 +73,12 @@
         "README.md"
       ]
     },
+    "charts/blackbox-lib": {
+      "release-type": "helm",
+      "extra-files": [
+        "README.md"
+      ]
+    },
     "charts/gatekeeper-constraints": {
       "release-type": "helm",
       "extra-files": [
