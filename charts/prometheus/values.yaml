@@ -45,11 +45,12 @@ prometheus:
         - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_probe_scheme]
           regex: (https?)
           target_label: __tmp_probe_scheme
+        # probe-path must be empty or start with "/"; otherwise no target is set and the scrape fails (up == 0).
         - source_labels:
             - __tmp_probe_scheme
             - __meta_kubernetes_service_annotation_prometheus_io_probe_host
             - __meta_kubernetes_service_annotation_prometheus_io_probe_path
-          regex: (.+);(.+);(.*)
+          regex: (.+);(.+);(/.*)?
           replacement: $1://$2$3
           target_label: __param_target
         - target_label: __address__
