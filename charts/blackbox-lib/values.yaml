@@ -20,5 +20,8 @@ blackbox:
     enabled: false
     moduleName: ""
     port: 9115
+    # Exporter Service name. Empty: <release>-<chart>-blackbox, or <release>-blackbox when the
+    # release name contains the chart name. Must be the same value the blackbox-exporter subchart sees.
+    fullnameOverride: ""
   alerts:
     enabled: false

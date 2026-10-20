@@ -20,7 +20,7 @@ metadata:
     prometheus.io/probe-host: "t-ts-server-boilerplate.team-dev.svc:8080"
     prometheus.io/probe-scheme: "http"
     prometheus.io/probe-path: "/liveness"
-    prometheus.io/probe-exporter: "t-blackbox.team-dev.svc:9115"
+    prometheus.io/probe-exporter: "t-ts-server-boilerplate-blackbox.team-dev.svc:9115"
     prometheus.io/probe-module: "my_module"
 spec:
   ports:

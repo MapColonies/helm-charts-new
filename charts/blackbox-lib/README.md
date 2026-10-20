@@ -56,6 +56,7 @@ prints nothing and `annotations:` stays empty.
 | `blackbox.customExporter.enabled` | `false` | Probe through the chart's own exporter (`blackbox-exporter` subchart) instead of the central one. |
 | `blackbox.customExporter.moduleName` | `""` | Exporter module to use. Required when `customExporter.enabled` is true. |
 | `blackbox.customExporter.port` | `9115` | Port of the custom exporter Service. |
+| `blackbox.customExporter.fullnameOverride` | `""` | Name of the custom exporter Service. Empty: `<release>-<chart>-blackbox`, or `<release>-blackbox` when the release name contains the chart name. |
 | `blackbox.alerts.enabled` | `false` | Reserved for the Grafana alert rules. |
 
 Example, internal probe of `/liveness` through the central exporter:
@@ -86,7 +87,7 @@ Invalid values fail the render with a message that names the key, for example
 | `prometheus.io/probe-host` | `target.host`, or `<service>.<namespace>.svc:<port>` |
 | `prometheus.io/probe-scheme` | `http` or `https` |
 | `prometheus.io/probe-path` | `target.path` |
-| `prometheus.io/probe-exporter` | `<release>-blackbox.<namespace>.svc:<customExporter.port>`, only with `customExporter.enabled` |
+| `prometheus.io/probe-exporter` | `<exporter name>.<namespace>.svc:<customExporter.port>`, only with `customExporter.enabled`. The exporter name includes the app chart name, so several apps in one umbrella release each get their own exporter. |
 | `prometheus.io/probe-module` | `customExporter.moduleName`, only with `customExporter.enabled` |
 
 The probe is `GET <exporter>/probe?module=<module>&target=<scheme>://<probe-host><probe-path>`, and its

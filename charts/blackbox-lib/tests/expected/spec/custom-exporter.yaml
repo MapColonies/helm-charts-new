@@ -9,7 +9,7 @@ metadata:
     prometheus.io/probe-host: "payment-api.team-dev.svc:8080"
     prometheus.io/probe-scheme: "http"
     prometheus.io/probe-path: "/liveness"
-    prometheus.io/probe-exporter: "t-blackbox.team-dev.svc:9115"
+    prometheus.io/probe-exporter: "t-spec-blackbox.team-dev.svc:9115"
     prometheus.io/probe-module: "payment_json_validation"
 spec:
   ports:

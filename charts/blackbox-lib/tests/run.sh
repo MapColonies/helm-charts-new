@@ -48,6 +48,17 @@ for values in failures/*/*.yaml; do
   fi
 done
 
+# A release named after the chart does not repeat the chart name in the exporter name.
+exporter=$(helm template spec consumers/spec -n team-dev --set blackbox.enabled=true \
+  --set blackbox.customExporter.enabled=true --set blackbox.customExporter.moduleName=m \
+  --show-only templates/service.yaml | sed -n 's/.*prometheus.io\/probe-exporter: "\(.*\)"/\1/p')
+if [[ $exporter == "spec-blackbox.team-dev.svc:9115" ]]; then
+  echo "ok   release named after the chart gives <release>-blackbox"
+else
+  echo "FAIL release named after the chart: got probe-exporter '$exporter'"
+  failed=1
+fi
+
 # Both calling forms must produce the same annotations for the same Service name and port.
 spec=$(render spec --set blackbox.enabled=true --set service.name=same-svc --set service.port=8080 | annotations)
 explicit=$(render boilerplate --set blackbox.enabled=true --set fullnameOverride=same-svc --set server.port=8080 | annotations)
