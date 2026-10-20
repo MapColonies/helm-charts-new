@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/MapColonies/helm-charts-new/compare/jenkins-v1.1.0...jenkins-v1.2.0) (2026-10-20)
+
+
+### 🎉 Features
+
+* **jenkins:** upgrade to Jenkins 2.580.1 and chart 5.9.69 (MAPCO-12090) ([#165](https://github.com/MapColonies/helm-charts-new/issues/165)) ([3b4aac2](https://github.com/MapColonies/helm-charts-new/commit/3b4aac2f17428b80ec1e76caf83ffb69d68b0b6d))
+
 ## [1.1.0](https://github.com/MapColonies/helm-charts-new/compare/jenkins-v1.0.0...jenkins-v1.1.0) (2026-08-26)
 
 
