@@ -1,0 +1,9 @@
+# expect-error: severity must be critical, warning or info, got "high"
+blackbox:
+  enabled: true
+  alerts:
+    enabled: true
+    team: raster
+    rules:
+      availability:
+        severity: high

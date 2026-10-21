@@ -1,0 +1,1 @@
+{{- include "blackbox-lib.grafanaAlertsConfigMap" (dict "ctx" . "service" (include "ts-server-boilerplate.fullname" .)) }}
