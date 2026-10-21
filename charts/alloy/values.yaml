@@ -52,6 +52,9 @@ exporter:
   retry_on_failure: {}
 
 # Keep or drop log lines by content, before they are exported. Off by default.
+# NOTE: this is a stopgap. Regex keep/drop filters do not scale as use cases are added. When
+# another need comes up, write a dedicated Alloy pipeline for it (its own loki.process with
+# parsing, labels and routing) instead of adding more logFilters entries.
 # Each entry applies to one namespace (omit `namespace` for all collected ones):
 #   keep: regexes that must ALL match the raw log line, otherwise the line is dropped
 #   drop: regexes where ANY match drops the line
