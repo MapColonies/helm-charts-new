@@ -61,7 +61,8 @@ grafana:
   #   alertingTeamsWebhooks:
   #     - team: "infra"
   # The Secret is loaded through envFromSecrets (default name: grafana-webhooks-external,
-  # optional). For another name, override envFromSecrets. Do not name it grafana-webhooks: that
+  # optional). Helm replaces lists, so an override of envFromSecrets must keep the
+  # grafana-webhooks entry if any team sets an inline `url`. Do not name it grafana-webhooks: that
   # is the Secret the chart creates for inline urls (below), and a Secret that Helm did not
   # create under that name makes install, upgrade and rollback fail on ownership metadata.
   #

@@ -38,7 +38,7 @@ LogQL quoting
 {{/* Validates deployAlerts.defaultTeam and returns it. */}}
 {{- define "gatekeeper-constraints.deployAlertDefaultTeam" -}}
 {{- $team := .Values.deployAlerts.defaultTeam -}}
-{{- if not (regexMatch "^[a-z0-9_-]+$" (toString $team)) -}}
+{{- if not (and (kindIs "string" $team) (regexMatch "^[a-z0-9_-]+$" $team)) -}}
 {{- fail (printf "deployAlerts.defaultTeam must be a team name like \"infra\", got %q" (toString $team)) -}}
 {{- end -}}
 {{- $team -}}

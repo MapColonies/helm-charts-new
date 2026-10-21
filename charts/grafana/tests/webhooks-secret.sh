@@ -30,6 +30,7 @@ out=$(render)
 out=$(render --set grafana.alertingReceiverType=slack --set 'grafana.alertingTeamsWebhooks[0].team=infra')
 grep -q 'name: grafana-webhooks-external' <<<"$out" || fail "default envFrom must include grafana-webhooks-external"
 grep -q 'name: "\?grafana-webhooks"\?$' <<<"$out" || fail "default envFrom must keep grafana-webhooks"
+[ "$(grep -c 'optional: true' <<<"$out")" -ge 2 ] || fail "both envFrom Secrets must be optional"
 
 out=$(render --set grafana.alertingReceiverType=slack \
   --set 'grafana.alertingTeamsWebhooks[0].team=infra' \
