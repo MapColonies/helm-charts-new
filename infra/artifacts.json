@@ -1,0 +1,7 @@
+{
+  "helm": {
+    "acrarolibotnonprod.azurecr.io": {
+      "infra/jenkins": "5.0.17"
+    }
+  }
+}
