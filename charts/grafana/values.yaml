@@ -56,16 +56,16 @@ grafana:
   #
   # Preferred: keep URLs out of values. List only the team and create the Secret yourself,
   # outside the chart, with one key per team:
-  #   kubectl create secret generic grafana-webhooks -n <ns> \
+  #   kubectl create secret generic grafana-webhooks-external -n <ns> \
   #     --from-literal=INFRA_WEBHOOK='<webhook url>' --from-literal=RASTER_WEBHOOK='<webhook url>'
   #   alertingTeamsWebhooks:
   #     - team: "infra"
-  # The Secret is loaded through envFromSecrets (default name: grafana-webhooks, optional). For
-  # another name, override envFromSecrets with that name. The chart creates no Secret when no
-  # team sets `url`, so an external Secret named grafana-webhooks does not collide.
+  # The Secret is loaded through envFromSecrets (default name: grafana-webhooks-external,
+  # optional). For another name, override envFromSecrets. Do not name it grafana-webhooks: that
+  # is the Secret the chart creates for inline urls (below), and a Secret that Helm did not
+  # create under that name makes install, upgrade and rollback fail on ownership metadata.
   #
-  # Legacy: set `url` inline. The chart then creates Secret grafana-webhooks itself
-  # (do not also create one with that name):
+  # Legacy: set `url` inline. The chart then creates Secret grafana-webhooks itself:
   #   - team: "infra"
   #     url: "https://example.com/webhook"
   alertingTeamsWebhooks: []
@@ -77,7 +77,9 @@ grafana:
   alertingReceiverType: ""
 
   envFromSecrets:
-    - name: grafana-webhooks
+    - name: grafana-webhooks          # created by the chart, only when a team sets `url`
+      optional: true
+    - name: grafana-webhooks-external # created by you (see above)
       optional: true
 
   grafana.ini:

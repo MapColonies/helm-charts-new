@@ -16,7 +16,7 @@ out=$(render --set grafana.alertingReceiverType=slack \
 grep -q 'INFRA_WEBHOOK: "https://example.invalid/hook"' <<<"$out" || fail "inline url: key missing"
 
 # 2. Teams without url (webhooks come from an external Secret): chart must not create
-#    a Secret, so an external Secret with any name (incl. grafana-webhooks) does not collide.
+#    a Secret, so the external Secret (grafana-webhooks-external) does not collide.
 out=$(render --set grafana.alertingReceiverType=slack \
   --set 'grafana.alertingTeamsWebhooks[0].team=infra')
 [ "$(secret_count "$out")" = 0 ] || fail "no url: chart must not create a Secret"
@@ -26,7 +26,11 @@ grep -q 'INFRA_WEBHOOK' <<<"$out" || fail "no url: contact point must still refe
 out=$(render)
 [ "$(secret_count "$out")" = 0 ] || fail "no teams: chart must not create a Secret"
 
-# 4. Custom external Secret name is wired into the pod env.
+# 4. Both Secrets are optional envFrom entries by default; a custom name replaces the list.
+out=$(render --set grafana.alertingReceiverType=slack --set 'grafana.alertingTeamsWebhooks[0].team=infra')
+grep -q 'name: grafana-webhooks-external' <<<"$out" || fail "default envFrom must include grafana-webhooks-external"
+grep -q 'name: "\?grafana-webhooks"\?$' <<<"$out" || fail "default envFrom must keep grafana-webhooks"
+
 out=$(render --set grafana.alertingReceiverType=slack \
   --set 'grafana.alertingTeamsWebhooks[0].team=infra' \
   --set 'grafana.envFromSecrets[0].name=my-webhooks')
