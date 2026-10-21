@@ -19,8 +19,8 @@ blackbox:
   customExporter:
     enabled: false
     port: 9115
-    # Exporter Service name. Empty: <release>-<chart>-blackbox, or <release>-blackbox when the
-    # release name contains the chart name. Must be the same value the blackbox-exporter subchart sees.
+    # Exporter Service name. Empty: <release>-<chart>-blackbox. At most 63 characters.
+    # Must be the same value the blackbox-exporter subchart sees.
     fullnameOverride: ""
   alerts:
     enabled: false

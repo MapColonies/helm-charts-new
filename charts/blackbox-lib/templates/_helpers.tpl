@@ -29,19 +29,17 @@ Usage: include "blackbox-lib.config" $ | fromYaml
 
 {{/*
 Name of the custom exporter Service deployed by the blackbox-exporter subchart: <release>-<app chart>-blackbox,
-or <release>-blackbox when the release name already contains the chart name. Unique per app, also when an
-umbrella release holds several apps. Must match blackbox-exporter.fullname.
+unique per app, also when an umbrella release holds several apps. Not truncated, so two long names cannot
+collide: longer than 63 characters fails the render. Must match blackbox-exporter.fullname.
 Usage: include "blackbox-lib.exporterName" $  (the app chart's root context)
 */}}
 {{- define "blackbox-lib.exporterName" -}}
 {{- $cfg := include "blackbox-lib.config" . | fromYaml -}}
-{{- if $cfg.customExporter.fullnameOverride -}}
-{{- $cfg.customExporter.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else if contains .Chart.Name .Release.Name -}}
-{{- printf "%s-blackbox" .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s-blackbox" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" -}}
+{{- $name := $cfg.customExporter.fullnameOverride | default (printf "%s-%s-blackbox" .Release.Name .Chart.Name) -}}
+{{- if gt (len $name) 63 -}}
+  {{- fail (printf "blackbox: exporter name %q is longer than 63 characters; set blackbox.customExporter.fullnameOverride" $name) -}}
 {{- end -}}
+{{- $name -}}
 {{- end }}
 
 {{/*

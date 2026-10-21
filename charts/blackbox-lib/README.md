@@ -44,7 +44,7 @@ Service's address itself.
 | `blackbox.target.port` | `""` | Port number to probe on a multi-port Service. Empty: every port of the Service is probed. |
 | `blackbox.customExporter.enabled` | `false` | Probe through the chart's own exporter (`blackbox-exporter` subchart) instead of the central one. |
 | `blackbox.customExporter.port` | `9115` | Port of the custom exporter Service. |
-| `blackbox.customExporter.fullnameOverride` | `""` | Name of the custom exporter Service. Empty: `<release>-<chart>-blackbox`, or `<release>-blackbox` when the release name contains the chart name. |
+| `blackbox.customExporter.fullnameOverride` | `""` | Name of the custom exporter Service. Empty: `<release>-<chart>-blackbox`. Names longer than 63 characters fail the render instead of being cut, so two apps can never end up with the same name; set an override then. |
 | `blackbox.alerts.enabled` | `false` | Reserved for the Grafana alert rules. |
 
 Example, probe `/liveness` on the Service through the central exporter:

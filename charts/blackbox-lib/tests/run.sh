@@ -44,12 +44,13 @@ for values in failures/*/*.yaml; do
   fi
 done
 
-# A release named after the chart does not repeat the chart name in the exporter name.
+# The exporter name always holds release and chart name, also when the release name contains the chart name
+# (no shortening: it made e.g. mapproxy and mapproxy-api in release raster-mapproxy-api collide).
 exporter=$(helm template spec consumers/spec -n team-dev --set blackbox.enabled=true \
   --set blackbox.customExporter.enabled=true --set blackbox.module=m \
   --show-only templates/service.yaml | sed -n 's/.*prometheus.io\/probe-exporter: "\(.*\)"/\1/p')
-if [[ $exporter == "spec-blackbox.team-dev.svc:9115" ]]; then
-  echo "ok   release named after the chart gives <release>-blackbox"
+if [[ $exporter == "spec-spec-blackbox.team-dev.svc:9115" ]]; then
+  echo "ok   release named after the chart gives <release>-<chart>-blackbox"
 else
   echo "FAIL release named after the chart: got probe-exporter '$exporter'"
   failed=1
