@@ -8,8 +8,7 @@ customExporter:
   enabled: false
   # Service port. blackbox-lib uses the same default for prometheus.io/probe-exporter.
   port: 9115
-  # Resource name. Empty: <release>-<app chart>-blackbox, or <release>-blackbox when the release name
-  # contains the app chart name. blackbox-lib reads the same key.
+  # Resource name. Empty: <release>-<app chart>-blackbox. At most 63 characters. blackbox-lib reads the same key.
   fullnameOverride: ""
   timeout: 5s
   rules:

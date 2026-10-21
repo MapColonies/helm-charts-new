@@ -11,18 +11,17 @@ Empty when this chart is rendered on its own.
 {{- end }}
 
 {{/*
-Service and resource name: <release>-<app chart>-blackbox, or <release>-blackbox when the release name already
-contains the app chart name. Must match blackbox-lib.exporterName, which builds prometheus.io/probe-exporter.
+Service and resource name: <release>-<app chart>-blackbox (<release>-blackbox when rendered on its own).
+Must match blackbox-lib.exporterName, which builds prometheus.io/probe-exporter; tests/naming.sh checks that.
+Not truncated, so two long names cannot collide: longer than 63 characters fails the render.
 */}}
 {{- define "blackbox-exporter.fullname" -}}
 {{- $app := include "blackbox-exporter.appName" . -}}
-{{- if .Values.customExporter.fullnameOverride -}}
-{{- .Values.customExporter.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else if or (not $app) (contains $app .Release.Name) -}}
-{{- printf "%s-blackbox" .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s-blackbox" .Release.Name $app | trunc 63 | trimSuffix "-" -}}
+{{- $name := .Values.customExporter.fullnameOverride | default (ternary (printf "%s-%s-blackbox" .Release.Name $app) (printf "%s-blackbox" .Release.Name) (not (empty $app))) -}}
+{{- if gt (len $name) 63 -}}
+  {{- fail (printf "blackbox: exporter name %q is longer than 63 characters; set blackbox.customExporter.fullnameOverride" $name) -}}
 {{- end -}}
+{{- $name -}}
 {{- end }}
 
 {{/*
@@ -49,7 +48,7 @@ Pod labels: common labels, mclabels defaults from global.mclabels, then customEx
 {{- with $global.environment }}{{ $_ := set $labels "mapcolonies.io/environment" . }}{{ end }}
 {{- with $global.owner }}{{ $_ := set $labels "mapcolonies.io/owner" . }}{{ end }}
 {{- include "blackbox-exporter.labels" . }}
-{{ toYaml (mergeOverwrite $labels .Values.customExporter.podLabels) }}
+{{ toYaml (mergeOverwrite $labels (.Values.customExporter.podLabels | default dict)) }}
 {{- end }}
 
 {{- define "blackbox-exporter.image" -}}
@@ -80,13 +79,19 @@ Probe scheme, same rule as blackbox-lib: target.scheme, else https when target.h
 {{- if not (regexMatch "^[A-Za-z0-9_-]+$" .Values.module) -}}
   {{- fail (printf "blackbox.module may only contain letters, digits, \"_\" and \"-\", got %q" .Values.module) -}}
 {{- end -}}
+{{- if not (regexMatch "^([0-9]+(ms|s|m|h))+$" (toString $ce.timeout)) -}}
+  {{- fail (printf "blackbox.customExporter.timeout must be a duration like 5s or 500ms, got %q" (toString $ce.timeout)) -}}
+{{- end -}}
 {{- $rules := $ce.rules | default dict -}}
 {{- with $rules.validStatusCodes -}}
   {{- if not (kindIs "slice" .) -}}
     {{- fail "blackbox.customExporter.rules.validStatusCodes must be a list of HTTP status codes" -}}
   {{- end -}}
   {{- range . -}}
-    {{- if or (not (or (kindIs "float64" .) (kindIs "int64" .) (kindIs "int" .))) (lt (float64 .) 100.0) (gt (float64 .) 599.0) -}}
+    {{- if not (or (kindIs "float64" .) (kindIs "int64" .) (kindIs "int" .)) -}}
+      {{- fail (printf "blackbox.customExporter.rules.validStatusCodes must be numbers, got %q" (toString .)) -}}
+    {{- end -}}
+    {{- if or (lt (float64 .) 100.0) (gt (float64 .) 599.0) -}}
       {{- fail (printf "blackbox.customExporter.rules.validStatusCodes: %v is not an HTTP status code (100-599)" .) -}}
     {{- end -}}
   {{- end -}}
@@ -99,6 +104,9 @@ Probe scheme, same rule as blackbox-lib: target.scheme, else https when target.h
     {{- if not (kindIs "string" .) -}}
       {{- fail (printf "blackbox.customExporter.rules.bodyRegexMatch: %v is not a string" .) -}}
     {{- end -}}
+    {{- /* Same Go regexp package as the exporter: an invalid or unsupported regex (e.g. a lookahead) fails here
+           instead of crash-looping the exporter after the upgrade. */ -}}
+    {{- $_ := mustRegexMatch . "" -}}
   {{- end -}}
 {{- end -}}
 {{- with $rules.headers -}}

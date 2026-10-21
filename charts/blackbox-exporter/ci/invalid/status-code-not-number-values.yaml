@@ -1,0 +1,6 @@
+# expect-error: blackbox.customExporter.rules.validStatusCodes must be numbers, got "200"
+module: m
+customExporter:
+  enabled: true
+  rules:
+    validStatusCodes: ["200"]
