@@ -13,6 +13,12 @@ policies:
           - alert_team = {{ .team | quote }}
         receiver: {{ printf "%s-alerts" .team | quote }}
         routes:
+          # Alerts that must not send resolved messages: one notification per alert.
+          - matchers:
+              - notify_resolved = "false"
+            receiver: {{ printf "%s-alerts-no-resolve" .team | quote }}
+            group_by: ['...']
+            repeat_interval: 12h
           - matchers:
               - severity =~ "warning|info"
             repeat_interval: 12h # Quieter notifications for non-critical alerts

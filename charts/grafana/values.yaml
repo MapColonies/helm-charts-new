@@ -46,12 +46,30 @@ grafana:
       searchNamespace: null
 
   # Alerting Teams Webhooks
-  # This is a list of teams and their corresponding webhook URLs for Grafana alerting.
-  # Example:
-  # alertingTeamsWebhooks:
+  # List of teams that get a contact point `<team>-alerts` (receiver type: alertingReceiverType).
+  # Each contact point reads its webhook URL from the env var `<TEAM>_WEBHOOK` (team upper-cased, `-` as `_`).
+  # A team starting with a digit gets a `TEAM_` prefix, e.g. `3d` -> `TEAM_3D_WEBHOOK`, since env var
+  # names cannot start with a digit. Team names may only contain a-z, 0-9, - and _ (else render fails).
+  # Every team also gets `<team>-alerts-no-resolve`: same webhook, no "resolved" messages. The
+  # notification policy sends alerts labelled `notify_resolved="false"` there (one notification
+  # per alert); all other alerts keep `<team>-alerts` and their resolved messages.
+  #
+  # Preferred: keep URLs out of values. List only the team and create the Secret yourself,
+  # outside the chart, with one key per team:
+  #   kubectl create secret generic grafana-webhooks-external -n <ns> \
+  #     --from-literal=INFRA_WEBHOOK='<webhook url>' --from-literal=RASTER_WEBHOOK='<webhook url>'
+  #   alertingTeamsWebhooks:
+  #     - team: "infra"
+  # The Secret is loaded through envFromSecrets (default name: grafana-webhooks-external,
+  # optional). Helm replaces lists, so an override of envFromSecrets must keep the
+  # grafana-webhooks entry if any team sets an inline `url`. Do not name it grafana-webhooks: that
+  # is the Secret the chart creates for inline urls (below), and a Secret that Helm did not
+  # create under that name makes install, upgrade and rollback fail on ownership metadata.
+  #
+  # Legacy: set `url` inline. The chart then creates Secret grafana-webhooks itself:
   #   - team: "infra"
-  #     url: "https://hooks.slack.com/services/T00000000/B000
-  alertingTeamsWebhooks: {}
+  #     url: "https://example.com/webhook"
+  alertingTeamsWebhooks: []
 
   # Alerting Receiver Type
   # This is the type of receiver to use for Grafana alerting.
@@ -60,7 +78,9 @@ grafana:
   alertingReceiverType: ""
 
   envFromSecrets:
-    - name: grafana-webhooks
+    - name: grafana-webhooks          # created by the chart, only when a team sets `url`
+      optional: true
+    - name: grafana-webhooks-external # created by you (see above)
       optional: true
 
   grafana.ini:

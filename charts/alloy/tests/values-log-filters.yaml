@@ -1,0 +1,13 @@
+namespaces:
+  - infra-dev
+  - gatekeeper-system
+logFilters:
+  - namespace: gatekeeper-system
+    keep:
+      - '"event_type":\s*"violation"'
+      - '"constraint_name":\s*"workload-[^"]*"'
+  - namespace: infra-dev
+    drop:
+      - 'healthcheck'
+  - drop:
+      - 'noisy'

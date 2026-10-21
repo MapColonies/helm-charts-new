@@ -1,0 +1,41 @@
+{{- /* See templates/_deploy-alerts.tpl for how the rules are built. */}}
+{{- if .Values.deployAlerts.enabled }}
+{{- $scopeRegex := include "gatekeeper-constraints.deployAlertScopeRegex" . }}
+{{- $defaultTeam := include "gatekeeper-constraints.deployAlertDefaultTeam" . }}
+{{- $entries := include "gatekeeper-constraints.deployAlertEntries" . | fromYamlArray }}
+{{- $base := .Files.Get "files/alerts/gatekeeper-deploy.yaml" | replace "__NAMESPACE_REGEX__" $scopeRegex }}
+{{- $rules := list }}
+{{- $earlier := list }}{{- /* namespace regexes of the entries before this one */}}
+{{- range $i, $e := $entries }}
+{{- $mine := include "gatekeeper-constraints.nsRegex" $e.namespace }}
+{{- if $e.team }}
+{{- $filters := include "gatekeeper-constraints.deployAlertNsFilter" (dict "op" "=~" "regex" $mine) }}
+{{- if $earlier }}{{ $filters = print $filters (include "gatekeeper-constraints.deployAlertNsFilter" (dict "op" "!~" "regex" (join "|" $earlier))) }}{{ end }}
+{{- $rules = append $rules (include "gatekeeper-constraints.deployAlertRule" (dict "base" $base "filters" $filters "uid" (printf "gk-deploy-%s-%d" $e.team $i) "title" (printf "WorkloadPolicyViolationOnDeploy-%s-%d" $e.team $i) "team" $e.team)) }}
+{{- end }}
+{{- $earlier = append $earlier $mine }}
+{{- end }}
+{{- /* Namespaces no entry matches go to the default team. */}}
+{{- $filters := "" }}
+{{- if $earlier }}{{ $filters = include "gatekeeper-constraints.deployAlertNsFilter" (dict "op" "!~" "regex" (join "|" $earlier)) }}{{ end }}
+{{- $rules = append $rules (include "gatekeeper-constraints.deployAlertRule" (dict "base" $base "filters" $filters "uid" "gk-deploy-violation" "title" "WorkloadPolicyViolationOnDeploy" "team" $defaultTeam)) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-deploy-alerts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    mapcolonies.io/grafana-alerts: "true"
+data:
+  gatekeeper-deploy.yaml: |
+    apiVersion: 1
+    groups:
+      - orgId: 1
+        name: gatekeeper_deploy
+        folder: Gatekeeper
+        interval: 1m
+        rules:
+{{- range $rules }}
+{{ . | indent 10 }}
+{{- end }}
+{{- end }}
