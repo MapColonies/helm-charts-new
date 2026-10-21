@@ -1,61 +1,24 @@
+{{- /* See templates/_deploy-alerts.tpl for how the rules are built. */}}
 {{- if .Values.deployAlerts.enabled }}
-{{- $wp := .Values.workloadPolicies }}
-{{- $scope := $wp.warnNamespaces | default list }}
-{{- $teams := .Values.namespaceTeams | default list }}
-{{- if .Values.deployAlerts.includeEnforcedNamespaces }}
-{{- $scope = concat $scope ($wp.enforcedNamespaces | default list) }}
-{{- end }}
-{{- if not $scope }}
-{{- fail "deployAlerts needs at least one namespace: set workloadPolicies.warnNamespaces (or enforcedNamespaces with deployAlerts.includeEnforcedNamespaces)" }}
-{{- end }}
-{{- $teamRe := "^[a-z0-9_-]+$" }}
-{{- $defaultTeam := .Values.deployAlerts.defaultTeam }}
-{{- if not (regexMatch $teamRe (toString $defaultTeam)) }}
-{{- fail (printf "deployAlerts.defaultTeam must be a team name like \"infra\", got %q" (toString $defaultTeam)) }}
-{{- end }}
-{{- /* Namespace globs (* and ?) become a Loki regex; Loki anchors label regexes. */}}
-{{- $parts := list }}
-{{- range $scope }}
-{{- $parts = append $parts (include "gatekeeper-constraints.nsRegex" .) }}
-{{- end }}
-{{- $scopeRegex := printf "(%s)" (join "|" $parts) }}
-{{- /* Mapping entries, validated. Exact namespaces come before globs so they win; among
-       globs the first listed wins. Each entry later excludes the entries before it. */}}
-{{- $entries := list }}
-{{- range $i, $e := $teams }}
-{{- if not (regexMatch "^[a-z0-9*?-]+$" (toString $e.namespace)) }}
-{{- fail (printf "namespaceTeams[%d].namespace %q must only contain a-z, 0-9, -, * and ?" $i (toString $e.namespace)) }}
-{{- end }}
-{{- if or (and $e.team $e.silence) (not (or $e.team $e.silence)) }}
-{{- fail (printf "namespaceTeams[%d]: set either team or silence: true" $i) }}
-{{- end }}
-{{- if and $e.team (not (regexMatch $teamRe (toString $e.team))) }}
-{{- fail (printf "namespaceTeams[%d].team must be a team name like \"raster\", got %q" $i (toString $e.team)) }}
-{{- end }}
-{{- end }}
-{{- $exact := list }}
-{{- $globs := list }}
-{{- range $e := $teams }}
-{{- if or (contains "*" $e.namespace) (contains "?" $e.namespace) }}{{ $globs = append $globs $e }}{{ else }}{{ $exact = append $exact $e }}{{ end }}
-{{- end }}
-{{- $ordered := concat $exact $globs }}
-{{- $q := "\\\"" }}
+{{- $scopeRegex := include "gatekeeper-constraints.deployAlertScopeRegex" . }}
+{{- $defaultTeam := include "gatekeeper-constraints.deployAlertDefaultTeam" . }}
+{{- $entries := include "gatekeeper-constraints.deployAlertEntries" . | fromYamlArray }}
 {{- $base := .Files.Get "files/alerts/gatekeeper-deploy.yaml" | replace "__NAMESPACE_REGEX__" $scopeRegex }}
 {{- $rules := list }}
-{{- $seen := list }}
-{{- range $i, $e := $ordered }}
-{{- $mine := printf "(%s)" (include "gatekeeper-constraints.nsRegex" $e.namespace) }}
+{{- $earlier := list }}{{- /* namespace regexes of the entries before this one */}}
+{{- range $i, $e := $entries }}
+{{- $mine := include "gatekeeper-constraints.nsRegex" $e.namespace }}
 {{- if $e.team }}
-{{- $filters := printf " | resource_namespace=~%s%s%s" $q $mine $q }}
-{{- if $seen }}{{ $filters = printf "%s | resource_namespace!~%s(%s)%s" $filters $q (join "|" $seen) $q }}{{ end }}
-{{- $rules = append $rules ($base | replace "__ENTRY_FILTERS__" $filters | replace "__UID__" (printf "gk-deploy-%s-%d" $e.team $i) | replace "__TITLE__" (printf "WorkloadPolicyViolationOnDeploy-%s-%d" $e.team $i) | replace "__TEAM__" $e.team) }}
+{{- $filters := include "gatekeeper-constraints.deployAlertNsFilter" (dict "op" "=~" "regex" $mine) }}
+{{- if $earlier }}{{ $filters = print $filters (include "gatekeeper-constraints.deployAlertNsFilter" (dict "op" "!~" "regex" (join "|" $earlier))) }}{{ end }}
+{{- $rules = append $rules (include "gatekeeper-constraints.deployAlertRule" (dict "base" $base "filters" $filters "uid" (printf "gk-deploy-%s-%d" $e.team $i) "title" (printf "WorkloadPolicyViolationOnDeploy-%s-%d" $e.team $i) "team" $e.team)) }}
 {{- end }}
-{{- $seen = append $seen (include "gatekeeper-constraints.nsRegex" $e.namespace) }}
+{{- $earlier = append $earlier $mine }}
 {{- end }}
 {{- /* Namespaces no entry matches go to the default team. */}}
 {{- $filters := "" }}
-{{- if $seen }}{{ $filters = printf " | resource_namespace!~%s(%s)%s" $q (join "|" $seen) $q }}{{ end }}
-{{- $rules = append $rules ($base | replace "__ENTRY_FILTERS__" $filters | replace "__UID__" "gk-deploy-violation" | replace "__TITLE__" "WorkloadPolicyViolationOnDeploy" | replace "__TEAM__" $defaultTeam) }}
+{{- if $earlier }}{{ $filters = include "gatekeeper-constraints.deployAlertNsFilter" (dict "op" "!~" "regex" (join "|" $earlier)) }}{{ end }}
+{{- $rules = append $rules (include "gatekeeper-constraints.deployAlertRule" (dict "base" $base "filters" $filters "uid" "gk-deploy-violation" "title" "WorkloadPolicyViolationOnDeploy" "team" $defaultTeam)) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
