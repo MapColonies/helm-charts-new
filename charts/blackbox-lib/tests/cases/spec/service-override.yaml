@@ -1,7 +1,0 @@
-# blackbox.serviceName/servicePort override .Values.service
-blackbox:
-  enabled: true
-  serviceName: infra-loki-gateway
-  servicePort: 80
-  target:
-    path: /

@@ -1,5 +1,0 @@
-# expect-error: blackbox: Service name is unknown
-service:
-  name: ""
-blackbox:
-  enabled: true

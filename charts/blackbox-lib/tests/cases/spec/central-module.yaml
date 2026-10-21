@@ -1,0 +1,4 @@
+# module on the central exporter, without a custom exporter: probe-module only
+blackbox:
+  enabled: true
+  module: http_2xx

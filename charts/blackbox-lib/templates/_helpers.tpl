@@ -3,8 +3,7 @@ Defaults for the `blackbox:` values block. Keep in sync with values.yaml.
 */}}
 {{- define "blackbox-lib.defaults" -}}
 enabled: false
-serviceName: ""
-servicePort: ""
+module: ""
 target:
   host: ""
   scheme: ""
@@ -12,7 +11,6 @@ target:
   port: ""
 customExporter:
   enabled: false
-  moduleName: ""
   port: 9115
   fullnameOverride: ""
 alerts:
@@ -48,43 +46,16 @@ Usage: include "blackbox-lib.exporterName" $  (the app chart's root context)
 
 {{/*
 Prometheus probe annotations for the application's Service. Prints nothing when blackbox.enabled is false.
+Prometheus probes the Service's own discovered address unless blackbox.target.host is set.
 
-Usage, chart with .Values.service.name/.port:
+Usage:
   annotations:
     {{- include "blackbox-lib.serviceAnnotations" . | nindent 4 }}
-
-Usage, chart that computes the Service name/port:
-  annotations:
-    {{- include "blackbox-lib.serviceAnnotations" (dict "ctx" . "name" (include "my-chart.fullname" .) "port" .Values.server.port) | nindent 4 }}
 */}}
 {{- define "blackbox-lib.serviceAnnotations" -}}
-{{- $ctx := . -}}
-{{- $name := "" -}}
-{{- $port := "" -}}
-{{- if hasKey . "ctx" -}}
-  {{- $ctx = .ctx -}}
-  {{- $name = .name | default "" -}}
-  {{- $port = .port | default "" -}}
-{{- else if .Values.service -}}
-  {{- $name = .Values.service.name | default "" -}}
-  {{- $port = .Values.service.port | default "" -}}
-{{- end -}}
-{{- $cfg := include "blackbox-lib.config" $ctx | fromYaml -}}
+{{- $cfg := include "blackbox-lib.config" . | fromYaml -}}
 {{- if $cfg.enabled -}}
-  {{- $name = $cfg.serviceName | default $name -}}
-  {{- $port = $cfg.servicePort | default $port -}}
   {{- $target := $cfg.target -}}
-  {{- $host := $target.host -}}
-  {{- if not $host -}}
-    {{- if not $name -}}
-      {{- fail "blackbox: Service name is unknown. Set service.name, blackbox.serviceName, or pass \"name\" to blackbox-lib.serviceAnnotations (or set blackbox.target.host)" -}}
-    {{- end -}}
-    {{- $probePort := $target.port | default $port -}}
-    {{- if not $probePort -}}
-      {{- fail "blackbox: Service port is unknown. Set service.port, blackbox.servicePort or blackbox.target.port, or pass \"port\" to blackbox-lib.serviceAnnotations" -}}
-    {{- end -}}
-    {{- $host = printf "%s.%s.svc:%v" $name $ctx.Release.Namespace $probePort -}}
-  {{- end -}}
   {{- $scheme := $target.scheme | default (ternary "https" "http" (not (empty $target.host))) -}}
   {{- if not (has $scheme (list "http" "https")) -}}
     {{- fail (printf "blackbox.target.scheme must be \"http\" or \"https\", got %q" $scheme) -}}
@@ -92,16 +63,30 @@ Usage, chart that computes the Service name/port:
   {{- if not (hasPrefix "/" $target.path) -}}
     {{- fail (printf "blackbox.target.path must start with \"/\", got %q" $target.path) -}}
   {{- end -}}
+  {{- $port := toString $target.port -}}
+  {{- if and $target.port (not (regexMatch "^[1-9][0-9]{0,4}$" $port)) -}}
+    {{- fail (printf "blackbox.target.port must be a port number, got %q" $port) -}}
+  {{- end -}}
+  {{- if and $cfg.module (not (regexMatch "^[A-Za-z0-9_-]+$" $cfg.module)) -}}
+    {{- fail (printf "blackbox.module may only contain letters, digits, \"_\" and \"-\", got %q" $cfg.module) -}}
+  {{- end -}}
+  {{- if and $cfg.customExporter.enabled (not $cfg.module) -}}
+    {{- fail "blackbox.module is required when blackbox.customExporter.enabled is true" -}}
+  {{- end -}}
 prometheus.io/probe: "true"
-prometheus.io/probe-host: {{ $host | quote }}
+  {{- with $target.host }}
+prometheus.io/probe-host: {{ . | quote }}
+  {{- end }}
 prometheus.io/probe-scheme: {{ $scheme | quote }}
 prometheus.io/probe-path: {{ $target.path | quote }}
+  {{- if $target.port }}
+prometheus.io/probe-port: {{ $port | quote }}
+  {{- end }}
+  {{- with $cfg.module }}
+prometheus.io/probe-module: {{ . | quote }}
+  {{- end }}
   {{- if $cfg.customExporter.enabled }}
-    {{- if not $cfg.customExporter.moduleName -}}
-      {{- fail "blackbox.customExporter.moduleName is required when blackbox.customExporter.enabled is true" -}}
-    {{- end }}
-prometheus.io/probe-exporter: {{ printf "%s.%s.svc:%v" (include "blackbox-lib.exporterName" $ctx) $ctx.Release.Namespace $cfg.customExporter.port | quote }}
-prometheus.io/probe-module: {{ $cfg.customExporter.moduleName | quote }}
+prometheus.io/probe-exporter: {{ printf "%s.%s.svc:%v" (include "blackbox-lib.exporterName" $) $.Release.Namespace $cfg.customExporter.port | quote }}
   {{- end }}
 {{- end -}}
 {{- end }}

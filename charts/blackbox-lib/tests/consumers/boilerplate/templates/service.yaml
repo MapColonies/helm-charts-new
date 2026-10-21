@@ -13,7 +13,7 @@ metadata:
     release: {{ $releaseName }}
     {{- include "ts-server-boilerplate.labels" . | nindent 4 }}
   annotations:
-    {{- include "blackbox-lib.serviceAnnotations" (dict "ctx" . "name" (include "ts-server-boilerplate.fullname" .) "port" .Values.server.port) | nindent 4 }}
+    {{- include "blackbox-lib.serviceAnnotations" . | nindent 4 }}
 spec:
   {{- if eq $cloudProviderFlavor "minikube" }}
   type: NodePort

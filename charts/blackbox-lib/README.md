@@ -19,47 +19,35 @@ dependencies:
 ```
 <!-- x-release-please-end-version -->
 
-Call the helper in the `metadata` of the chart's own Service template. Use the form that matches the chart.
-
-Chart with `.Values.service.name` and `.Values.service.port`:
+Call the helper in the `metadata` of the chart's own Service template:
 
 ```yaml
 metadata:
-  name: {{ .Values.service.name }}
+  name: {{ include "my-chart.fullname" . }}
   annotations:
     {{- include "blackbox-lib.serviceAnnotations" . | nindent 4 }}
 ```
 
-Chart that computes the Service name and port, such as charts built from `ts-server-boilerplate`:
-
-```yaml
-metadata:
-  name: {{ include "ts-server-boilerplate.fullname" . }}
-  annotations:
-    {{- include "blackbox-lib.serviceAnnotations" (dict "ctx" . "name" (include "ts-server-boilerplate.fullname" .) "port" .Values.server.port) | nindent 4 }}
-```
-
-Both forms read the `blackbox:` block from the chart's values. With `blackbox.enabled: false` the helper
-prints nothing and `annotations:` stays empty.
+It reads the `blackbox:` block from the chart's values. With `blackbox.enabled: false` it prints nothing and
+`annotations:` stays empty. The helper needs neither the Service name nor its port: Prometheus discovers the
+Service's address itself.
 
 ## Values
 
 | Key | Default | Description |
 | --- | --- | --- |
 | `blackbox.enabled` | `false` | Add the probe annotations. |
-| `blackbox.serviceName` | `""` | Service name for the internal address. Overrides `.Values.service.name` and the `name` argument. |
-| `blackbox.servicePort` | `""` | Service port. Overrides `.Values.service.port` and the `port` argument. |
-| `blackbox.target.host` | `""` | Empty: probe `<service>.<namespace>.svc:<port>`. Set: probe this host, for example the OpenShift Route host. No port is added. |
+| `blackbox.module` | `""` | Probe module. Empty: `http_2xx` on the central exporter. On the central exporter only allowlisted modules are used (today `http_2xx`); others fall back to `http_2xx`. Required with `customExporter.enabled`: the name of the module the `blackbox-exporter` subchart generates. Letters, digits, `_` and `-`. |
+| `blackbox.target.host` | `""` | Empty: probe the Service's own address `<service>.<namespace>.svc:<port>`. Set: probe this host, for example the OpenShift Route host. No port is added. |
 | `blackbox.target.scheme` | `""` | `http` or `https`. Empty: `https` when `target.host` is set, otherwise `http`. |
 | `blackbox.target.path` | `/liveness` | Path to probe. Must start with `/`. |
-| `blackbox.target.port` | `""` | Port for the internal address. Empty: the Service port. |
+| `blackbox.target.port` | `""` | Port number to probe on a multi-port Service. Empty: every port of the Service is probed. |
 | `blackbox.customExporter.enabled` | `false` | Probe through the chart's own exporter (`blackbox-exporter` subchart) instead of the central one. |
-| `blackbox.customExporter.moduleName` | `""` | Exporter module to use. Required when `customExporter.enabled` is true. |
 | `blackbox.customExporter.port` | `9115` | Port of the custom exporter Service. |
 | `blackbox.customExporter.fullnameOverride` | `""` | Name of the custom exporter Service. Empty: `<release>-<chart>-blackbox`, or `<release>-blackbox` when the release name contains the chart name. |
 | `blackbox.alerts.enabled` | `false` | Reserved for the Grafana alert rules. |
 
-Example, internal probe of `/liveness` through the central exporter:
+Example, probe `/liveness` on the Service through the central exporter:
 
 ```yaml
 blackbox:
@@ -84,47 +72,33 @@ Invalid values fail the render with a message that names the key, for example
 | Annotation | Value |
 | --- | --- |
 | `prometheus.io/probe` | `"true"` |
-| `prometheus.io/probe-host` | `target.host`, or `<service>.<namespace>.svc:<port>` |
+| `prometheus.io/probe-host` | `target.host`, only when set |
 | `prometheus.io/probe-scheme` | `http` or `https` |
 | `prometheus.io/probe-path` | `target.path` |
+| `prometheus.io/probe-port` | `target.port`, only when set |
+| `prometheus.io/probe-module` | `module`, only when set |
 | `prometheus.io/probe-exporter` | `<exporter name>.<namespace>.svc:<customExporter.port>`, only with `customExporter.enabled`. The exporter name includes the app chart name, so several apps in one umbrella release each get their own exporter. |
-| `prometheus.io/probe-module` | `customExporter.moduleName`, only with `customExporter.enabled` |
 
-The probe is `GET <exporter>/probe?module=<module>&target=<scheme>://<probe-host><probe-path>`, and its
-metrics carry the `service` and `namespace` labels of the annotated Service.
+The probe is `GET <exporter>/probe?module=<module>&target=<scheme>://<host><probe-path>`, where `<host>` is
+`probe-host` or the Service's discovered `<service>.<namespace>.svc:<port>`. Its metrics carry the `service` and
+`namespace` labels of the annotated Service.
 
 ## Wrapper charts
 
 Charts that wrap an upstream chart (for example `charts/loki` and `charts/grafana`) do not template the
 Service themselves, and a values file cannot call a template. Put the annotations into the upstream chart's
 service annotations value instead. Prometheus only reads the annotations; it does not matter how they were set.
+Since the Service address is discovered, the annotations do not depend on the Service name or namespace:
 
-1. Render the annotation set once with the helper, from any chart that depends on `blackbox-lib`
-   (here the test consumer in this repository):
-
-   ```bash
-   make -C charts/blackbox-lib deps
-   helm template x charts/blackbox-lib/tests/consumers/spec -n infra-dev --show-only templates/service.yaml \
-     --set blackbox.enabled=true \
-     --set blackbox.serviceName=infra-loki-gateway \
-     --set blackbox.servicePort=80 \
-     --set blackbox.target.path=/
-   ```
-
-2. Copy the `annotations` into the upstream value:
-
-   ```yaml
-   loki:
-     gateway:
-       service:
-         annotations:
-           prometheus.io/probe: "true"
-           prometheus.io/probe-host: "infra-loki-gateway.infra-dev.svc:80"
-           prometheus.io/probe-scheme: "http"
-           prometheus.io/probe-path: "/"
-   ```
-
-   Update the copy when the target changes, for example when the Service moves to another namespace.
+```yaml
+loki:
+  gateway:
+    service:
+      annotations:
+        prometheus.io/probe: "true"
+        prometheus.io/probe-scheme: "http"
+        prometheus.io/probe-path: "/"
+```
 
 Tested keys (rendered with the real dev values; only the annotations of that Service change):
 
@@ -143,8 +117,8 @@ make -C charts/blackbox-lib test     # render the test consumers and compare wit
 make -C charts/blackbox-lib update   # rewrite tests/expected after an intended change; review the diff
 ```
 
-- `tests/consumers/spec`: a minimal chart that uses `.Values.service.*`.
-- `tests/consumers/boilerplate`: a copy of `ts-server-boilerplate/helm` that uses the explicit form.
+- `tests/consumers/spec`: a minimal chart with its own Service template.
+- `tests/consumers/boilerplate`: a copy of `ts-server-boilerplate/helm` with the helper in `templates/service.yaml`.
   `mclabels` is replaced by a stub because its registry is not reachable from PR checks.
 - `tests/cases/<consumer>/*.yaml`: values for each case; the rendered Service must match `tests/expected`.
 - `tests/failures/<consumer>/*.yaml`: invalid values; rendering must fail with the error in the first line
