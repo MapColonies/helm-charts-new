@@ -32,13 +32,36 @@ prometheus:
         - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_probe]
           action: keep
           regex: "true"
+        # Discovery yields one target per Service port. probe-port (a port number) keeps only that port;
+        # without it every port is probed.
+        - source_labels: [__meta_kubernetes_service_port_number]
+          target_label: __tmp_probe_port
+        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_probe_port]
+          regex: (.+)
+          target_label: __tmp_probe_port
+        - source_labels: [__meta_kubernetes_service_port_number]
+          action: keepequal
+          target_label: __tmp_probe_port
+        # Host: the discovered <service>.<namespace>.svc:<port>, or probe-host (e.g. an external Route host).
+        - source_labels: [__address__]
+          target_label: __tmp_probe_host
         - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_probe_host]
-          action: keep
-          regex: .+
+          regex: (.+)
+          target_label: __tmp_probe_host
         - target_label: __param_module
           replacement: http_2xx
         - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_probe_module]
           regex: (.+)
+          target_label: __param_module
+        # On the central exporter only allowlisted modules may be chosen; anything else falls back to http_2xx.
+        # http_2xx_headers is not allowlisted: it sends a shared secret header to the target.
+        - target_label: __tmp_central_module
+          replacement: http_2xx
+        - source_labels: [__param_module]
+          regex: (http_2xx)
+          target_label: __tmp_central_module
+        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_probe_exporter, __tmp_central_module]
+          regex: ;(.+)
           target_label: __param_module
         - target_label: __tmp_probe_scheme
           replacement: http
@@ -48,7 +71,7 @@ prometheus:
         # probe-path must be empty or start with "/"; otherwise no target is set and the scrape fails (up == 0).
         - source_labels:
             - __tmp_probe_scheme
-            - __meta_kubernetes_service_annotation_prometheus_io_probe_host
+            - __tmp_probe_host
             - __meta_kubernetes_service_annotation_prometheus_io_probe_path
           regex: (.+);(.+);(/.*)?
           replacement: $1://$2$3
@@ -64,6 +87,9 @@ prometheus:
           target_label: namespace
         - source_labels: [__meta_kubernetes_service_name]
           target_label: service
+        # Remove the helper labels, so the ports of a Service with probe-host collapse into one target.
+        - action: labeldrop
+          regex: __tmp_.*
 
 
   commonMetaLabels:
