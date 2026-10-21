@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/MapColonies/helm-charts-new/compare/gatekeeper-constraints-v1.1.0...gatekeeper-constraints-v1.2.0) (2026-10-21)
+
+
+### 🎉 Features
+
+* **alloy,grafana,gatekeeper-constraints:** deploy-time alerts for gatekeeper workload policy warnings ([#163](https://github.com/MapColonies/helm-charts-new/issues/163)) ([74247ba](https://github.com/MapColonies/helm-charts-new/commit/74247bac14c9066cbf913a51acf6d66d8c4d4ee7))
+
 ## [1.1.0](https://github.com/MapColonies/helm-charts-new/compare/gatekeeper-constraints-v1.0.0...gatekeeper-constraints-v1.1.0) (2026-10-14)
 
 
