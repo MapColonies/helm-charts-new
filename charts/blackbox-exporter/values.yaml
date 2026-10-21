@@ -1,0 +1,48 @@
+# Consumed as a subchart with `alias: blackbox`, so these keys sit under the team's `blackbox:` block.
+
+# Name of the generated module (blackbox.module, shared with blackbox-lib, which sets it as
+# prometheus.io/probe-module). Required when customExporter.enabled is true.
+module: ""
+
+customExporter:
+  enabled: false
+  # Service port. blackbox-lib uses the same default for prometheus.io/probe-exporter.
+  port: 9115
+  # Resource name. Empty: <release>-<app chart>-blackbox, or <release>-blackbox when the release name
+  # contains the app chart name. blackbox-lib reads the same key.
+  fullnameOverride: ""
+  timeout: 5s
+  rules:
+    # Empty: any 2xx.
+    validStatusCodes: []
+    # Every regex must match the response body.
+    bodyRegexMatch: []
+    # Sent with every probe. Stored in plain text in a ConfigMap: never put secrets here.
+    headers: {}
+
+  image:
+    # Empty: global.cloudProvider.dockerRegistryUrl, then global.imageRegistry.
+    registry: ""
+    repository: infra/blackbox-exporter
+    tag: v0.28.0
+    pullPolicy: IfNotPresent
+  # Empty: global.cloudProvider.imagePullSecretName, then global.imagePullSecretName.
+  imagePullSecretName: ""
+
+  # Trust an extra CA from a Secret (e.g. the company CA). It is added to the system CAs, which stay trusted.
+  ca:
+    enabled: false
+    secretName: root-ca
+    key: ca.crt
+
+  # CPU limit is 4x the request (gatekeeper K8sWorkloadCpuRatio).
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+
+  # Extra Pod labels, e.g. mapcolonies.io/owner (required by gatekeeper K8sWorkloadMcLabels).
+  podLabels: {}
