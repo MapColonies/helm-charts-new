@@ -1,0 +1,5 @@
+# expect-error: blackbox\.alerts\.team is unknown: set mclabels\.owner
+blackbox:
+  enabled: true
+  alerts:
+    enabled: true

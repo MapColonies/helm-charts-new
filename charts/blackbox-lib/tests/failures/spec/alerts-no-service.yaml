@@ -1,0 +1,8 @@
+# expect-error: the "service" argument is empty
+service:
+  name: ""
+blackbox:
+  enabled: true
+  alerts:
+    enabled: true
+    team: raster

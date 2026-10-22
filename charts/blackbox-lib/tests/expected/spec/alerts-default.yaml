@@ -1,0 +1,70 @@
+---
+# Source: spec/templates/monitoring.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: t-spec-blackbox-alerts
+  namespace: team-dev
+  labels:
+    mapcolonies.io/grafana-alerts: "true"
+data:
+  blackbox-team-dev-payment-api.yaml: |
+    apiVersion: 1
+    deleteRules:
+    - orgId: 1
+      uid: bb-0274ca51680bfd6d40ce408125f0191f2e92e
+    - orgId: 1
+      uid: bb-68561f4b897fcfc71ccaf4466ba9a7361aedd
+    groups:
+    - folder: raster
+      interval: 1m
+      name: blackbox-team-dev-payment-api
+      orgId: 1
+      rules:
+      - annotations:
+          description: The Blackbox probe of {{ $labels.instance }} (service payment-api
+            in namespace team-dev) is failing.
+          summary: payment-api is down
+        condition: C
+        data:
+        - datasourceUid: prometheus
+          model:
+            datasource:
+              type: prometheus
+              uid: prometheus
+            expr: probe_success{job="blackbox-services",namespace="team-dev",service="payment-api"}
+            instant: true
+            intervalMs: 1000
+            maxDataPoints: 43200
+            refId: A
+          refId: A
+          relativeTimeRange:
+            from: 600
+            to: 0
+        - datasourceUid: __expr__
+          model:
+            conditions:
+            - evaluator:
+                params:
+                - 1
+                type: lt
+            datasource:
+              type: __expr__
+              uid: __expr__
+            expression: A
+            refId: C
+            type: threshold
+          refId: C
+          relativeTimeRange:
+            from: 600
+            to: 0
+        execErrState: KeepLast
+        for: 1m
+        labels:
+          alert_team: raster
+          namespace: team-dev
+          service: payment-api
+          severity: critical
+        noDataState: OK
+        title: payment-api (team-dev) is down
+        uid: bb-215d6e36b84a86b4760fc12f31c15c269ede1

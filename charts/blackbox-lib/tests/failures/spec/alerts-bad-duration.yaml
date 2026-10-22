@@ -1,0 +1,9 @@
+# expect-error: blackbox\.alerts\.rules\.downDuration must be a duration like 1m or 1h30m, got "5"
+blackbox:
+  enabled: true
+  alerts:
+    enabled: true
+    team: raster
+    rules:
+      availability:
+        downDuration: 5

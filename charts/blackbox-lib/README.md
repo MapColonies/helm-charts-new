@@ -14,7 +14,7 @@ A library chart only provides named templates: it renders nothing by itself and 
 # Chart.yaml
 dependencies:
   - name: blackbox-lib
-    version: "0.0.1"
+    version: "0.1.0"
     repository: oci://acrarolibotnonprod.azurecr.io/helm/common
 ```
 <!-- x-release-please-end-version -->
@@ -45,7 +45,7 @@ Service's address itself.
 | `blackbox.customExporter.enabled` | `false` | Probe through the chart's own exporter (`blackbox-exporter` subchart) instead of the central one. |
 | `blackbox.customExporter.port` | `9115` | Port of the custom exporter Service. |
 | `blackbox.customExporter.fullnameOverride` | `""` | Name of the custom exporter Service. Empty: `<release>-<chart>-blackbox`. Names longer than 63 characters fail the render instead of being cut, so two apps can never end up with the same name; set an override then. |
-| `blackbox.alerts.enabled` | `false` | Reserved for the Grafana alert rules. |
+| `blackbox.alerts.*` | | Grafana alert rules, see [Alerts](#alerts). |
 
 Example, probe `/liveness` on the Service through the central exporter:
 
@@ -109,6 +109,88 @@ Tested keys (rendered with the real dev values; only the annotations of that Ser
 
 For other wrapper charts, check the upstream chart's `values.yaml` for its service annotations key; it is not
 the same in every chart.
+
+## Alerts
+
+`blackbox-lib.grafanaAlertsConfigMap` renders Grafana alert rules for the app's probes into a ConfigMap labeled
+`mapcolonies.io/grafana-alerts: "true"`, which the central Grafana's alerts sidecar loads without a restart.
+Add it to a template of the chart, passing the Service name (the probe metrics carry it as the `service` label):
+
+```yaml
+# templates/monitoring.yaml
+{{- include "blackbox-lib.grafanaAlertsConfigMap" (dict "ctx" . "service" (include "my-chart.fullname" .)) }}
+```
+
+It renders nothing unless `blackbox.enabled` and `blackbox.alerts.enabled` are both true.
+
+```yaml
+blackbox:
+  enabled: true
+  alerts:
+    enabled: true
+    rules:
+      availability:            # on by default
+        downDuration: 2m
+      latency:
+        enabled: true
+        maxSeconds: 0.5
+      sslExpiry:
+        enabled: true
+        warningDays: 21
+```
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `blackbox.alerts.enabled` | `false` | Render the alert rules. |
+| `blackbox.alerts.team` | `mclabels.owner` | Team the alerts go to (`alert_team` label). Defaults to the chart's `mclabels.owner`, then `global.mclabels.owner`; the render fails if none is set. |
+| `blackbox.alerts.folder` | the team | Grafana folder of the rules. |
+| `blackbox.alerts.interval` | `1m` | Evaluation interval of the rule group. |
+| `blackbox.alerts.datasourceUid` | `prometheus` | Grafana data source UID of the Prometheus that scrapes the probes. |
+| `blackbox.alerts.extraLabels` | `{}` | Labels added to every rule. `service`, `namespace`, `alert_team` and `severity` are reserved. |
+| `blackbox.alerts.extraAnnotations` | `{}` | Annotations added to every rule, for example `summary_he`. They do not replace `summary` and `description`. |
+| `blackbox.alerts.rules.availability` | on | The probe fails for `downDuration` (`1m`). With `customExporter.enabled` it also fires when the team's exporter cannot run the probe at all (`up == 0`). An outage of the central exporter does not page app teams; infra alerts on that. `severity`: `critical`. `enabled: false` turns it off. |
+| `blackbox.alerts.rules.latency` | off | `probe_duration_seconds > maxSeconds` (`1`) for `forDuration` (`5m`), while the probe succeeds (a failing probe is the availability alert, so one outage gives one alert). `severity`: `warning`. |
+| `blackbox.alerts.rules.sslExpiry` | off | Certificate expires in less than `warningDays` (`21`) days, for `forDuration` (`1h`). `severity`: `warning`. HTTPS targets only. |
+
+Severities are `critical`, `warning` or `info`; durations look like `1m` or `1h30m`. `maxSeconds` and
+`warningDays` also accept numeric strings, so `--set blackbox.alerts.rules.latency.maxSeconds=0.5` works.
+
+Each rule queries only the app's own probes, `{namespace="<release namespace>", service="<service>"}`, and is
+labeled `alert_team`, `severity`, `service` and `namespace`. Rule UIDs are `bb-` plus a hash of namespace, service
+and rule (40 characters). `noDataState` is `OK`, so a new or removed probe does not alert; `execErrState` is
+`KeepLast`, so a failing Prometheus query keeps the last state instead of raising a `DatasourceError` for every
+team (Prometheus health is infra's to alert on).
+
+### Turning rules off and removing alerts
+
+Grafana keeps a provisioned rule when it only disappears from the file (and dev/prod Grafana store rules in
+Postgres, so they stay). The helper therefore lists every disabled rule under `deleteRules`, by its UID, and still
+renders the ConfigMap when all rules are disabled. Deleting a UID that does not exist is a no-op.
+
+**To remove an app's alerts, first deploy with all rules disabled**, so Grafana deletes them, and only then remove
+`blackbox.alerts`, the alerts template or the app itself:
+
+```yaml
+blackbox:
+  alerts:
+    enabled: true
+    rules:
+      availability:
+        enabled: false   # latency and sslExpiry are off by default
+```
+
+### Routing
+
+Grafana routes on `alert_team`: every team in the Grafana chart's `alertingTeamsWebhooks` gets a contact point
+`<team>-alerts` and a route `alert_team = <team>` (`warning` and `info` repeat every 12h instead of 4h). A team
+without an entry there falls back to the default receiver `infra-alerts`, so add a webhook for the team in the
+Grafana values to get its own channel.
+
+### Onboarding a namespace
+
+The alerts sidecar only reads ConfigMaps from the namespaces in the Grafana chart's
+`grafana.sidecar.alerts.searchNamespace`, and each of them gets a Role and RoleBinding for Grafana. Add the team's
+namespace there (site-values, `infra/grafana/<env>`) before its rules can load.
 
 ## Tests
 

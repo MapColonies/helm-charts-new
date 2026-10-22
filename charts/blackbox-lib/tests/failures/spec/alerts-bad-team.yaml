@@ -1,0 +1,6 @@
+# expect-error: blackbox\.alerts\.team must be lowercase
+blackbox:
+  enabled: true
+  alerts:
+    enabled: true
+    team: Raster Team
