@@ -1,0 +1,6 @@
+# alerts with defaults: availability only, critical, 1m
+blackbox:
+  enabled: true
+  alerts:
+    enabled: true
+    team: raster

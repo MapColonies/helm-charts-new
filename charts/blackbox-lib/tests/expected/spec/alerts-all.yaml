@@ -1,0 +1,168 @@
+---
+# Source: spec/templates/monitoring.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: t-spec-blackbox-alerts
+  namespace: team-dev
+  labels:
+    mapcolonies.io/grafana-alerts: "true"
+data:
+  blackbox-team-dev-payment-api.yaml: |
+    apiVersion: 1
+    groups:
+    - folder: Raster probes
+      interval: 1m
+      name: blackbox-team-dev-payment-api
+      orgId: 1
+      rules:
+      - annotations:
+          description: The Blackbox probe of {{ $labels.instance }} (service payment-api
+            in namespace team-dev) is failing.
+          summary: payment-api is down
+          summary_he: השירות לא זמין
+        condition: C
+        data:
+        - datasourceUid: prometheus
+          model:
+            datasource:
+              type: prometheus
+              uid: prometheus
+            expr: probe_success{job="blackbox-services",namespace="team-dev",service="payment-api"}
+            instant: true
+            intervalMs: 1000
+            maxDataPoints: 43200
+            refId: A
+          refId: A
+          relativeTimeRange:
+            from: 600
+            to: 0
+        - datasourceUid: __expr__
+          model:
+            conditions:
+            - evaluator:
+                params:
+                - 1
+                type: lt
+            datasource:
+              type: __expr__
+              uid: __expr__
+            expression: A
+            refId: C
+            type: threshold
+          refId: C
+          relativeTimeRange:
+            from: 600
+            to: 0
+        execErrState: KeepLast
+        for: 2m
+        labels:
+          alert_team: raster
+          namespace: team-dev
+          process: payments
+          service: payment-api
+          severity: warning
+        noDataState: OK
+        title: payment-api (team-dev) is down
+        uid: bb-215d6e36b84a86b4760fc12f31c15c269ede1
+      - annotations:
+          description: The Blackbox probe of {{ $labels.instance }} (service payment-api
+            in namespace team-dev) takes longer than 0.5s.
+          summary: payment-api responds slowly
+          summary_he: השירות לא זמין
+        condition: C
+        data:
+        - datasourceUid: prometheus
+          model:
+            datasource:
+              type: prometheus
+              uid: prometheus
+            expr: probe_duration_seconds{job="blackbox-services",namespace="team-dev",service="payment-api"}
+              unless probe_success{job="blackbox-services",namespace="team-dev",service="payment-api"}
+              == 0
+            instant: true
+            intervalMs: 1000
+            maxDataPoints: 43200
+            refId: A
+          refId: A
+          relativeTimeRange:
+            from: 600
+            to: 0
+        - datasourceUid: __expr__
+          model:
+            conditions:
+            - evaluator:
+                params:
+                - 0.5
+                type: gt
+            datasource:
+              type: __expr__
+              uid: __expr__
+            expression: A
+            refId: C
+            type: threshold
+          refId: C
+          relativeTimeRange:
+            from: 600
+            to: 0
+        execErrState: KeepLast
+        for: 10m
+        labels:
+          alert_team: raster
+          namespace: team-dev
+          process: payments
+          service: payment-api
+          severity: info
+        noDataState: OK
+        title: payment-api (team-dev) is slow
+        uid: bb-0274ca51680bfd6d40ce408125f0191f2e92e
+      - annotations:
+          description: The TLS certificate of {{ $labels.instance }} (service payment-api
+            in namespace team-dev) expires in less than 30 days.
+          summary: The certificate of payment-api expires soon
+          summary_he: השירות לא זמין
+        condition: C
+        data:
+        - datasourceUid: prometheus
+          model:
+            datasource:
+              type: prometheus
+              uid: prometheus
+            expr: (probe_ssl_earliest_cert_expiry{job="blackbox-services",namespace="team-dev",service="payment-api"}
+              - time()) / 86400
+            instant: true
+            intervalMs: 1000
+            maxDataPoints: 43200
+            refId: A
+          refId: A
+          relativeTimeRange:
+            from: 600
+            to: 0
+        - datasourceUid: __expr__
+          model:
+            conditions:
+            - evaluator:
+                params:
+                - 30
+                type: lt
+            datasource:
+              type: __expr__
+              uid: __expr__
+            expression: A
+            refId: C
+            type: threshold
+          refId: C
+          relativeTimeRange:
+            from: 600
+            to: 0
+        execErrState: KeepLast
+        for: 1h
+        labels:
+          alert_team: raster
+          namespace: team-dev
+          process: payments
+          service: payment-api
+          severity: warning
+        noDataState: OK
+        title: payment-api (team-dev) certificate expires soon
+        uid: bb-68561f4b897fcfc71ccaf4466ba9a7361aedd

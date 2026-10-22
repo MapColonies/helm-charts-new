@@ -1,0 +1,8 @@
+# expect-error: blackbox\.alerts\.extraLabels\.severity is reserved
+blackbox:
+  enabled: true
+  alerts:
+    enabled: true
+    team: raster
+    extraLabels:
+      severity: low

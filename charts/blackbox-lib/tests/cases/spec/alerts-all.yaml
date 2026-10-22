@@ -1,0 +1,23 @@
+# every rule with custom thresholds, severities, folder and extra labels/annotations
+blackbox:
+  enabled: true
+  alerts:
+    enabled: true
+    team: raster
+    folder: Raster probes
+    extraLabels:
+      process: payments
+    extraAnnotations:
+      summary_he: השירות לא זמין
+    rules:
+      availability:
+        downDuration: 2m
+        severity: warning
+      latency:
+        enabled: true
+        maxSeconds: 0.5
+        forDuration: 10m
+        severity: info
+      sslExpiry:
+        enabled: true
+        warningDays: 30

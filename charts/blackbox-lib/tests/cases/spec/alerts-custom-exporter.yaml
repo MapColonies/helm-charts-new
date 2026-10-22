@@ -1,0 +1,9 @@
+# custom exporter: the availability rule also fires when the team exporter cannot run the probe (or up)
+blackbox:
+  enabled: true
+  module: payment_json_validation
+  customExporter:
+    enabled: true
+  alerts:
+    enabled: true
+    team: raster
