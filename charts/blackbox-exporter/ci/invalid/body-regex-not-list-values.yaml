@@ -1,0 +1,6 @@
+# expect-error: bodyRegexMatch must be a list
+module: m
+customExporter:
+  enabled: true
+  rules:
+    bodyRegexMatch: "HEALTHY"

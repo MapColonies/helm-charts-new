@@ -1,0 +1,14 @@
+---
+# Source: spec/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-api
+  annotations:
+    prometheus.io/probe: "true"
+    prometheus.io/probe-host: "payment.apps.example.com"
+    prometheus.io/probe-scheme: "https"
+    prometheus.io/probe-path: "/api/v1/health"
+spec:
+  ports:
+    - port: 8080

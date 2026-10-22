@@ -1,0 +1,4 @@
+# expect-error: blackbox\.module may only contain
+blackbox:
+  enabled: true
+  module: "my module"

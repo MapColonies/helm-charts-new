@@ -1,0 +1,13 @@
+# Test consumer: copy of MapColonies/ts-server-boilerplate helm/ (a04a414, 2026-09-15).
+# Changes: blackbox-lib dependency and annotations in templates/service.yaml, blackbox block in values.yaml,
+# mclabels replaced by templates/_mclabels-stub.tpl (its registry is not reachable from PR checks).
+apiVersion: v2
+name: ts-server-boilerplate
+description: A Helm chart for ts-server-boilerplate service
+type: application
+version: 1.0.0
+appVersion: 1.0.0
+dependencies:
+  - name: blackbox-lib
+    version: "*"  # always the local library, whatever its version
+    repository: file://../../..

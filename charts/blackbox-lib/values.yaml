@@ -1,0 +1,26 @@
+# Reference only: a library chart's values are not merged into the parent's `blackbox:` block.
+# The defaults that apply are defined in templates/_helpers.tpl ("blackbox-lib.defaults")
+# and are kept in sync with this file.
+blackbox:
+  enabled: false
+  # Probe module. Empty: http_2xx on the central exporter. On the central exporter only allowlisted
+  # modules are used (others fall back to http_2xx). Required with customExporter.enabled: it names the
+  # module the blackbox-exporter subchart generates.
+  module: ""
+  target:
+    # Empty: probe the Service's own address <service>.<namespace>.svc:<port>, as discovered by Prometheus.
+    # Set: probe this host (e.g. the OpenShift Route host); no port is added.
+    host: ""
+    # http | https. Empty: https when target.host is set, otherwise http.
+    scheme: ""
+    path: /liveness
+    # Port number to probe on a multi-port Service. Empty: every port of the Service.
+    port: ""
+  customExporter:
+    enabled: false
+    port: 9115
+    # Exporter Service name. Empty: <release>-<chart>-blackbox. At most 63 characters.
+    # Must be the same value the blackbox-exporter subchart sees.
+    fullnameOverride: ""
+  alerts:
+    enabled: false

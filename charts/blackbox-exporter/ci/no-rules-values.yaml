@@ -1,0 +1,4 @@
+# No rules: module accepts any 2xx.
+module: plain_http
+customExporter:
+  enabled: true

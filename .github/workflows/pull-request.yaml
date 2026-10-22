@@ -59,3 +59,51 @@ jobs:
       - name: Run chart tests
         if: steps.filter.outputs.chart == 'true'
         run: make -C charts/gatekeeper-constraints test
+
+  test_blackbox_lib:
+    name: Test blackbox-lib chart
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Check for blackbox-lib changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            chart:
+              - 'charts/blackbox-lib/**'
+
+      - name: Set up Helm
+        if: steps.filter.outputs.chart == 'true'
+        uses: azure/setup-helm@v4
+
+      - name: Run chart tests
+        if: steps.filter.outputs.chart == 'true'
+        run: make -C charts/blackbox-lib test
+
+  test_blackbox_exporter:
+    name: Test blackbox-exporter chart
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # The test renders both charts together, so a change to either one must run it.
+      - name: Check for blackbox-exporter or blackbox-lib changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            chart:
+              - 'charts/blackbox-exporter/**'
+              - 'charts/blackbox-lib/**'
+
+      - name: Set up Helm
+        if: steps.filter.outputs.chart == 'true'
+        uses: azure/setup-helm@v4
+
+      - name: Run chart tests
+        if: steps.filter.outputs.chart == 'true'
+        run: make -C charts/blackbox-exporter test

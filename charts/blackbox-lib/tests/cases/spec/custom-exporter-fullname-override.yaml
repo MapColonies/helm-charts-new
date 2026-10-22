@@ -1,0 +1,7 @@
+# custom exporter with an explicit exporter name
+blackbox:
+  enabled: true
+  module: payment_json_validation
+  customExporter:
+    enabled: true
+    fullnameOverride: payments-blackbox

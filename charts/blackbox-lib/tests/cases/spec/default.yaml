@@ -1,0 +1,3 @@
+# defaults: internal address, http, /liveness, central exporter
+blackbox:
+  enabled: true
