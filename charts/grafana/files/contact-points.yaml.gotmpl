@@ -19,6 +19,14 @@ contactPoints:
         type: {{ $.Values.grafana.alertingReceiverType }}
         settings:
           url: {{ printf "${%s}" (include "grafana.webhookEnv" .team) | quote }}
+          {{- /* Readable layout from files/notification-templates.yaml. Setting names differ per type. */}}
+          {{- if eq $.Values.grafana.alertingReceiverType "slack" }}
+          title: {{ `{{ template "no_resolve_notification.title" . }}` | quote }}
+          text: {{ `{{ template "no_resolve_notification.message" . }}` | quote }}
+          {{- else if eq $.Values.grafana.alertingReceiverType "teams" }}
+          title: {{ `{{ template "no_resolve_notification.title" . }}` | quote }}
+          message: {{ `{{ template "no_resolve_notification.message" . }}` | quote }}
+          {{- end }}
         disableResolveMessage: true
 {{- end }}
 {{- end }}
