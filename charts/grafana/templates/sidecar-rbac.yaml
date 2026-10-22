@@ -6,6 +6,8 @@ A sidecar without searchNamespace watches the release namespace. A sidecar with 
 cluster-wide RBAC from elsewhere, so it adds nothing here.
 */ -}}
 {{- $sidecar := .Values.grafana.sidecar }}
+{{- /* tpl context like the subchart's, where .Values is this chart's .Values.grafana */}}
+{{- $sub := dict "Values" .Values.grafana "Release" .Release "Chart" .Chart "Capabilities" .Capabilities "Template" .Template "Files" .Files }}
 {{- $watch := list }}
 {{- range $kind := list "alerts" "dashboards" "datasources" "notifiers" "plugins" }}
 {{- $cfg := get $sidecar $kind | default dict }}
@@ -14,11 +16,11 @@ cluster-wide RBAC from elsewhere, so it adds nothing here.
 {{- if not (has $resource (list "configmap" "secret" "both")) }}
 {{- fail (printf "grafana.sidecar.%s.resource: must be configmap, secret or both, got %q" $kind (toString $resource)) }}
 {{- end }}
-{{- $ns := include "grafana.sidecarNamespaces" (dict "value" $cfg.searchNamespace "root" $) | fromJsonArray }}
+{{- $ns := include "grafana.sidecarNamespaces" (dict "value" $cfg.searchNamespace "root" $sub) | fromJsonArray }}
 {{- $watch = append $watch (dict "resource" $resource "namespaces" ($ns | default (list $.Release.Namespace))) }}
 {{- end }}
 {{- end }}
-{{- range $ns := include "grafana.sidecarNamespaces" (dict "value" $sidecar.alerts.searchNamespace "root" $) | fromJsonArray }}
+{{- range $ns := include "grafana.sidecarNamespaces" (dict "value" $sidecar.alerts.searchNamespace "root" $sub) | fromJsonArray }}
 {{- if ne $ns "ALL" }}
 {{- $resources := list }}
 {{- range $watch }}

@@ -10,6 +10,8 @@ render() {
   helm template t . --namespace infra-dev --show-only templates/sidecar-rbac.yaml \
     --set 'grafana.sidecar.alerts.searchNamespace={infra-dev,gatekeeper-system}' "$@"
 }
+# render_ns <values file> [args]: like render, with searchNamespace from the file (--set would win)
+render_ns() { helm template t . --namespace infra-dev --show-only templates/sidecar-rbac.yaml -f "$@"; }
 # role <rendered> <namespace>: the resources list of the Role in that namespace
 role() { awk -v ns="$2" '/^kind:/{k=$2} k=="Role"&&$1=="namespace:"{n=$2} k=="Role"&&n==ns&&$1=="resources:"{sub(/^ *resources: /,"");print}' <<<"$1"; }
 
@@ -50,10 +52,14 @@ out=$(render --set grafana.sidecar.alerts.resource=configmap --set grafana.sidec
 [ "$(role "$out" gatekeeper-system)" = '["configmaps"]' ] || fail "notifiers does not watch gatekeeper-system"
 
 # 5. searchNamespace is read like the subchart reads it: tpl and comma-separated strings.
-out=$(render -f <(printf '%s\n' 'grafana:' '  sidecar:' '    alerts:' '      resource: configmap' \
+out=$(render_ns <(printf '%s\n' 'grafana:' '  sidecar:' '    alerts:' '      resource: configmap' \
   '      searchNamespace: ["{{ .Release.Namespace }}", gatekeeper-system]'))
 [ "$(role "$out" infra-dev)" = '["configmaps", "secrets"]' ] || fail "tpl namespace: infra-dev Role missing"
 [ "$(role "$out" gatekeeper-system)" = '["configmaps"]' ] || fail "tpl namespace: gatekeeper-system Role missing"
+# .Values in the template is the subchart's (grafana.*), as for the sidecar's NAMESPACE.
+out=$(render_ns <(printf '%s\n' 'grafana:' '  sidecar:' '    alerts:' \
+  '      resource: configmap' '      searchNamespace: ["{{ .Release.Namespace }}", "{{ .Values.alertsNs }}"]') --set grafana.alertsNs=gatekeeper-system)
+[ "$(role "$out" gatekeeper-system)" = '["configmaps"]' ] || fail "tpl .Values must resolve like in the subchart"
 out=$(render --set grafana.sidecar.alerts.resource=configmap \
   --set 'grafana.sidecar.alerts.searchNamespace=infra-dev\,gatekeeper-system')
 [ "$(grep -c '^kind: Role$' <<<"$out")" = 2 ] || fail "comma-separated string must give one Role per namespace"

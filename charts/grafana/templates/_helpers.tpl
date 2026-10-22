@@ -1,7 +1,8 @@
 {{/*
 Namespaces a sidecar watches, read like the subchart does: searchNamespace as a list or a
-comma-separated string, run through tpl. Returns a JSON array (empty when unset).
-  {{ include "grafana.sidecarNamespaces" (dict "value" .searchNamespace "root" $) | fromJsonArray }}
+comma-separated string, run through tpl with root (a context shaped like the subchart's).
+Returns a JSON array (empty when unset).
+  {{ include "grafana.sidecarNamespaces" (dict "value" .searchNamespace "root" $sub) | fromJsonArray }}
 */}}
 {{- define "grafana.sidecarNamespaces" -}}
 {{- $joined := tpl (join "," (.value | default list)) .root }}
