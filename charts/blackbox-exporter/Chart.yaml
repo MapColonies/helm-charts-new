@@ -1,8 +1,9 @@
 apiVersion: v2
 name: blackbox-exporter
-description: Team-local Blackbox exporter with one probe module generated from the blackbox values block
+description: Team-local Blackbox exporter with one probe module generated from
+  the blackbox values block
 type: application
-version: 0.0.1
+version: 0.1.0
 appVersion: v0.28.0
 annotations:
   domain: common
