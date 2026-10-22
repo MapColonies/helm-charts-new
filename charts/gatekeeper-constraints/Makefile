@@ -1,5 +1,5 @@
 # make test: render the chart with tests/values.yaml, then run tests/suites,
-# tests/gator-test, tests/render-failures and tests/deploy-alerts.sh.
+# tests/gator-test, tests/render-failures, tests/deploy-alerts.sh and tests/alloy-access.sh.
 # gator matches the wrapped Gatekeeper version; set GATOR to use your own binary.
 
 GATOR_VERSION ?= v3.22.0
@@ -18,6 +18,7 @@ test: render $(GATOR)
 	for case in tests/gator-test/*/; do GATOR=$(GATOR) tests/expect-gator-test.sh $$case || exit 1; done
 	for values in tests/render-failures/*.yaml; do tests/expect-render-failure.sh $$values || exit 1; done
 	tests/deploy-alerts.sh
+	tests/alloy-access.sh
 
 render:
 	ls charts/*.tgz > /dev/null 2>&1 || helm dependency build .

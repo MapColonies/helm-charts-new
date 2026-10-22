@@ -1,0 +1,3 @@
+# expect-error: alloyAccess\.serviceAccount\.namespace is required when alloyAccess\.enabled is true
+alloyAccess:
+  enabled: true

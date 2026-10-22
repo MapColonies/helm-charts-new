@@ -68,6 +68,15 @@ deployAlerts:
   # alert_team of namespaces that namespaceTeams does not mention.
   defaultTeam: infra
 
+# Read access for Alloy in this namespace (Role + RoleBinding), so it can tail the Gatekeeper
+# controller-manager logs that deployAlerts alerts on. Alloy's ServiceAccount lives in another
+# namespace and is not created by this chart. Off by default.
+alloyAccess:
+  enabled: false
+  serviceAccount:
+    name: alloy-kube-api
+    namespace: ""   # namespace of Alloy's ServiceAccount, e.g. infra-dev
+
 # Which team owns which namespace. Used by deployAlerts to set alert_team, and meant
 # to be shared with other consumers (e.g. the daily violation report). Entries:
 #   - namespace: raster-dev   # exact name or glob (* and ?)
