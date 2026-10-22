@@ -36,6 +36,10 @@ grafana:
       folderAnnotation: "mapcolonies.io/grafana-dashboards-folder"
       provider:
         foldersFromFilesStructure: true
+    # For each namespace in alerts.searchNamespace (except ALL), the chart creates Role
+    # grafana-reader for ServiceAccount monitoring. It grants configmaps and/or secrets according
+    # to `resource` (configmap, secret or both; default both) of every enabled sidecar watching
+    # that namespace. A sidecar without searchNamespace watches the release namespace.
     alerts:
       enabled: true
       label: "mapcolonies.io/grafana-alerts"
