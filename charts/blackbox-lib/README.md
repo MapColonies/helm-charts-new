@@ -148,16 +148,35 @@ blackbox:
 | `blackbox.alerts.datasourceUid` | `prometheus` | Grafana data source UID of the Prometheus that scrapes the probes. |
 | `blackbox.alerts.extraLabels` | `{}` | Labels added to every rule. `service`, `namespace`, `alert_team` and `severity` are reserved. |
 | `blackbox.alerts.extraAnnotations` | `{}` | Annotations added to every rule, for example `summary_he`. They do not replace `summary` and `description`. |
-| `blackbox.alerts.rules.availability` | on | `probe_success == 0` for `downDuration` (`1m`). `severity`: `critical`. `enabled: false` turns it off. |
-| `blackbox.alerts.rules.latency` | off | `probe_duration_seconds > maxSeconds` (`1`) for `forDuration` (`5m`). `severity`: `warning`. |
+| `blackbox.alerts.rules.availability` | on | The probe fails, or cannot run at all (`up == 0`, e.g. the custom exporter is down), for `downDuration` (`1m`). `severity`: `critical`. `enabled: false` turns it off. |
+| `blackbox.alerts.rules.latency` | off | `probe_duration_seconds > maxSeconds` (`1`) for `forDuration` (`5m`), while the probe succeeds (a failing probe is the availability alert, so one outage gives one alert). `severity`: `warning`. |
 | `blackbox.alerts.rules.sslExpiry` | off | Certificate expires in less than `warningDays` (`21`) days, for `forDuration` (`1h`). `severity`: `warning`. HTTPS targets only. |
 
-Severities are `critical`, `warning` or `info`; durations look like `1m` or `1h30m`.
+Severities are `critical`, `warning` or `info`; durations look like `1m` or `1h30m`. `maxSeconds` and
+`warningDays` also accept numeric strings, so `--set blackbox.alerts.rules.latency.maxSeconds=0.5` works.
 
 Each rule queries only the app's own probes, `{namespace="<release namespace>", service="<service>"}`, and is
 labeled `alert_team`, `severity`, `service` and `namespace`. Rule UIDs are `bb-` plus a hash of namespace, service
 and rule (40 characters). `noDataState` is `OK`, so a new or removed probe does not alert; `execErrState` is
 `Error`, as in the other platform rules.
+
+### Turning rules off and removing alerts
+
+Grafana keeps a provisioned rule when it only disappears from the file (and dev/prod Grafana store rules in
+Postgres, so they stay). The helper therefore lists every disabled rule under `deleteRules`, by its UID, and still
+renders the ConfigMap when all rules are disabled. Deleting a UID that does not exist is a no-op.
+
+**To remove an app's alerts, first deploy with all rules disabled**, so Grafana deletes them, and only then remove
+`blackbox.alerts`, the alerts template or the app itself:
+
+```yaml
+blackbox:
+  alerts:
+    enabled: true
+    rules:
+      availability:
+        enabled: false   # latency and sslExpiry are off by default
+```
 
 ### Routing
 

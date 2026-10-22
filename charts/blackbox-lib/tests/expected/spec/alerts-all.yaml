@@ -28,7 +28,8 @@ data:
             datasource:
               type: prometheus
               uid: prometheus
-            expr: probe_success{namespace="team-dev",service="payment-api"}
+            expr: probe_success{job="blackbox-services",namespace="team-dev",service="payment-api"}
+              or up{job="blackbox-services",namespace="team-dev",service="payment-api"}
             instant: true
             intervalMs: 1000
             maxDataPoints: 43200
@@ -77,7 +78,9 @@ data:
             datasource:
               type: prometheus
               uid: prometheus
-            expr: probe_duration_seconds{namespace="team-dev",service="payment-api"}
+            expr: probe_duration_seconds{job="blackbox-services",namespace="team-dev",service="payment-api"}
+              unless probe_success{job="blackbox-services",namespace="team-dev",service="payment-api"}
+              == 0
             instant: true
             intervalMs: 1000
             maxDataPoints: 43200
@@ -126,7 +129,7 @@ data:
             datasource:
               type: prometheus
               uid: prometheus
-            expr: (probe_ssl_earliest_cert_expiry{namespace="team-dev",service="payment-api"}
+            expr: (probe_ssl_earliest_cert_expiry{job="blackbox-services",namespace="team-dev",service="payment-api"}
               - time()) / 86400
             instant: true
             intervalMs: 1000

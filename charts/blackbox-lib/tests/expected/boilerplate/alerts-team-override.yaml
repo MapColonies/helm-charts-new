@@ -10,6 +10,11 @@ metadata:
 data:
   blackbox-team-dev-t-ts-server-boilerplate.yaml: |
     apiVersion: 1
+    deleteRules:
+    - orgId: 1
+      uid: bb-7642ed5c850ea066b80b7ed76f468c7f9246e
+    - orgId: 1
+      uid: bb-a84c00511dbf374d38bca063b59e1239e2779
     groups:
     - folder: raster
       interval: 1m
@@ -27,7 +32,8 @@ data:
             datasource:
               type: prometheus
               uid: prometheus
-            expr: probe_success{namespace="team-dev",service="t-ts-server-boilerplate"}
+            expr: probe_success{job="blackbox-services",namespace="team-dev",service="t-ts-server-boilerplate"}
+              or up{job="blackbox-services",namespace="team-dev",service="t-ts-server-boilerplate"}
             instant: true
             intervalMs: 1000
             maxDataPoints: 43200

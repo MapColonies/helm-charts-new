@@ -47,9 +47,9 @@ for values in failures/*/*.yaml; do
   fi
 done
 
-# Alerts render nothing unless blackbox.enabled and blackbox.alerts.enabled are both true, or with every rule off.
-for flags in "--set blackbox.enabled=true" "--set blackbox.alerts.enabled=true" \
-  "--set blackbox.enabled=true --set blackbox.alerts.enabled=true --set blackbox.alerts.team=raster --set blackbox.alerts.rules.availability.enabled=false"; do
+# Alerts render nothing unless blackbox.enabled and blackbox.alerts.enabled are both true. (With every rule off
+# they still render, with only deleteRules: see cases/spec/alerts-all-off.yaml.)
+for flags in "--set blackbox.enabled=true" "--set blackbox.alerts.enabled=true"; do
   # shellcheck disable=SC2086
   if ! output=$(render spec --set blackbox.alerts.team=raster $flags 2>&1); then
     echo "FAIL render failed with: $flags"
@@ -62,6 +62,17 @@ for flags in "--set blackbox.enabled=true" "--set blackbox.alerts.enabled=true" 
     echo "ok   no alerts with: $flags"
   fi
 done
+
+# helm --set passes decimals as strings (0.5 -> "0.5"); thresholds must accept them.
+if threshold=$(render spec -f cases/spec/alerts-default.yaml --set blackbox.alerts.rules.latency.enabled=true \
+    --set blackbox.alerts.rules.latency.maxSeconds=0.5 --show-only templates/monitoring.yaml 2>&1) &&
+   grep -q -- '- 0.5$' <<< "$threshold"; then
+  echo "ok   --set latency.maxSeconds=0.5 is accepted"
+else
+  echo "FAIL --set latency.maxSeconds=0.5:"
+  echo "$threshold" | tail -3
+  failed=1
+fi
 
 # The exporter name always holds release and chart name, also when the release name contains the chart name
 # (no shortening: it made e.g. mapproxy and mapproxy-api in release raster-mapproxy-api collide).

@@ -10,6 +10,11 @@ metadata:
 data:
   blackbox-team-dev-payment-api.yaml: |
     apiVersion: 1
+    deleteRules:
+    - orgId: 1
+      uid: bb-0274ca51680bfd6d40ce408125f0191f2e92e
+    - orgId: 1
+      uid: bb-68561f4b897fcfc71ccaf4466ba9a7361aedd
     groups:
     - folder: raster
       interval: 1m
@@ -27,7 +32,8 @@ data:
             datasource:
               type: prometheus
               uid: prometheus
-            expr: probe_success{namespace="team-dev",service="payment-api"}
+            expr: probe_success{job="blackbox-services",namespace="team-dev",service="payment-api"}
+              or up{job="blackbox-services",namespace="team-dev",service="payment-api"}
             instant: true
             intervalMs: 1000
             maxDataPoints: 43200

@@ -1,0 +1,8 @@
+# every rule off: only deleteRules, so Grafana removes rules that were provisioned before (no team needed)
+blackbox:
+  enabled: true
+  alerts:
+    enabled: true
+    rules:
+      availability:
+        enabled: false
