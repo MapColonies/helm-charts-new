@@ -18,7 +18,7 @@ Declare it with `alias: blackbox`, so it reads the same `blackbox:` block as `bl
 # Chart.yaml
 dependencies:
   - name: blackbox-exporter
-    version: "0.0.1"
+    version: "0.1.0"
     repository: oci://acrarolibotnonprod.azurecr.io/helm/common
     alias: blackbox
     condition: blackbox.customExporter.enabled
