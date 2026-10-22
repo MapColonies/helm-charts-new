@@ -148,7 +148,7 @@ blackbox:
 | `blackbox.alerts.datasourceUid` | `prometheus` | Grafana data source UID of the Prometheus that scrapes the probes. |
 | `blackbox.alerts.extraLabels` | `{}` | Labels added to every rule. `service`, `namespace`, `alert_team` and `severity` are reserved. |
 | `blackbox.alerts.extraAnnotations` | `{}` | Annotations added to every rule, for example `summary_he`. They do not replace `summary` and `description`. |
-| `blackbox.alerts.rules.availability` | on | The probe fails, or cannot run at all (`up == 0`, e.g. the custom exporter is down), for `downDuration` (`1m`). `severity`: `critical`. `enabled: false` turns it off. |
+| `blackbox.alerts.rules.availability` | on | The probe fails for `downDuration` (`1m`). With `customExporter.enabled` it also fires when the team's exporter cannot run the probe at all (`up == 0`). An outage of the central exporter does not page app teams; infra alerts on that. `severity`: `critical`. `enabled: false` turns it off. |
 | `blackbox.alerts.rules.latency` | off | `probe_duration_seconds > maxSeconds` (`1`) for `forDuration` (`5m`), while the probe succeeds (a failing probe is the availability alert, so one outage gives one alert). `severity`: `warning`. |
 | `blackbox.alerts.rules.sslExpiry` | off | Certificate expires in less than `warningDays` (`21`) days, for `forDuration` (`1h`). `severity`: `warning`. HTTPS targets only. |
 
@@ -158,7 +158,8 @@ Severities are `critical`, `warning` or `info`; durations look like `1m` or `1h3
 Each rule queries only the app's own probes, `{namespace="<release namespace>", service="<service>"}`, and is
 labeled `alert_team`, `severity`, `service` and `namespace`. Rule UIDs are `bb-` plus a hash of namespace, service
 and rule (40 characters). `noDataState` is `OK`, so a new or removed probe does not alert; `execErrState` is
-`Error`, as in the other platform rules.
+`KeepLast`, so a failing Prometheus query keeps the last state instead of raising a `DatasourceError` for every
+team (Prometheus health is infra's to alert on).
 
 ### Turning rules off and removing alerts
 

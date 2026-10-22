@@ -57,12 +57,17 @@ Usage: include "blackbox-lib.positiveNumber" (dict "value" $v "key" "latency.max
   {{- $out := list -}}
   {{- $deletes := list -}}
 
-  {{- /* availability: on unless rules.availability.enabled is false. "or up" also fires when the probe cannot run
-         at all (exporter down or unreachable): then there is no probe_success, only up == 0. */ -}}
+  {{- /* availability: on unless rules.availability.enabled is false. With the team's own exporter, "or up" also fires
+         when the probe cannot run at all (that exporter down or unreachable: no probe_success, only up == 0). Not with
+         the central exporter: its outage would page every team, and it is infra's to alert on. */ -}}
   {{- $r := $rules.availability | default dict -}}
   {{- if or (not (hasKey $r "enabled")) $r.enabled -}}
+    {{- $availability := printf "probe_success%s" $selector -}}
+    {{- if $cfg.customExporter.enabled -}}
+      {{- $availability = printf "probe_success%s or up%s" $selector $selector -}}
+    {{- end -}}
     {{- $out = append $out (dict "rule" "availability" "title" "is down" "for" ($r.downDuration | default "1m") "forKey" "downDuration"
-          "severity" ($r.severity | default "critical") "expr" (printf "probe_success%s or up%s" $selector $selector) "op" "lt" "threshold" 1
+          "severity" ($r.severity | default "critical") "expr" $availability "op" "lt" "threshold" 1
           "summary" (printf "%s is down" $service)
           "description" (printf "The Blackbox probe of {{ $labels.instance }} (service %s in namespace %s) is failing." $service $ns)) -}}
   {{- else -}}
@@ -124,7 +129,7 @@ Usage: include "blackbox-lib.positiveNumber" (dict "value" $v "key" "latency.max
             "uid" (get $uid .rule)
             "title" (printf "%s (%s) %s" $service $ns .title)
             "condition" "C" "data" (list $query $threshold)
-            "noDataState" "OK" "execErrState" "Error" "for" .for
+            "noDataState" "OK" "execErrState" "KeepLast" "for" .for
             "labels" $labels "annotations" $annotations) -}}
     {{- end -}}
   {{- /* A file with only deleteRules is still rendered, so turning rules off removes them from Grafana. */ -}}

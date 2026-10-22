@@ -33,7 +33,6 @@ data:
               type: prometheus
               uid: prometheus
             expr: probe_success{job="blackbox-services",namespace="team-dev",service="t-ts-server-boilerplate"}
-              or up{job="blackbox-services",namespace="team-dev",service="t-ts-server-boilerplate"}
             instant: true
             intervalMs: 1000
             maxDataPoints: 43200
@@ -59,7 +58,7 @@ data:
           relativeTimeRange:
             from: 600
             to: 0
-        execErrState: Error
+        execErrState: KeepLast
         for: 1m
         labels:
           alert_team: common
