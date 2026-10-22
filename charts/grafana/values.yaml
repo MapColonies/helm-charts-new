@@ -60,15 +60,24 @@ grafana:
   #     --from-literal=INFRA_WEBHOOK='<webhook url>' --from-literal=RASTER_WEBHOOK='<webhook url>'
   #   alertingTeamsWebhooks:
   #     - team: "infra"
-  # The Secret is loaded through envFromSecrets (default name: grafana-webhooks-external,
-  # optional). Helm replaces lists, so an override of envFromSecrets must keep the
-  # grafana-webhooks entry if any team sets an inline `url`. Do not name it grafana-webhooks: that
-  # is the Secret the chart creates for inline urls (below), and a Secret that Helm did not
-  # create under that name makes install, upgrade and rollback fail on ownership metadata.
+  # Each team's env var is read with secretKeyRef (optional: false) from alertingWebhooksSecret
+  # (below). Add the key before adding the team: helm install/upgrade fails while the Secret exists
+  # without it. If the key is still missing when the pod starts (e.g. the Secret did not exist
+  # yet), the new pod waits in CreateContainerConfigError ("couldn't find key <TEAM>_WEBHOOK in
+  # Secret ...") and the old pod keeps serving until its Grafana container restarts: it has
+  # already loaded the new contact points, which use the missing variable.
+  # Do not name the Secret grafana-webhooks: that is the Secret the chart creates for inline urls
+  # (below), and a Secret that Helm did not create under that name makes install, upgrade and
+  # rollback fail on ownership metadata.
+  # Upgrading from 1.2.0 with envFromSecrets set to a Secret of another name: set
+  # alertingWebhooksSecret to that name instead, envFromSecrets no longer loads the webhooks.
   #
-  # Legacy: set `url` inline. The chart then creates Secret grafana-webhooks itself:
+  # Legacy: set `url` inline. The chart then creates Secret grafana-webhooks itself and the
+  # team's env var reads it from there:
   #   - team: "infra"
   #     url: "https://example.com/webhook"
+  #
+  # An entry for the same env var name in envValueFrom or env takes precedence over the above.
   alertingTeamsWebhooks: []
 
   # Alerting Receiver Type
@@ -77,11 +86,8 @@ grafana:
   # alertingReceiverType: "slack"
   alertingReceiverType: ""
 
-  envFromSecrets:
-    - name: grafana-webhooks          # created by the chart, only when a team sets `url`
-      optional: true
-    - name: grafana-webhooks-external # created by you (see above)
-      optional: true
+  # Secret with the webhook keys of teams that do not set `url` (see alertingTeamsWebhooks).
+  alertingWebhooksSecret: grafana-webhooks-external
 
   grafana.ini:
     unified_alerting:
