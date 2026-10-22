@@ -23,6 +23,6 @@
     "charts/raster-serving": "1.1.1",
     "charts/raster-ingestion": "1.3.0",
     "charts/raster-export": "1.2.0",
-    "charts/blackbox-exporter": "0.1.0"
     "charts/blackbox-lib": "0.1.0",
+    "charts/blackbox-exporter": "0.1.0"
 }
