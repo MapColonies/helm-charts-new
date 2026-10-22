@@ -1,0 +1,7 @@
+# expect-error: headers.X-Retries must be a string
+module: m
+customExporter:
+  enabled: true
+  rules:
+    headers:
+      X-Retries: 3

@@ -1,0 +1,3 @@
+# expect-error: blackbox.module is required
+customExporter:
+  enabled: true

@@ -1,0 +1,6 @@
+# expect-error: validStatusCodes must be a list
+module: m
+customExporter:
+  enabled: true
+  rules:
+    validStatusCodes: 200

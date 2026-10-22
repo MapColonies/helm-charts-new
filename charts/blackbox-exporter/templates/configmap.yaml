@@ -1,0 +1,12 @@
+{{- if .Values.customExporter.enabled }}
+{{- include "blackbox-exporter.validate" . }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "blackbox-exporter.fullname" . }}
+  labels:
+    {{- include "blackbox-exporter.labels" . | nindent 4 }}
+data:
+  blackbox.yaml: |
+    {{- include "blackbox-exporter.config" . | nindent 4 }}
+{{- end }}

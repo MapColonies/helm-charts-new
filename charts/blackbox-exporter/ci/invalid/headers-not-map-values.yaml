@@ -1,0 +1,6 @@
+# expect-error: headers must be a map
+module: m
+customExporter:
+  enabled: true
+  rules:
+    headers: ["X-Probe-Client: blackbox"]
