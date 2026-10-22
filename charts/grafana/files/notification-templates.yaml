@@ -1,0 +1,28 @@
+apiVersion: 1
+templates:
+  - orgId: 1
+    name: no_resolve_notification
+    # Message layout for the <team>-alerts-no-resolve contact points (alerts labelled
+    # notify_resolved="false"). Not run through Helm tpl: the braces below are Grafana's.
+    # Title: the alert summary. Body, one block per alert: description, then every other
+    # annotation as "Name: value" (deployed_by -> "Deployed By: ..."). No label dump and no
+    # metrics values, which Grafana's default message adds. Two Gatekeeper phrases are cut from
+    # the description: the "denied admission" prefix (these alerts are warnings, the deploy went
+    # through) and the trailing "To exempt this workload..." sentence, which how_to_exempt repeats.
+    template: |
+      {{ define "no_resolve_notification.title" -}}
+      {{ with index .Alerts 0 }}{{ .Annotations.summary }}{{ end }}{{ if gt (len .Alerts) 1 }} (and others){{ end }}
+      {{- end }}
+
+      {{ define "no_resolve_notification.message" -}}
+      {{ range $i, $a := .Alerts -}}
+      {{ if $i }}
+      {{ end -}}
+      {{ $a.Annotations.description | reReplaceAll "^Gatekeeper denied admission: " "" | reReplaceAll " To exempt this workload.*$" "" }}
+      {{ range $a.Annotations.SortedPairs -}}
+      {{ if and (ne .Name "summary") (ne .Name "description") -}}
+      {{ .Name | reReplaceAll "_" " " | title }}: {{ .Value }}
+      {{ end -}}
+      {{ end -}}
+      {{ end -}}
+      {{- end }}
