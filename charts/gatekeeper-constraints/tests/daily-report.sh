@@ -61,9 +61,10 @@ cron='one("CronJob")["spec"]["jobTemplate"]["spec"]["template"]'
   || fail "a webhook env var has a literal value"
 grep -qi 'hooks.slack.com' <<<"$out" && fail "rendered output contains a Slack webhook URL"
 
-# 4. RBAC: get/list only, no Secrets, no pods/log, constraints of the configured kinds only
-[ "$(json "$out" 'sorted({v for r in one("ClusterRole")["rules"] for v in r["verbs"]})')" = '["get", "list"]' ] \
-  || fail "ClusterRole verbs must be get and list only"
+# 4. RBAC: list only (get on the report's ConstraintTemplates), no Secrets, no pods/log,
+# constraints of the configured kinds only
+[ "$(json "$out" '[r["verbs"] for r in one("ClusterRole")["rules"] if r["apiGroups"] != ["templates.gatekeeper.sh"]]')" = \
+  '[["list"], ["list"], ["list"]]' ] || fail "ClusterRole verbs must be list only (report.py lists collections)"
 [ "$(json "$out" 'sorted({x for r in one("ClusterRole")["rules"] for x in r["resources"]})')" = \
   '["constrainttemplates", "deployments", "k8sworkloadcpuratio", "k8sworkloadmclabels", "namespaces", "statefulsets"]' ] \
   || fail "ClusterRole resources must be the workloads, namespaces and the report's Gatekeeper kinds"
