@@ -53,6 +53,7 @@ CONTAINER_RE = re.compile(r' container "([^"]+)"')
 MCLABELS_RE = re.compile(r"mclabels are missing or invalid: (.*?)\. To exempt", re.S)
 PROBLEM_SPLIT_RE = re.compile(r"(?<=\)), ")
 URL_RE = re.compile(r"https?://\S+")
+INPUT_FILE_RE = re.compile(r"^[0-9]{6}\.json$")  # write_inputs() file names
 
 
 class ReportError(Exception):
@@ -329,8 +330,9 @@ def audit_fresh(status, now):
 def audit_check(constraints_by_kind, findings, now):
     """R6. Every Constraint with a fresh audit (< 2h) is checked on its own: gator count vs
     status.totalViolations. A Constraint without one is skipped (not an error), whatever
-    the list order. -> ({rule: {"gator": n, "audit": m[, "skipped": [names]]} | "skipped"},
-    [problem text]); "skipped" alone when no Constraint of the kind had a fresh audit."""
+    the list order, and named in the Pod log. -> ({rule: {"gator": n, "audit": m} | "skipped"},
+    [problem text]), the Loki contract's shapes: gator/audit cover the Constraints with a
+    fresh audit, and "skipped" means none of the kind had one."""
     counts = {}
     for f in findings:
         k = (f["constraintKind"], f["constraint"])
@@ -349,11 +351,9 @@ def audit_check(constraints_by_kind, findings, now):
             total["audit"] += audit
             if (gator == 0 and audit > 0) or abs(gator - audit) > max(5, audit // 10):
                 problems.append("audit check: %s gator %d vs audit %d" % (name, gator, audit))
-        if len(skipped) == len(constraints):
-            total = "skipped"
-        elif skipped:
-            total["skipped"] = skipped
-        check[rule_of(kind)] = total
+        if skipped:
+            log("audit check: %s: no fresh audit, not compared: %s" % (rule_of(kind), ", ".join(skipped)))
+        check[rule_of(kind)] = "skipped" if len(skipped) == len(constraints) else total
     return check, problems
 
 
@@ -487,8 +487,17 @@ def fetch(source, constraint_kinds):
 
 
 def write_inputs(directory, objects):
-    """One object per file (R4): gator reads JSON files, and a `kind: List` would be ignored."""
+    """One object per file (R4): gator reads JSON files, and a `kind: List` would be ignored.
+    gator reads every file in `directory`, so a reused --work must not feed it the last run's
+    objects: the files a previous run wrote are removed first, and any other file stops the run."""
     os.makedirs(directory, exist_ok=True)
+    for name in os.listdir(directory):
+        if INPUT_FILE_RE.match(name):
+            os.remove(os.path.join(directory, name))
+    others = sorted(os.listdir(directory))
+    if others:
+        raise ReportError("%s holds files report.py did not write (%s): use an empty --work"
+                          % (directory, ", ".join(others[:3])))
     for i, obj in enumerate(objects):
         with open(os.path.join(directory, "%06d.json" % i), "w") as f:
             json.dump(obj, f)
@@ -728,7 +737,8 @@ def main(argv=None, env=None, urlopen=urllib.request.urlopen):
     p.add_argument("--dry-run", action="store_true", help="log messages instead of posting (or DRY_RUN=true)")
     p.add_argument("--teams", required=True, help="teams.json rendered by the chart")
     p.add_argument("--gator", help="gator binary to use instead of downloading GATOR_URL")
-    p.add_argument("--work", default="/work", help="scratch directory (default /work)")
+    p.add_argument("--work", default="/work",
+                   help="scratch directory (default /work); gator reads <work>/in, which must hold only this script's files")
     args = p.parse_args(argv)
     cfg = env_config(env)
     cfg["dry_run"] = cfg["dry_run"] or args.dry_run

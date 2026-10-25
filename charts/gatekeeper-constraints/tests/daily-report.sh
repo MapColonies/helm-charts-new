@@ -67,6 +67,13 @@ grep -qi 'hooks.slack.com' <<<"$out" && fail "rendered output contains a Slack w
 [ "$(json "$out" 'sorted({x for r in one("ClusterRole")["rules"] for x in r["resources"]})')" = \
   '["constrainttemplates", "deployments", "k8sworkloadcpuratio", "k8sworkloadmclabels", "namespaces", "statefulsets"]' ] \
   || fail "ClusterRole resources must be the workloads, namespaces and the report's Gatekeeper kinds"
+# ConstraintTemplates: get on the report's kinds only (resourceNames), never every template
+templates_rule() {
+  json "$1" '[r for r in one("ClusterRole")["rules"] if r["apiGroups"] == ["templates.gatekeeper.sh"]]'
+}
+[ "$(templates_rule "$out")" = \
+  '[{"apiGroups": ["templates.gatekeeper.sh"], "resourceNames": ["k8sworkloadcpuratio", "k8sworkloadmclabels"], "resources": ["constrainttemplates"], "verbs": ["get"]}]' ] \
+  || fail "constrainttemplates must be get-only and limited to constraintKinds by resourceNames"
 
 # 5. the job Pod: CPU limit = 4x request, hardened, read-only root, python -I
 [ "$(json "$out" "[c['resources'] for c in $cron['spec']['containers']][0]['limits']['cpu']")" = 200m ] || fail "cpu limit"
@@ -136,6 +143,9 @@ out3=$(render "${on[@]}" --set dailyReport.dryRun=true --set dailyReport.postWhe
   '["other-secret"]' ] || fail "webhooksSecret must name every webhook secretKeyRef"
 [ "$(json "$out3" 'sorted({x for r in one("ClusterRole")["rules"] for x in r["resources"] + r.get("resourceNames", []) if x.startswith("k8s")})')" = \
   '["k8sworkloadcpuratio"]' ] || fail "ClusterRole must follow constraintKinds"
+[ "$(templates_rule "$out3")" = \
+  '[{"apiGroups": ["templates.gatekeeper.sh"], "resourceNames": ["k8sworkloadcpuratio"], "resources": ["constrainttemplates"], "verbs": ["get"]}]' ] \
+  || fail "constrainttemplates resourceNames must follow constraintKinds"
 # and every env var report.py reads is rendered
 python3 -I -c '
 import json, re, sys
@@ -179,7 +189,7 @@ assert m["A"]["model"]["expr"] == "sum(count_over_time({job=\"gatekeeper-workloa
 assert m["B"]["datasourceUid"] == "prometheus"
 assert m["B"]["model"]["expr"] == "(hour() >= bool 9) * (hour() < bool 16) * ((day_of_week() == bool 0) + (day_of_week() == bool 1) + (day_of_week() == bool 2) + (day_of_week() == bool 3) + (day_of_week() == bool 4))", m["B"]["model"]["expr"]
 assert (m["C"]["model"]["type"], m["C"]["model"]["expression"]) == ("math", "$A < 1 && $B > 0")
-assert rules["gk-daily-report-missing"]["execErrState"] == "Error" and rules["gk-daily-report-missing"]["noDataState"] == "Alerting"
+assert rules["gk-daily-report-missing"]["execErrState"] == "KeepLast" and rules["gk-daily-report-missing"]["noDataState"] == "Alerting"
 assert rules["gk-daily-report-missing"]["for"] == "15m"
 f = {d["refId"]: d for d in rules["gk-daily-report-failed"]["data"]}
 assert f["A"]["model"]["expr"] == "sum(count_over_time({job=\"gatekeeper-workload-report\", team=\"_run\"} | json | type=\"run\" | status!=\"ok\" [3h]))", f["A"]["model"]["expr"]

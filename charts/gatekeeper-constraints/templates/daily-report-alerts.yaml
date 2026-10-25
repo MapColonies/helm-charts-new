@@ -87,11 +87,12 @@ data:
                   intervalMs: 1000
                   maxDataPoints: 43200
                   refId: C
-            # No data means no run: alert. A query error (Loki or Prometheus down) skips the
-            # time gate in B, so it is not reported as a missing run: Grafana raises a
-            # DatasourceError alert with these labels instead (design-final §3).
+            # No data means no run: alert. A query error (Loki or Prometheus not ready yet when
+            # the stack starts at 04:00, or a transient error) keeps the last state: Error would
+            # raise a DatasourceError alert at once, past the B gate and `for`. A Loki that
+            # stays down at run time is reported by the run itself (a failed push is partial).
             noDataState: Alerting
-            execErrState: Error
+            execErrState: KeepLast
             for: 15m
             labels:
               severity: warning

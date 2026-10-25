@@ -22,6 +22,7 @@ import stat
 import tarfile
 import tempfile
 import unittest
+import unittest.mock
 import urllib.error
 import urllib.parse
 
@@ -86,17 +87,28 @@ class FakeResponse:
         return False
 
 
+def assert_finite_timeouts(test, timeouts):
+    """Every network call must set a timeout (R3: a hung post is a failed team, not a Pod
+    killed by activeDeadlineSeconds with no run line)."""
+    test.assertTrue(timeouts)
+    for t in timeouts:
+        test.assertTrue(t is not None and 0 < t <= 120, "network call without a finite timeout: %r" % (t,))
+
+
 class FakeUrlopen:
-    """Records requests. fail: {url substring: exception or FakeResponse} for that URL."""
+    """Records requests (and their timeouts). fail: {url substring: exception or FakeResponse}
+    for that URL."""
 
     def __init__(self, fail=None):
         self.fail = fail or {}
         self.calls = []
+        self.timeouts = []
 
     def __call__(self, req, timeout=None, context=None):
         url = req.full_url
         body = json.loads(req.data.decode()) if req.data else None
         self.calls.append((url, body))
+        self.timeouts.append(timeout)
         for key, outcome in self.fail.items():
             if key in url:
                 if isinstance(outcome, Exception):
@@ -200,6 +212,20 @@ class ProjectionTest(Base):
         self.assertEqual(sorted(names), ["workload-cpu-ratio-enforced", "workload-cpu-ratio-warn", "workload-mclabels-warn"])
         self.assertTrue(all(o["spec"]["enforcementAction"] == "warn" for o in objects if o["kind"].startswith("K8sWorkload")))
 
+    def test_a_reused_input_dir_holds_this_run_only(self):
+        objects, _, _ = report.fetch(report.FileSource(API), ["K8sWorkloadCpuRatio", "K8sWorkloadMcLabels"])
+        d = os.path.join(self.tmp, "in")
+        report.write_inputs(d, objects)
+        report.write_inputs(d, objects[:2])  # a rerun with the same --work and fewer objects
+        files = sorted(os.listdir(d))
+        self.assertEqual(files, ["000000.json", "000001.json"])
+        for name, obj in zip(files, objects):
+            with open(os.path.join(d, name)) as f:
+                self.assertEqual(json.load(f), obj)
+        open(os.path.join(d, "mine.yaml"), "w").close()  # gator would read it too
+        with self.assertRaisesRegex(report.ReportError, "holds files report.py did not write \\(mine.yaml\\)"):
+            report.write_inputs(d, objects)
+
     def test_matched_kinds_come_from_the_constraints(self):
         c = {"metadata": {"name": "c"}, "spec": {"match": {"kinds": [{"apiGroups": ["apps"], "kinds": ["StatefulSet", "Deployment"]}]}}}
         self.assertEqual(report.matched_workload_kinds([c]), [("apps", "Deployment"), ("apps", "StatefulSet")])
@@ -215,15 +241,57 @@ class PaginationTest(Base):
                  "tok1": {"metadata": {"continue": ""}, "items": [{"n": 3}]}}
         seen = []
 
+        timeouts = []
+
         def urlopen(req, timeout=None, context=None):
             q = urllib.parse.parse_qs(urllib.parse.urlparse(req.full_url).query)
             seen.append(q)
+            timeouts.append(timeout)
             return FakeResponse(200, json.dumps(pages[q.get("continue", [""])[0]]).encode())
 
         src = report.ClusterSource("http://127.0.0.1:1/", urlopen=urlopen)
         self.assertEqual(src.list("/apis/apps/v1/deployments"), [{"n": 1}, {"n": 2}, {"n": 3}])
         self.assertEqual([q["limit"] for q in seen], [["500"], ["500"]])
         self.assertEqual(seen[1]["continue"], ["tok1"])
+        assert_finite_timeouts(self, timeouts)
+
+    def test_in_cluster_uses_the_service_account_token_and_ca(self):
+        sa = os.path.join(self.tmp, "sa")
+        os.mkdir(sa)
+        with open(os.path.join(sa, "token"), "w") as f:
+            f.write("sa-token-123\n")
+        context, cafiles, calls = object(), [], []
+
+        def create_default_context(cafile=None):
+            cafiles.append(cafile)
+            return context
+
+        def urlopen(req, timeout=None, context=None):
+            calls.append((req.full_url, req.get_header("Authorization"), context, timeout))
+            return FakeResponse(200, b'{"items": [{"n": 1}]}')
+
+        with unittest.mock.patch.object(report.ClusterSource, "SA_DIR", sa), \
+                unittest.mock.patch.object(report.ssl, "create_default_context", create_default_context):
+            src = report.ClusterSource(None, urlopen=urlopen)
+            self.assertEqual(src.list("/api/v1/namespaces"), [{"n": 1}])
+            src.get("/apis/templates.gatekeeper.sh/v1/constrainttemplates/k8sworkloadcpuratio")
+        self.assertEqual(calls[0], ("https://kubernetes.default.svc/api/v1/namespaces?limit=500",
+                                    "Bearer sa-token-123", context, report.HTTP_TIMEOUT))
+        self.assertEqual([c[1:3] for c in calls[1:]], [("Bearer sa-token-123", context)])
+        self.assertEqual(cafiles, [os.path.join(sa, "ca.crt")])  # read once
+        # no token (or no CA): the run is skipped, never an unauthenticated GET
+        for missing in ("token", "ca.crt"):
+            with self.subTest(missing=missing):
+                empty = os.path.join(self.tmp, "sa-no-" + missing)
+                os.mkdir(empty)
+                if missing == "ca.crt":
+                    with open(os.path.join(empty, "token"), "w") as f:
+                        f.write("t")
+                calls.clear()
+                with unittest.mock.patch.object(report.ClusterSource, "SA_DIR", empty):
+                    with self.assertRaisesRegex(report.ReportError, "^in-cluster credentials: "):
+                        report.ClusterSource(None, urlopen=urlopen).list("/api/v1/namespaces")
+                self.assertEqual(calls, [])
 
     def test_410_gone_skips(self):
         def urlopen(req, timeout=None, context=None):
@@ -293,9 +361,12 @@ class ParseTest(Base):
         findings = [{"constraintKind": "K8sWorkloadCpuRatio", "constraint": "workload-cpu-ratio-warn"}] * 100
         for order in ([stale, fresh], [fresh, stale]):
             with self.subTest([c["metadata"]["name"] for c in order]):
+                # the Loki contract's shape only; the stale Constraint is named in the Pod log
                 self.assertEqual(report.audit_check({"K8sWorkloadCpuRatio": order}, findings, NOW),
-                                 ({"cpuRatio": {"gator": 100, "audit": 157, "skipped": ["workload-cpu-ratio-enforced"]}},
+                                 ({"cpuRatio": {"gator": 100, "audit": 157}},
                                   ["audit check: workload-cpu-ratio-warn gator 100 vs audit 157"]))
+                self.assertIn("audit check: cpuRatio: no fresh audit, not compared: workload-cpu-ratio-enforced",
+                              self.log.getvalue().splitlines()[-1])
                 self.assertEqual(report.audit_check({"K8sWorkloadCpuRatio": order}, findings[:157] * 2, NOW)[1],
                                  ["audit check: workload-cpu-ratio-warn gator 200 vs audit 157"])
         self.assertEqual(report.audit_check({"K8sWorkloadCpuRatio": [stale, dict(stale)]}, findings, NOW),
@@ -386,6 +457,7 @@ class RunTest(Base):
         self.assertNotIn("gateway-dev", "".join(posts.values()))  # D8: silenced, not in Slack
         self.assertIn("mclabels: 1 workloads (missing 1, invalid 1)", posts["VECTOR_WEBHOOK"])
 
+        assert_finite_timeouts(self, self.urlopen.timeouts)  # every webhook post and the Loki push
         (payload,) = self.urlopen.loki()
         streams = {(s["stream"]["team"], s["stream"]["namespace"]): s for s in payload["streams"]}
         for s in payload["streams"]:
@@ -471,6 +543,7 @@ class RunTest(Base):
                 everything = (json.dumps(self.urlopen.loki()) + json.dumps(r.run_line) + json.dumps(infra)
                               + self.log.getvalue() + self.out.getvalue())
                 self.assertNotIn("RASTER-SECRET", everything)
+                assert_finite_timeouts(self, self.urlopen.timeouts)
 
     def test_a_failed_post_to_infra_itself_is_partial(self):
         # gk-daily-report-failed exists for this case: the run line must carry it.
@@ -573,6 +646,20 @@ class RunTest(Base):
         r.work = os.path.join(blocker, "work")  # /work not writable
         self.assert_skipped(r, "^(NotADirectoryError|FileExistsError): ")
 
+    def test_a_rerun_with_the_same_work_dir_reads_only_its_own_objects(self):
+        def fewer_deployments(path):
+            items = report.FileSource.list(src, path)
+            return items[:2] if path == "/apis/apps/v1/deployments" else items
+        src = report.FileSource(API)
+        src.list = fewer_deployments
+        n = len(report.fetch(src, ["K8sWorkloadCpuRatio", "K8sWorkloadMcLabels"])[0])
+        self.assertEqual(self.runner().run(), 0)  # the full fixtures first, into the same work dir
+        # this gator fails unless its input dir holds exactly this run's objects
+        g = self.gators.make("count", '[ "$(ls "$3" | wc -l)" -eq %d ] || { echo "got $(ls "$3" | wc -l) files" >&2; exit 1; }; cat "%s"'
+                             % (n, GATOR_RESULTS))
+        r = self.runner(source=src, gator=g)
+        self.assertEqual(r.run(), 0, r.run_line["reason"])
+
     def test_failure_after_counting_pushes_the_run_line_only(self):
         # audit_check runs after summarize(): its counts must not reach Loki or Slack
         src = report.FileSource(API)
@@ -587,7 +674,10 @@ class RunTest(Base):
         self.assert_skipped(self.runner(source=src), "^ValueError: invalid literal")
 
     def test_api_error_on_one_kind_skips_the_run(self):
+        timeouts = []
+
         def urlopen(req, timeout=None, context=None):  # the API server, from the fixtures
+            timeouts.append(timeout)
             path = urllib.parse.urlparse(req.full_url).path
             if path == "/apis/apps/v1/statefulsets":
                 raise urllib.error.HTTPError(req.full_url, 403, "Forbidden", {}, None)
@@ -596,6 +686,7 @@ class RunTest(Base):
 
         r = self.runner(source=report.ClusterSource("http://127.0.0.1:1", urlopen=urlopen))
         self.assert_skipped(r, "GET /apis/apps/v1/statefulsets: HTTP 403")
+        assert_finite_timeouts(self, timeouts)
 
     def test_gator_timeout(self):
         with self.assertRaisesRegex(report.ReportError, "timed out"):
@@ -672,6 +763,7 @@ class RunTest(Base):
                 self.assertEqual(r.run_line["reason"], "loki push failed: " + reason)
                 self.assertIn("loki push failed: " + reason, self.urlopen.posts()["INFRA_WEBHOOK"])
                 self.assertIn('"status": "partial"', self.log.getvalue().splitlines()[-1])  # the Pod log
+                assert_finite_timeouts(self, self.urlopen.timeouts)
 
 
 class GatorDownloadTest(Base):
@@ -686,9 +778,14 @@ class GatorDownloadTest(Base):
 
     def test_checks_sha256_and_extracts_only_gator(self):
         data = self.tarball()
-        urlopen = lambda req, timeout=None: FakeResponse(200, data)
+        timeouts = []
+
+        def urlopen(req, timeout=None):
+            timeouts.append(timeout)
+            return FakeResponse(200, data)
         d = os.path.join(self.tmp, "bin")
         path = report.download_gator("https://x/gator.tar.gz", hashlib.sha256(data).hexdigest(), d, urlopen)
+        assert_finite_timeouts(self, timeouts)
         self.assertEqual(path, os.path.join(d, "gator"))
         self.assertEqual(sorted(os.listdir(self.tmp)), ["bin"])  # nothing written outside bin/
         self.assertEqual(os.listdir(d), ["gator"])  # no LICENSE, no tarball left

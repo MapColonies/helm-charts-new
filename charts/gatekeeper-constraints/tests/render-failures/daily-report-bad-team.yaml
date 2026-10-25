@@ -1,0 +1,10 @@
+# expect-error: namespaceTeams\[0\]\.team must be a team name like "raster", got "raster\.team"|team "raster\.team" must only contain a-z
+dailyReport:
+  enabled: true
+  namespace: infra-dev
+  environment: dev
+  dashboardUrl: https://grafana.invalid/d/gk-workload-policy
+  loki:
+    pushUrl: http://loki.invalid/loki/api/v1/push
+namespaceTeams:
+  - { namespace: raster-dev, team: raster.team }
