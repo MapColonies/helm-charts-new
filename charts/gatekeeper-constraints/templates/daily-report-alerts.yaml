@@ -87,9 +87,11 @@ data:
                   intervalMs: 1000
                   maxDataPoints: 43200
                   refId: C
-            # A dead-man must not pass when it cannot tell.
+            # No data means no run: alert. A query error (Loki or Prometheus down) skips the
+            # time gate in B, so it is not reported as a missing run: Grafana raises a
+            # DatasourceError alert with these labels instead (design-final §3).
             noDataState: Alerting
-            execErrState: Alerting
+            execErrState: Error
             for: 15m
             labels:
               severity: warning

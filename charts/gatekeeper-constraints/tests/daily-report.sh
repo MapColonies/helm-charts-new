@@ -83,6 +83,29 @@ cpu_ratio_ok() {
 [ "$(json "$out" 'one("CronJob")["spec"]["schedule"] + " " + one("CronJob")["spec"]["concurrencyPolicy"]')" = '30 7 * * 0-4 Forbid' ] \
   || fail "default schedule must be Sun-Thu 07:30 UTC, Forbid"
 [ "$(json "$out" 'one("CronJob")["spec"]["jobTemplate"]["spec"]["backoffLimit"]')" = 0 ] || fail "backoffLimit must be 0"
+# the wiring the job needs to run at all: script and teams.json inside the ConfigMap mount,
+# --work on an emptyDir (the root filesystem is read-only), the bound ServiceAccount, no retry
+python3 -I -c '
+import json, sys
+docs = [json.loads(l) for l in open(sys.argv[1])]
+one = lambda kind: [d for d in docs if d["kind"] == kind and d["metadata"]["name"].endswith("daily-report")][0]
+job = one("CronJob")["spec"]["jobTemplate"]["spec"]
+pod = job["template"]["spec"]
+c = pod["containers"][0]
+volumes = {v["name"]: v for v in pod["volumes"]}
+mounts = {m["mountPath"]: volumes[m["name"]] for m in c["volumeMounts"]}
+def volume_of(path):
+    return [v for m, v in mounts.items() if path.startswith(m.rstrip("/") + "/")][0]
+cmd = c["command"]
+cm = one("ConfigMap")["metadata"]["name"]
+assert cmd[3].endswith("/report.py") and volume_of(cmd[3]).get("configMap", {}).get("name") == cm, cmd
+assert volume_of(cmd[cmd.index("--teams") + 1]).get("configMap", {}).get("name") == cm, cmd
+assert "emptyDir" in mounts[cmd[cmd.index("--work") + 1]], "--work must be an emptyDir mount"
+env = {e["name"]: e.get("value") for e in c["env"]}
+assert env["HOME"] == env["TMPDIR"] == cmd[cmd.index("--work") + 1], env
+assert pod["serviceAccountName"] == one("ClusterRoleBinding")["subjects"][0]["name"] == one("ServiceAccount")["metadata"]["name"]
+assert (pod["restartPolicy"], job["activeDeadlineSeconds"]) == ("Never", 900), (pod["restartPolicy"], job.get("activeDeadlineSeconds"))
+' "$tmp/in.jsonl" || fail "CronJob wiring (mounts, --work, ServiceAccount, restartPolicy, activeDeadlineSeconds)"
 
 # 6. the ConfigMap carries report.py byte for byte, and teams.json in matching order
 [ "$(json "$out" "[d for d in docs if d['kind'] == 'ConfigMap' and 'report.py' in d['data']][0]['data']['report.py'] == open('files/daily-report/report.py').read()")" = true ] \
@@ -98,11 +121,30 @@ assert t["defaultTeam"] == "infra" and t["teams"] == ["raster", "vector", "3d", 
 assert t["webhookEnv"]["3d"] == "TEAM_3D_WEBHOOK" and t["webhookEnv"]["infra"] == "INFRA_WEBHOOK"
 ' "$teams_json" || fail "teams.json"
 
-# 7. switches reach the job; dryRun is a string "true"
-[ "$(json "$(render "${on[@]}" --set dailyReport.dryRun=true)" "[e['value'] for e in $cron['spec']['containers'][0]['env'] if e['name'] == 'DRY_RUN']")" = '["true"]' ] \
-  || fail "dryRun must reach DRY_RUN"
-[ "$(json "$out" "[e['value'] for e in $cron['spec']['containers'][0]['env'] if e['name'] in ('LOKI_URL', 'LOKI_JOB')]")" = \
-  '["http://infra-loki-gateway.infra-dev/loki/api/v1/push", "gatekeeper-workload-report"]' ] || fail "loki env"
+# 7. every value reaches the job (rendered with non-defaults); dryRun is a string "true".
+# report.py falls back to a default for a missing env var, so a dropped one would be silent.
+out3=$(render "${on[@]}" --set dailyReport.dryRun=true --set dailyReport.postWhenClean=true \
+  --set dailyReport.maxNamesPerRule=7 --set dailyReport.maxMessageChars=2000 \
+  --set dailyReport.dashboardUrl=https://grafana.invalid/d/custom --set dailyReport.readmeUrl=https://readme.invalid/x \
+  --set dailyReport.schedule='15 6 * * 1-5' --set 'dailyReport.constraintKinds={K8sWorkloadCpuRatio}' \
+  --set dailyReport.loki.job=other-job)
+[ "$(json "$out3" "{e['name']: e['value'] for e in $cron['spec']['containers'][0]['env'] if 'value' in e and e['name'] not in ('HOME', 'TMPDIR') and not e['name'].startswith('GATOR_')}")" = \
+  '{"CONSTRAINT_KINDS": "K8sWorkloadCpuRatio", "DASHBOARD_URL": "https://grafana.invalid/d/custom", "DRY_RUN": "true", "LOKI_JOB": "other-job", "LOKI_URL": "http://infra-loki-gateway.infra-dev/loki/api/v1/push", "MAX_CHARS": "2000", "MAX_NAMES": "7", "POST_WHEN_CLEAN": "true", "README_URL": "https://readme.invalid/x", "SCHEDULE": "15 6 * * 1-5"}' ] \
+  || fail "dailyReport values must reach the job env"
+[ "$(json "$out3" 'one("CronJob")["spec"]["schedule"]')" = '15 6 * * 1-5' ] || fail "schedule must reach the CronJob"
+[ "$(json "$out3" 'sorted({x for r in one("ClusterRole")["rules"] for x in r["resources"] + r.get("resourceNames", []) if x.startswith("k8s")})')" = \
+  '["k8sworkloadcpuratio"]' ] || fail "ClusterRole must follow constraintKinds"
+# and every env var report.py reads is rendered
+python3 -I -c '
+import json, re, sys
+docs = [json.loads(l) for l in open(sys.argv[1])]
+cron = [d for d in docs if d["kind"] == "CronJob"][0]
+rendered = {e["name"] for e in cron["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]["env"]}
+src = open("files/daily-report/report.py").read()
+config = src[src.index("def env_config"):src.index("class Runner")]
+read = set(re.findall(r"(?:env\.get|flag)\(\"([A-Z_]+)\"", config))
+assert len(read) > 10 and read <= rendered, sorted(read - rendered)
+' "$tmp/in.jsonl" || fail "an env var report.py reads is not rendered"
 
 # 8. gator: one version everywhere (values, Makefile, wrapped Gatekeeper), pinned sha256
 version=$(json "$out" "[e['value'] for e in $cron['spec']['containers'][0]['env'] if e['name'] == 'GATOR_VERSION'][0]")
@@ -135,9 +177,14 @@ assert m["A"]["model"]["expr"] == "sum(count_over_time({job=\"gatekeeper-workloa
 assert m["B"]["datasourceUid"] == "prometheus"
 assert m["B"]["model"]["expr"] == "(hour() >= bool 9) * (hour() < bool 16) * ((day_of_week() == bool 0) + (day_of_week() == bool 1) + (day_of_week() == bool 2) + (day_of_week() == bool 3) + (day_of_week() == bool 4))", m["B"]["model"]["expr"]
 assert (m["C"]["model"]["type"], m["C"]["model"]["expression"]) == ("math", "$A < 1 && $B > 0")
-assert rules["gk-daily-report-missing"]["execErrState"] == "Alerting" and rules["gk-daily-report-missing"]["noDataState"] == "Alerting"
+assert rules["gk-daily-report-missing"]["execErrState"] == "Error" and rules["gk-daily-report-missing"]["noDataState"] == "Alerting"
+assert rules["gk-daily-report-missing"]["for"] == "15m"
 f = {d["refId"]: d for d in rules["gk-daily-report-failed"]["data"]}
 assert f["A"]["model"]["expr"] == "sum(count_over_time({job=\"gatekeeper-workload-report\", team=\"_run\"} | json | type=\"run\" | status!=\"ok\" [3h]))", f["A"]["model"]["expr"]
+assert (f["C"]["model"]["type"], f["C"]["model"]["expression"]) == ("threshold", "A")
+assert f["C"]["model"]["conditions"][0]["evaluator"] == {"params": [0], "type": "gt"}, f["C"]["model"]["conditions"]
+failed = rules["gk-daily-report-failed"]
+assert (failed["noDataState"], failed["execErrState"], failed["for"]) == ("OK", "OK", "0s"), failed
 ' || fail "daily-report rules"
 grep -q '\${' <<<"$rules" && fail "rules must not contain \${...} (Grafana provisioning expands it as an env var)"
 out2=$(render "${on[@]}" --set deployAlerts.defaultTeam=devops --set 'dailyReport.alerts.checkDays={1,3}' \
@@ -147,5 +194,24 @@ grep -qF '(hour() >= bool 10) * (hour() < bool 16) * ((day_of_week() == bool 1) 
   || fail "check window must follow dailyReport.alerts"
 grep -qF '{job=\"other\", team=\"_run\"} [5h]' <<<"$out2" || fail "lookback and job must follow dailyReport"
 render "${on[@]}" --set dailyReport.alerts.enabled=false | grep -q 'daily-report-alerts' && fail "alerts.enabled=false must drop the rules"
+
+# 10. defaultTeam gets a webhook even when no namespaceTeams entry names it (skipped and
+# partial reports go only to defaultTeam)
+default_team_webhook() {  # <expected team> <render args...>
+  local team=$1 env o
+  shift
+  env=$(tr '[:lower:]' '[:upper:]' <<<"$team")_WEBHOOK
+  o=$(render "${on[@]}" "$@")
+  [ "$(json "$o" "[e['name'] for e in $cron['spec']['containers'][0]['env'] if e['name'] == '$env' and 'valueFrom' in e]")" = "[\"$env\"]" ] \
+    || fail "defaultTeam $team needs $env"
+  [ "$(json "$o" "(lambda t: t['defaultTeam'] == '$team' and '$team' in t['teams'])(json.loads([d for d in docs if d['kind'] == 'ConfigMap' and 'teams.json' in d['data']][0]['data']['teams.json']))")" = true ] \
+    || fail "teams.json must name defaultTeam $team in teams"
+}
+default_team_webhook infra                                          # no namespaceTeams at all
+default_team_webhook devops "${teams[@]}" --set deployAlerts.defaultTeam=devops   # not in namespaceTeams
+
+# 11. gator.url may point at a mirror that has the version only in the file name
+render "${on[@]}" --set dailyReport.gator.url=https://mirror.invalid/gatekeeper/gator-v3.22.0-linux-amd64.tar.gz > /dev/null \
+  || fail "a mirror URL with the version in the file name must render"
 
 echo "OK"

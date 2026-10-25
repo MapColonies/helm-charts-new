@@ -96,8 +96,8 @@ Validates dailyReport (call only when it is enabled). Renders nothing.
 {{- if not (regexMatch "^[0-9a-f]{64}$" (toString $r.gator.sha256)) -}}
 {{- fail (printf "dailyReport.gator.sha256 must be 64 lowercase hex characters, got %q" (toString $r.gator.sha256)) -}}
 {{- end -}}
-{{- if not (contains (printf "/%s/" $r.gator.version) $r.gator.url) -}}
-{{- fail (printf "dailyReport.gator.url must contain the version /%s/" $r.gator.version) -}}
+{{- if not (contains $r.gator.version $r.gator.url) -}}
+{{- fail (printf "dailyReport.gator.url must contain the version %s" $r.gator.version) -}}
 {{- end -}}
 {{- if or (not $r.constraintKinds) (not (kindIs "slice" $r.constraintKinds)) -}}
 {{- fail "dailyReport.constraintKinds must be a non-empty list of Constraint kinds" -}}

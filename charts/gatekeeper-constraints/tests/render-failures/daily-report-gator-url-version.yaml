@@ -1,4 +1,4 @@
-# expect-error: dailyReport\.gator\.url must contain the version /v3\.99\.0/
+# expect-error: dailyReport\.gator\.url must contain the version v3\.99\.0
 dailyReport:
   enabled: true
   namespace: infra-dev
