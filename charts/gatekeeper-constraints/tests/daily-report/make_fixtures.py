@@ -84,6 +84,8 @@ def main(templates_jsonl, gator, out):
                  [container("app", "250m", "1")], init=[container("migrate", "100m", "1")]),
         # dem-dev (team 3d): matched by the warn and the enforced cpu-ratio Constraint
         workload("dem-dev", "overlap", OWNER_OK, [container("app", "100m", "200m")]),
+        # 3d-dev (team 3d too): team totals add up both namespaces (R8)
+        workload("3d-dev", "tiler", OWNER_OK, [container("app", "100m", "1"), container("cache", "200m", "400m")]),
         # gateway-dev: silenced
         workload("gateway-dev", "gw", OWNER_OK, [container("app", "100m", "100m")]),
         # misc-dev: no entry -> defaultTeam; owner not an allowed domain
@@ -103,7 +105,7 @@ def main(templates_jsonl, gator, out):
                  "reason": "test"}
     # totalViolations = what the audit would count (checked by test_report.py against gator).
     write("/apis/constraints.gatekeeper.sh/v1beta1/k8sworkloadcpuratio", api_list("K8sWorkloadCpuRatioList", [
-        constraint("workload-cpu-ratio-warn", ["*-dev"], "warn", 5, [exemption]),
+        constraint("workload-cpu-ratio-warn", ["*-dev"], "warn", 7, [exemption]),
         constraint("workload-cpu-ratio-enforced", ["dem-dev"], "deny", 1),
     ], "constraints.gatekeeper.sh/v1beta1"))
     write("/apis/constraints.gatekeeper.sh/v1beta1/k8sworkloadmclabels", api_list("K8sWorkloadMcLabelsList", [

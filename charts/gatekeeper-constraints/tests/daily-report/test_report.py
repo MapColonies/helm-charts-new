@@ -11,10 +11,12 @@ replaced by small shell scripts here; parity.sh runs the real one.
 import contextlib
 import datetime
 import hashlib
+import http.client
 import importlib.util
 import io
 import json
 import os
+import random
 import socket
 import stat
 import tarfile
@@ -230,6 +232,27 @@ class PaginationTest(Base):
         with self.assertRaisesRegex(report.ReportError, "410"):
             report.ClusterSource("http://x", urlopen=urlopen).list("/api/v1/namespaces")
 
+    def test_every_api_error_skips_never_an_empty_list(self):
+        class Truncated(FakeResponse):
+            def read(self, n=-1):
+                raise http.client.IncompleteRead(b"{\"items", 4096)
+
+        errors = {
+            "403": (urllib.error.HTTPError("http://x", 403, "Forbidden", {}, None), "HTTP 403"),
+            "500": (urllib.error.HTTPError("http://x", 500, "x", {}, None), "HTTP 500"),
+            "url error": (urllib.error.URLError("connection refused"), "connection refused"),
+            "dropped mid-body": (Truncated(), "IncompleteRead"),
+            "not json": (FakeResponse(200, b"<html>"), "JSONDecodeError"),
+        }
+        for label, (outcome, reason) in errors.items():
+            with self.subTest(label):
+                def urlopen(req, timeout=None, context=None):
+                    if isinstance(outcome, Exception):
+                        raise outcome
+                    return outcome
+                with self.assertRaisesRegex(report.ReportError, reason):
+                    report.ClusterSource("http://x", urlopen=urlopen).list("/apis/apps/v1/statefulsets")
+
 
 class ParseTest(Base):
     def test_overlapping_warn_and_enforced_count_once(self):
@@ -239,7 +262,7 @@ class ParseTest(Base):
         self.assertEqual(len(overlap["msgs"]), 1)
         self.assertEqual(workloads[("cpuRatio", "Deployment", "raster-dev", "api")]["containers"], {"app", "sidecar"})
         self.assertEqual(workloads[("cpuRatio", "Deployment", "vector-dev", "init-bad")]["containers"], {"migrate"})
-        self.assertEqual(len([k for k in workloads if k[0] == "cpuRatio"]), 4)
+        self.assertEqual(len([k for k in workloads if k[0] == "cpuRatio"]), 5)
         self.assertEqual(len([k for k in workloads if k[0] == "mclabels"]), 4)
 
     def test_mclabels_missing_vs_invalid(self):
@@ -253,6 +276,27 @@ class ParseTest(Base):
         self.assertEqual(both["invalid"], {"mapcolonies.io/environment", "mapcolonies.io/part-of"})
         self.assertEqual(w[("mclabels", "Deployment", "misc-dev", "m")]["invalid"], {"mapcolonies.io/owner"})
         self.assertEqual(w[("mclabels", "StatefulSet", "raster-dev", "db")]["invalid"], {"mapcolonies.io/component"})
+
+    def test_names_are_sorted_whatever_gator_order(self):
+        results = gator_results()
+        for order in (list(reversed(results)), random.Random(1).sample(results, len(results))):
+            by_team, _ = report.summarize(report.group_workloads(report.parse_gator(order)), TEAMS, ["cpuRatio", "mclabels"])
+            self.assertEqual(by_team["raster"]["raster-dev"]["mclabels"]["names"], ["api", "sts/db"])
+
+    def test_audit_check_is_per_constraint_and_order_free(self):
+        stale = {"metadata": {"name": "workload-cpu-ratio-enforced"}}  # never audited
+        fresh = {"metadata": {"name": "workload-cpu-ratio-warn"},
+                 "status": {"auditTimestamp": "2026-10-26T07:29:00Z", "totalViolations": 157}}
+        findings = [{"constraintKind": "K8sWorkloadCpuRatio", "constraint": "workload-cpu-ratio-warn"}] * 100
+        for order in ([stale, fresh], [fresh, stale]):
+            with self.subTest([c["metadata"]["name"] for c in order]):
+                self.assertEqual(report.audit_check({"K8sWorkloadCpuRatio": order}, findings, NOW),
+                                 ({"cpuRatio": {"gator": 100, "audit": 157, "skipped": ["workload-cpu-ratio-enforced"]}},
+                                  ["audit check: workload-cpu-ratio-warn gator 100 vs audit 157"]))
+                self.assertEqual(report.audit_check({"K8sWorkloadCpuRatio": order}, findings[:157] * 2, NOW)[1],
+                                 ["audit check: workload-cpu-ratio-warn gator 200 vs audit 157"])
+        self.assertEqual(report.audit_check({"K8sWorkloadCpuRatio": [stale, dict(stale)]}, findings, NOW),
+                         ({"cpuRatio": "skipped"}, []))
 
     def test_unknown_problem_text_is_invalid(self):
         msg = "Deployment a/b: Pod template mclabels are missing or invalid: mapcolonies.io/owner (too long), x (missing). To exempt this"
@@ -330,6 +374,7 @@ class RunTest(Base):
         self.assertIn("• mclabels: `api`, `sts/db`", raster)
         self.assertNotIn("exempt-", raster)
         self.assertIn("*dem-dev*: CPU limit not 4x request: 1 workloads (1 containers)", posts["TEAM_3D_WEBHOOK"])
+        self.assertIn("*3d-dev*: CPU limit not 4x request: 1 workloads (2 containers)", posts["TEAM_3D_WEBHOOK"])
         self.assertIn("*misc-dev*", posts["INFRA_WEBHOOK"])  # unmatched -> defaultTeam
         self.assertNotIn("gateway-dev", "".join(posts.values()))  # D8: silenced, not in Slack
         self.assertIn("mclabels: 1 workloads (missing 1, invalid 1)", posts["VECTOR_WEBHOOK"])
@@ -352,13 +397,24 @@ class RunTest(Base):
                          {"type": "team_total", "rule": "mclabels", "workloads": 0, "containers": 0, "missing": 0, "invalid": 0})
         self.assertEqual(totals[("silenced", "cpuRatio")]["workloads"], 1)
         self.assertEqual(totals[("raster", "cpuRatio")]["containers"], 2)
+        # a team total is the sum of its namespaces (R8): 3d = 3d-dev + dem-dev
+        self.assertEqual(totals[("3d", "cpuRatio")],
+                         {"type": "team_total", "rule": "cpuRatio", "workloads": 2, "containers": 3, "missing": 0, "invalid": 0})
         # per-namespace summary lines, silenced included (D8: on the dashboard)
         summary = [json.loads(v[1]) for v in streams[("silenced", "gateway-dev")]["values"]]
         self.assertIn({"type": "summary", "rule": "cpuRatio", "workloads": 1, "containers": 1}, summary)
         mcl = [json.loads(v[1]) for v in streams[("raster", "raster-dev")]["values"]
                if json.loads(v[1])["type"] == "summary" and json.loads(v[1])["rule"] == "mclabels"]
         self.assertEqual(mcl, [{"type": "summary", "rule": "mclabels", "workloads": 2, "missing": 1, "invalid": 1}])
-        v = [l for l in lines if l["type"] == "violation" and l["workload"] == "init-bad" and l["rule"] == "mclabels"]
+        # violation lines sit in the stream of their real team and namespace
+        violations = {(s["stream"]["team"], s["stream"]["namespace"], json.loads(v[1])["workload"])
+                      for s in payload["streams"] for v in s["values"] if json.loads(v[1])["type"] == "violation"}
+        self.assertEqual(violations, {("vector", "vector-dev", "init-bad"), ("silenced", "gateway-dev", "gw"),
+                                      ("3d", "dem-dev", "overlap"), ("3d", "3d-dev", "tiler"),
+                                      ("raster", "raster-dev", "api"), ("raster", "raster-dev", "db"),
+                                      ("infra", "misc-dev", "m")})
+        v = [json.loads(x[1]) for x in streams[("vector", "vector-dev")]["values"]
+             if json.loads(x[1])["type"] == "violation" and json.loads(x[1])["rule"] == "mclabels"]
         self.assertEqual(v[0]["problems"], {"missing": ["mapcolonies.io/component"],
                                             "invalid": ["mapcolonies.io/environment", "mapcolonies.io/part-of"]})
         self.assertEqual(v[0]["kind"], "Deployment")
@@ -366,7 +422,7 @@ class RunTest(Base):
         (run,) = [json.loads(x[1]) for x in streams[("_run", "_run")]["values"]]
         self.assertEqual(run, {"type": "run", "status": "ok", "reason": "", "posted": ["3d", "infra", "raster", "vector"],
                                "failed": [], "dryRun": False, "gator": "v3.22.0", "schedule": "30 7 * * 0-4",
-                               "auditCheck": {"cpuRatio": {"gator": 6, "audit": 6}, "mclabels": {"gator": 4, "audit": 4}}})
+                               "auditCheck": {"cpuRatio": {"gator": 8, "audit": 8}, "mclabels": {"gator": 4, "audit": 4}}})
 
     def test_missing_webhook_fails_that_team_only(self):
         env = dict(WEBHOOKS, VECTOR_WEBHOOK="")
@@ -399,6 +455,31 @@ class RunTest(Base):
                 self.assertTrue(any("report partial: raster: " in t for t in infra), infra)
                 everything = json.dumps(self.urlopen.calls[-1]) + json.dumps(r.run_line) + json.dumps(infra)
                 self.assertNotIn("RASTER-SECRET", everything)
+
+    def test_a_failed_post_to_infra_itself_is_partial(self):
+        # gk-daily-report-failed exists for this case: the run line must carry it.
+        r = self.runner(urlopen=FakeUrlopen({"INFRA-SECRET": urllib.error.URLError("connection refused")}))
+        self.assertEqual(r.run(), 1)
+        self.assertEqual((r.run_line["status"], r.run_line["failed"]), ("partial", ["infra"]))
+        self.assertEqual(r.run_line["posted"], ["3d", "raster", "vector"])
+        self.assertIn("report partial: infra: URLError: connection refused", r.run_line["reason"])
+        (payload,) = self.urlopen.loki()
+        (pushed,) = [json.loads(v[1]) for s in payload["streams"] if s["stream"]["team"] == "_run" for v in s["values"]]
+        self.assertEqual(pushed, r.run_line)
+
+    def test_malformed_webhook_values_fail_that_team_without_leaking_them(self):
+        env = dict(WEBHOOKS, RASTER_WEBHOOK="hooks.invalid/services/RASTER-SECRET",  # no scheme
+                   VECTOR_WEBHOOK="https://hooks.invalid/services/VECTOR SECRET")    # inner whitespace
+        invalid_url = http.client.InvalidURL("URL can't contain control characters. '/services/VECTOR SECRET' (found at least ' ')")
+        r = self.runner(env=env, urlopen=FakeUrlopen({"VECTOR SECRET": invalid_url}))
+        self.assertEqual(r.run(), 1)
+        self.assertEqual((r.run_line["status"], r.run_line["failed"]), ("partial", ["raster", "vector"]))
+        self.assertEqual(r.run_line["posted"], ["3d", "infra"])
+        self.assertIn("raster: invalid URL", r.run_line["reason"])
+        infra = [b["text"] for u, b in self.urlopen.calls if u == WEBHOOKS["INFRA_WEBHOOK"]]
+        everything = self.log.getvalue() + self.out.getvalue() + json.dumps(infra) + json.dumps(self.urlopen.loki())
+        for secret in ("RASTER-SECRET", "VECTOR SECRET", "services/"):
+            self.assertNotIn(secret, everything)
 
     def test_dry_run_posts_nothing_but_still_pushes(self):
         r = self.runner(c=cfg(dry_run=True))
@@ -441,14 +522,54 @@ class RunTest(Base):
             with self.subTest(label):
                 self.assert_skipped(self.runner(gator=self.gators.make("g-" + label.replace(" ", "-"), body)), reason)
 
+    def test_skipped_reason_has_no_url(self):
+        g = self.gators.make("g-url", 'echo "fetch https://x.invalid/secret-token failed" >&2; exit 1')
+        r = self.runner(gator=g)
+        self.assert_skipped(r, "gator exited 1: fetch <url> failed")
+        self.assertNotIn("secret-token", json.dumps(self.urlopen.calls) + self.log.getvalue())
+
+    def test_unexpected_errors_skip_and_still_reach_infra_and_loki(self):
+        src = report.FileSource(API)
+        src.list = lambda path: [{"no": "metadata"}]  # KeyError deep in the code
+        self.assert_skipped(self.runner(source=src), "^KeyError: 'metadata'$")
+        self.assertIn("Traceback", self.log.getvalue())
+        blocker = os.path.join(self.tmp, "file")
+        open(blocker, "w").close()
+        r = self.runner()
+        r.work = os.path.join(blocker, "work")  # /work not writable
+        self.assert_skipped(r, "^(NotADirectoryError|FileExistsError): ")
+
+    def test_api_error_on_one_kind_skips_the_run(self):
+        def urlopen(req, timeout=None, context=None):  # the API server, from the fixtures
+            path = urllib.parse.urlparse(req.full_url).path
+            if path == "/apis/apps/v1/statefulsets":
+                raise urllib.error.HTTPError(req.full_url, 403, "Forbidden", {}, None)
+            with open(os.path.join(API, path.strip("/").replace("/", "_") + ".json"), "rb") as f:
+                return FakeResponse(200, f.read())
+
+        r = self.runner(source=report.ClusterSource("http://127.0.0.1:1", urlopen=urlopen))
+        self.assert_skipped(r, "GET /apis/apps/v1/statefulsets: HTTP 403")
+
     def test_gator_timeout(self):
         with self.assertRaisesRegex(report.ReportError, "timed out"):
             report.run_gator(self.gators.make("slow", "sleep 5"), self.tmp, timeout=1)
 
     def test_gator_gets_no_stdin(self):
         # gator reads stdin when given no objects; a stdin left open would hang the job.
-        g = self.gators.make("stdin", 'if [ -t 0 ] || ! IFS= read -r x; then echo null; else echo "stdin: $x"; exit 1; fi')
-        self.assertEqual(report.run_gator(g, self.tmp), [])
+        # Our own fd 0 is a pipe with data for the test, whatever stdin the test runner has.
+        g = self.gators.make("stdin", 'if IFS= read -r x; then echo "stdin: $x"; exit 1; fi; echo null')
+        r, w = os.pipe()
+        os.write(w, b"from the parent\n")
+        os.close(w)
+        saved = os.dup(0)
+        os.dup2(r, 0)
+        os.close(r)
+        try:
+            result = report.run_gator(g, self.tmp)
+        finally:
+            os.dup2(saved, 0)
+            os.close(saved)
+        self.assertEqual(result, [])
 
     def test_no_constraints_of_a_configured_kind_skips(self):
         src = report.FileSource(API)
@@ -484,26 +605,41 @@ class RunTest(Base):
         self.assertEqual(r.run_line["auditCheck"], {"cpuRatio": "skipped", "mclabels": "skipped"})
 
     def test_loki_push_failure_is_partial(self):
-        r = self.runner(urlopen=FakeUrlopen({LOKI: urllib.error.URLError("connection refused")}))
-        self.assertEqual(r.run(), 1)
-        self.assertEqual(r.status, "partial")
-        self.assertIn("loki push failed", self.urlopen.posts()["INFRA_WEBHOOK"])
+        failures = {
+            "url error": (urllib.error.URLError("connection refused"), "URLError: connection refused"),
+            "http 400": (urllib.error.HTTPError(LOKI, 400, "x", {}, io.BytesIO(b"entry out of order")),
+                         "HTTP 400 entry out of order"),
+            "http 429": (urllib.error.HTTPError(LOKI, 429, "x", {}, None), "HTTP 429"),
+            "non-2xx response": (FakeResponse(302, b""), "HTTP 302"),
+        }
+        for label, (outcome, reason) in failures.items():
+            with self.subTest(label):
+                r = self.runner(urlopen=FakeUrlopen({LOKI: outcome}))
+                self.assertEqual(r.run(), 1)
+                self.assertEqual((r.status, r.run_line["status"]), ("partial", "partial"))
+                self.assertEqual(r.run_line["reason"], "loki push failed: " + reason)
+                self.assertIn("loki push failed: " + reason, self.urlopen.posts()["INFRA_WEBHOOK"])
+                self.assertIn('"status": "partial"', self.log.getvalue().splitlines()[-1])  # the Pod log
 
 
 class GatorDownloadTest(Base):
     def tarball(self, content=b"#!/bin/sh\necho null\n"):
         buf = io.BytesIO()
         with tarfile.open(fileobj=buf, mode="w:gz") as tar:
-            info = tarfile.TarInfo("gator")
-            info.size, info.mode = len(content), 0o755
-            tar.addfile(info, io.BytesIO(content))
+            for name, data in (("LICENSE", b"text"), ("gator", content), ("../evil", b"x")):
+                info = tarfile.TarInfo(name)
+                info.size, info.mode = len(data), 0o755
+                tar.addfile(info, io.BytesIO(data))
         return buf.getvalue()
 
     def test_checks_sha256_and_extracts_only_gator(self):
         data = self.tarball()
         urlopen = lambda req, timeout=None: FakeResponse(200, data)
-        path = report.download_gator("https://x/gator.tar.gz", hashlib.sha256(data).hexdigest(), self.tmp, urlopen)
-        self.assertEqual(path, os.path.join(self.tmp, "gator"))
+        d = os.path.join(self.tmp, "bin")
+        path = report.download_gator("https://x/gator.tar.gz", hashlib.sha256(data).hexdigest(), d, urlopen)
+        self.assertEqual(path, os.path.join(d, "gator"))
+        self.assertEqual(sorted(os.listdir(self.tmp)), ["bin"])  # nothing written outside bin/
+        self.assertEqual(os.listdir(d), ["gator"])  # no LICENSE, no tarball left
         self.assertTrue(os.access(path, os.X_OK))
         self.assertEqual(report.run_gator(path, self.tmp), [])
 

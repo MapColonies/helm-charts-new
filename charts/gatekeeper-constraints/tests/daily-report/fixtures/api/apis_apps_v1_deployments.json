@@ -363,6 +363,79 @@
     "annotations": {
      "kubectl.kubernetes.io/last-applied-configuration": "{}"
     },
+    "name": "tiler",
+    "namespace": "3d-dev",
+    "resourceVersion": "1",
+    "uid": "u-3d-dev-tiler"
+   },
+   "spec": {
+    "replicas": 1,
+    "selector": {
+     "matchLabels": {
+      "app": "tiler"
+     }
+    },
+    "template": {
+     "metadata": {
+      "labels": {
+       "app": "tiler",
+       "mapcolonies.io/component": "c",
+       "mapcolonies.io/environment": "dev",
+       "mapcolonies.io/owner": "raster",
+       "mapcolonies.io/part-of": "p"
+      }
+     },
+     "spec": {
+      "containers": [
+       {
+        "env": [
+         {
+          "name": "PASSWORD",
+          "value": "must-not-leave-the-pod"
+         }
+        ],
+        "image": "registry.invalid/app:1",
+        "name": "app",
+        "resources": {
+         "limits": {
+          "cpu": "1"
+         },
+         "requests": {
+          "cpu": "100m"
+         }
+        }
+       },
+       {
+        "env": [
+         {
+          "name": "PASSWORD",
+          "value": "must-not-leave-the-pod"
+         }
+        ],
+        "image": "registry.invalid/cache:1",
+        "name": "cache",
+        "resources": {
+         "limits": {
+          "cpu": "400m"
+         },
+         "requests": {
+          "cpu": "200m"
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "status": {
+    "replicas": 1
+   }
+  },
+  {
+   "metadata": {
+    "annotations": {
+     "kubectl.kubernetes.io/last-applied-configuration": "{}"
+    },
     "name": "gw",
     "namespace": "gateway-dev",
     "resourceVersion": "1",

@@ -21,6 +21,7 @@ import argparse
 import copy
 import datetime
 import hashlib
+import http.client
 import json
 import os
 import re
@@ -28,6 +29,7 @@ import ssl
 import subprocess
 import sys
 import tarfile
+import traceback
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -64,6 +66,18 @@ def log(msg):
 def redact(text):
     """Never let a URL (webhooks carry their secret in the path) into a message or log."""
     return URL_RE.sub("<url>", str(text))
+
+
+def hide(text, url):
+    """redact(), and also hide `url` and its path in any form: a malformed webhook value
+    (no scheme, inner whitespace) is not caught by URL_RE, and http.client quotes only the
+    path in its errors."""
+    text = redact(text)
+    path = urllib.parse.urlsplit(url).path
+    for secret in sorted({url, url.strip(), path, path.lstrip("/")}, key=len, reverse=True):
+        if len(secret) >= 4:
+            text = text.replace(secret, "<url>")
+    return text
 
 
 def rule_of(constraint_kind):
@@ -302,36 +316,44 @@ def parse_time(value):
     return datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.timezone.utc)
 
 
+def audit_fresh(status, now):
+    ts = status.get("auditTimestamp")
+    if not ts or "totalViolations" not in status:
+        return False
+    try:
+        return now - parse_time(ts) < AUDIT_MAX_AGE
+    except ValueError:
+        return False
+
+
 def audit_check(constraints_by_kind, findings, now):
-    """R6. Per Constraint with a fresh audit (< 2h): gator count vs status.totalViolations.
-    -> ({rule: {"gator": n, "audit": m} | "skipped"}, [problem text])."""
+    """R6. Every Constraint with a fresh audit (< 2h) is checked on its own: gator count vs
+    status.totalViolations. A Constraint without one is skipped (not an error), whatever
+    the list order. -> ({rule: {"gator": n, "audit": m[, "skipped": [names]]} | "skipped"},
+    [problem text]); "skipped" alone when no Constraint of the kind had a fresh audit."""
     counts = {}
     for f in findings:
         k = (f["constraintKind"], f["constraint"])
         counts[k] = counts.get(k, 0) + 1
     check, problems = {}, []
     for kind, constraints in constraints_by_kind.items():
-        rule = rule_of(kind)
-        total = {"gator": 0, "audit": 0}
-        for c in constraints:
+        total, skipped = {"gator": 0, "audit": 0}, []
+        for c in sorted(constraints, key=lambda c: c["metadata"]["name"]):
             name = c["metadata"]["name"]
             status = c.get("status") or {}
-            ts = status.get("auditTimestamp")
-            fresh = False
-            if ts and "totalViolations" in status:
-                try:
-                    fresh = now - parse_time(ts) < AUDIT_MAX_AGE
-                except ValueError:
-                    fresh = False
-            if not fresh:
-                total = None
-                break
+            if not audit_fresh(status, now):
+                skipped.append(name)
+                continue
             gator, audit = counts.get((kind, name), 0), int(status["totalViolations"])
             total["gator"] += gator
             total["audit"] += audit
             if (gator == 0 and audit > 0) or abs(gator - audit) > max(5, audit // 10):
                 problems.append("audit check: %s gator %d vs audit %d" % (name, gator, audit))
-        check[rule] = total if total is not None else "skipped"
+        if len(skipped) == len(constraints):
+            total = "skipped"
+        elif skipped:
+            total["skipped"] = skipped
+        check[rule_of(kind)] = total
     return check, problems
 
 
@@ -411,8 +433,8 @@ class ClusterSource:
             if e.code == 410:
                 raise ReportError("GET %s: 410 Gone (list continue token expired)" % path)
             raise ReportError("GET %s: HTTP %d" % (path, e.code))
-        except (urllib.error.URLError, OSError, ValueError) as e:
-            raise ReportError("GET %s: %s" % (path, redact(getattr(e, "reason", e))))
+        except (urllib.error.URLError, OSError, ValueError, http.client.HTTPException) as e:
+            raise ReportError("GET %s: %s: %s" % (path, type(e).__name__, redact(getattr(e, "reason", e))))
 
     def list(self, path):
         """Every item, following metadata.continue (R5)."""
@@ -511,8 +533,8 @@ def download_gator(url, sha256, directory, urlopen=urllib.request.urlopen):
                     break
                 digest.update(chunk)
                 out.write(chunk)
-    except (urllib.error.URLError, OSError) as e:
-        raise ReportError("gator download failed: %s" % redact(getattr(e, "reason", e)))
+    except (urllib.error.URLError, OSError, ValueError, http.client.HTTPException) as e:
+        raise ReportError("gator download failed: %s: %s" % (type(e).__name__, hide(getattr(e, "reason", e), url)))
     if digest.hexdigest() != sha256:
         raise ReportError("gator sha256 mismatch: got %s, want %s" % (digest.hexdigest(), sha256))
     path = os.path.join(directory, "gator")
@@ -531,41 +553,41 @@ def download_gator(url, sha256, directory, urlopen=urllib.request.urlopen):
     return path
 
 
-def post(url, text, urlopen=urllib.request.urlopen):
-    """POST {"text": ...}. Returns None on success, else a reason without the URL (R3)."""
-    req = urllib.request.Request(url, data=json.dumps({"text": text}).encode("utf-8"),
-                                 headers={"Content-Type": "application/json"}, method="POST")
+def post_json(url, body, urlopen=urllib.request.urlopen, slack=False):
+    """POST body as JSON. Returns None on success, else a reason without `url` (R3): every
+    error text goes through hide(), and a malformed URL (ValueError, http.client.InvalidURL
+    quote it) gets a fixed text. slack: the body must also be "ok" (or empty). Never raises
+    for an HTTP or network error."""
     try:
+        req = urllib.request.Request(url, data=json.dumps(body).encode("utf-8"),
+                                     headers={"Content-Type": "application/json"}, method="POST")
         with urlopen(req, timeout=HTTP_TIMEOUT) as resp:
-            body = resp.read(200).decode("utf-8", "replace").strip()
+            text = resp.read(200).decode("utf-8", "replace").strip()
             if not 200 <= resp.status < 300:
                 return "HTTP %d" % resp.status
-            if body not in ("", "ok"):
-                return "unexpected response %r" % redact(body)[:80]
+            if slack and text not in ("", "ok"):
+                return "unexpected response %r" % hide(text, url)[:80]
             return None
     except urllib.error.HTTPError as e:
         try:
-            body = e.read(200).decode("utf-8", "replace").strip()
-        except OSError:
-            body = ""
-        return "HTTP %d %s" % (e.code, redact(body)[:80])
-    except (urllib.error.URLError, OSError, ValueError) as e:
-        return "post failed: %s" % redact(getattr(e, "reason", e))
+            text = e.read(200).decode("utf-8", "replace").strip()
+        except (OSError, http.client.HTTPException, AttributeError):
+            text = ""
+        return ("HTTP %d %s" % (e.code, hide(text, url)[:80])).strip()
+    except (ValueError, http.client.InvalidURL):
+        return "invalid URL"
+    except (urllib.error.URLError, OSError, http.client.HTTPException) as e:
+        return "%s: %s" % (type(e).__name__, hide(getattr(e, "reason", e), url)[:120])
+
+
+def post(url, text, urlopen=urllib.request.urlopen):
+    """POST {"text": ...} to a webhook. None on success, else a reason without the URL."""
+    return post_json(url, {"text": text}, urlopen, slack=True)
 
 
 def push(url, payload, urlopen=urllib.request.urlopen):
-    """Returns None on success, else a reason."""
-    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"),
-                                 headers={"Content-Type": "application/json"}, method="POST")
-    try:
-        with urlopen(req, timeout=HTTP_TIMEOUT) as resp:
-            if not 200 <= resp.status < 300:
-                return "HTTP %d" % resp.status
-            return None
-    except urllib.error.HTTPError as e:
-        return "HTTP %d" % e.code
-    except (urllib.error.URLError, OSError, ValueError) as e:
-        return "push failed: %s" % redact(getattr(e, "reason", e))
+    """POST the Loki payload. None on success, else a reason."""
+    return post_json(url, payload, urlopen)
 
 
 # ---------------------------------------------------------------------------------------
@@ -642,8 +664,14 @@ class Runner:
                 if t["workloads"]:
                     log("%s %s: %s" % (team, rule, json.dumps(t, sort_keys=True)))
             log("audit check: %s" % json.dumps(check, sort_keys=True))
-        except ReportError as e:
-            status, reason = "skipped", redact(e)
+        except Exception as e:  # any failure skips the run; infra and Loki are still told
+            if isinstance(e, ReportError):
+                reason = redact(e)
+            else:  # unexpected (a bug, /work not writable, ...): keep the trace in the log
+                reason = redact("%s: %s" % (type(e).__name__, e))
+                log(redact(traceback.format_exc()))
+            status, check = "skipped", {}
+            by_team, totals, workloads = {}, {}, {}  # a skipped run pushes its run line only
             log("report skipped: " + reason)
             self.send(self.teams["defaultTeam"], "*Gatekeeper daily report skipped* (run %s): %s" % (self.run_id, reason))
         if status == "ok":
@@ -660,9 +688,13 @@ class Runner:
                 status, reason = "partial", "; ".join(problems)
                 self.send(self.teams["defaultTeam"], "*Gatekeeper daily report: problems* (run %s)\n%s" % (
                     self.run_id, "\n".join("• " + p for p in problems)))
-        run_line = {"type": "run", "status": status, "reason": reason, "posted": sorted(set(self.posted)),
+
+        def make_run_line():
+            return {"type": "run", "status": status, "reason": reason, "posted": sorted(set(self.posted)),
                     "failed": sorted(set(self.failed)), "dryRun": cfg["dry_run"], "auditCheck": check,
                     "gator": cfg["gator_version"], "schedule": cfg["schedule"]}
+
+        run_line = make_run_line()
         payload = loki_payload(cfg["loki_job"], self.run_id, start_ns, by_team, totals, workloads,
                                self.teams, run_line)
         if cfg["loki_url"]:
@@ -670,8 +702,10 @@ class Runner:
             if err:
                 log("loki push failed: " + err)
                 status = "partial" if status == "ok" else status
+                reason = "; ".join(x for x in (reason, "loki push failed: " + err) if x)
                 self.send(self.teams["defaultTeam"], "*Gatekeeper daily report: problems* (run %s)\n• report partial: loki push failed: %s"
                           % (self.run_id, err))
+                run_line = make_run_line()  # the Pod log is the only record of this run now
             else:
                 log("pushed %d lines to loki" % sum(len(s["values"]) for s in payload["streams"]))
         else:
