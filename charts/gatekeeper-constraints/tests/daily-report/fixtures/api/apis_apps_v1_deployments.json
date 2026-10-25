@@ -1,0 +1,527 @@
+{
+ "apiVersion": "apps/v1",
+ "items": [
+  {
+   "metadata": {
+    "annotations": {
+     "kubectl.kubernetes.io/last-applied-configuration": "{}"
+    },
+    "name": "api",
+    "namespace": "raster-dev",
+    "resourceVersion": "1",
+    "uid": "u-raster-dev-api"
+   },
+   "spec": {
+    "replicas": 1,
+    "selector": {
+     "matchLabels": {
+      "app": "api"
+     }
+    },
+    "template": {
+     "metadata": {
+      "labels": {
+       "app": "api"
+      }
+     },
+     "spec": {
+      "containers": [
+       {
+        "env": [
+         {
+          "name": "PASSWORD",
+          "value": "must-not-leave-the-pod"
+         }
+        ],
+        "image": "registry.invalid/app:1",
+        "name": "app",
+        "resources": {
+         "limits": {
+          "cpu": "100m"
+         },
+         "requests": {
+          "cpu": "100m"
+         }
+        }
+       },
+       {
+        "env": [
+         {
+          "name": "PASSWORD",
+          "value": "must-not-leave-the-pod"
+         }
+        ],
+        "image": "registry.invalid/sidecar:1",
+        "name": "sidecar",
+        "resources": {}
+       }
+      ]
+     }
+    }
+   },
+   "status": {
+    "replicas": 1
+   }
+  },
+  {
+   "metadata": {
+    "annotations": {
+     "kubectl.kubernetes.io/last-applied-configuration": "{}"
+    },
+    "name": "exempt-listed",
+    "namespace": "raster-dev",
+    "resourceVersion": "1",
+    "uid": "u-raster-dev-exempt-listed"
+   },
+   "spec": {
+    "replicas": 1,
+    "selector": {
+     "matchLabels": {
+      "app": "exempt-listed"
+     }
+    },
+    "template": {
+     "metadata": {
+      "labels": {
+       "app": "exempt-listed",
+       "mapcolonies.io/component": "c",
+       "mapcolonies.io/environment": "dev",
+       "mapcolonies.io/owner": "raster",
+       "mapcolonies.io/part-of": "p"
+      }
+     },
+     "spec": {
+      "containers": [
+       {
+        "env": [
+         {
+          "name": "PASSWORD",
+          "value": "must-not-leave-the-pod"
+         }
+        ],
+        "image": "registry.invalid/app:1",
+        "name": "app",
+        "resources": {
+         "limits": {
+          "cpu": "100m"
+         },
+         "requests": {
+          "cpu": "100m"
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "status": {
+    "replicas": 1
+   }
+  },
+  {
+   "metadata": {
+    "annotations": {
+     "kubectl.kubernetes.io/last-applied-configuration": "{}",
+     "mapcolonies.io/exempt-cpu-ratio": "Guaranteed QoS on purpose"
+    },
+    "name": "exempt-annotated",
+    "namespace": "raster-dev",
+    "resourceVersion": "1",
+    "uid": "u-raster-dev-exempt-annotated"
+   },
+   "spec": {
+    "replicas": 1,
+    "selector": {
+     "matchLabels": {
+      "app": "exempt-annotated"
+     }
+    },
+    "template": {
+     "metadata": {
+      "labels": {
+       "app": "exempt-annotated",
+       "mapcolonies.io/component": "c",
+       "mapcolonies.io/environment": "dev",
+       "mapcolonies.io/owner": "raster",
+       "mapcolonies.io/part-of": "p"
+      }
+     },
+     "spec": {
+      "containers": [
+       {
+        "env": [
+         {
+          "name": "PASSWORD",
+          "value": "must-not-leave-the-pod"
+         }
+        ],
+        "image": "registry.invalid/app:1",
+        "name": "app",
+        "resources": {
+         "limits": {
+          "cpu": "100m"
+         },
+         "requests": {
+          "cpu": "100m"
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "status": {
+    "replicas": 1
+   }
+  },
+  {
+   "metadata": {
+    "annotations": {
+     "kubectl.kubernetes.io/last-applied-configuration": "{}"
+    },
+    "name": "compliant",
+    "namespace": "raster-dev",
+    "resourceVersion": "1",
+    "uid": "u-raster-dev-compliant"
+   },
+   "spec": {
+    "replicas": 1,
+    "selector": {
+     "matchLabels": {
+      "app": "compliant"
+     }
+    },
+    "template": {
+     "metadata": {
+      "labels": {
+       "app": "compliant",
+       "mapcolonies.io/component": "c",
+       "mapcolonies.io/environment": "dev",
+       "mapcolonies.io/owner": "raster",
+       "mapcolonies.io/part-of": "p"
+      }
+     },
+     "spec": {
+      "containers": [
+       {
+        "env": [
+         {
+          "name": "PASSWORD",
+          "value": "must-not-leave-the-pod"
+         }
+        ],
+        "image": "registry.invalid/app:1",
+        "name": "app",
+        "resources": {
+         "limits": {
+          "cpu": "1"
+         },
+         "requests": {
+          "cpu": "250m"
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "status": {
+    "replicas": 1
+   }
+  },
+  {
+   "metadata": {
+    "annotations": {
+     "kubectl.kubernetes.io/last-applied-configuration": "{}"
+    },
+    "name": "init-bad",
+    "namespace": "vector-dev",
+    "resourceVersion": "1",
+    "uid": "u-vector-dev-init-bad"
+   },
+   "spec": {
+    "replicas": 1,
+    "selector": {
+     "matchLabels": {
+      "app": "init-bad"
+     }
+    },
+    "template": {
+     "metadata": {
+      "labels": {
+       "app": "init-bad",
+       "mapcolonies.io/environment": "undefined",
+       "mapcolonies.io/owner": "vector",
+       "mapcolonies.io/part-of": ""
+      }
+     },
+     "spec": {
+      "containers": [
+       {
+        "env": [
+         {
+          "name": "PASSWORD",
+          "value": "must-not-leave-the-pod"
+         }
+        ],
+        "image": "registry.invalid/app:1",
+        "name": "app",
+        "resources": {
+         "limits": {
+          "cpu": "1"
+         },
+         "requests": {
+          "cpu": "250m"
+         }
+        }
+       }
+      ],
+      "initContainers": [
+       {
+        "env": [
+         {
+          "name": "PASSWORD",
+          "value": "must-not-leave-the-pod"
+         }
+        ],
+        "image": "registry.invalid/migrate:1",
+        "name": "migrate",
+        "resources": {
+         "limits": {
+          "cpu": "1"
+         },
+         "requests": {
+          "cpu": "100m"
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "status": {
+    "replicas": 1
+   }
+  },
+  {
+   "metadata": {
+    "annotations": {
+     "kubectl.kubernetes.io/last-applied-configuration": "{}"
+    },
+    "name": "overlap",
+    "namespace": "dem-dev",
+    "resourceVersion": "1",
+    "uid": "u-dem-dev-overlap"
+   },
+   "spec": {
+    "replicas": 1,
+    "selector": {
+     "matchLabels": {
+      "app": "overlap"
+     }
+    },
+    "template": {
+     "metadata": {
+      "labels": {
+       "app": "overlap",
+       "mapcolonies.io/component": "c",
+       "mapcolonies.io/environment": "dev",
+       "mapcolonies.io/owner": "raster",
+       "mapcolonies.io/part-of": "p"
+      }
+     },
+     "spec": {
+      "containers": [
+       {
+        "env": [
+         {
+          "name": "PASSWORD",
+          "value": "must-not-leave-the-pod"
+         }
+        ],
+        "image": "registry.invalid/app:1",
+        "name": "app",
+        "resources": {
+         "limits": {
+          "cpu": "200m"
+         },
+         "requests": {
+          "cpu": "100m"
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "status": {
+    "replicas": 1
+   }
+  },
+  {
+   "metadata": {
+    "annotations": {
+     "kubectl.kubernetes.io/last-applied-configuration": "{}"
+    },
+    "name": "gw",
+    "namespace": "gateway-dev",
+    "resourceVersion": "1",
+    "uid": "u-gateway-dev-gw"
+   },
+   "spec": {
+    "replicas": 1,
+    "selector": {
+     "matchLabels": {
+      "app": "gw"
+     }
+    },
+    "template": {
+     "metadata": {
+      "labels": {
+       "app": "gw",
+       "mapcolonies.io/component": "c",
+       "mapcolonies.io/environment": "dev",
+       "mapcolonies.io/owner": "raster",
+       "mapcolonies.io/part-of": "p"
+      }
+     },
+     "spec": {
+      "containers": [
+       {
+        "env": [
+         {
+          "name": "PASSWORD",
+          "value": "must-not-leave-the-pod"
+         }
+        ],
+        "image": "registry.invalid/app:1",
+        "name": "app",
+        "resources": {
+         "limits": {
+          "cpu": "100m"
+         },
+         "requests": {
+          "cpu": "100m"
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "status": {
+    "replicas": 1
+   }
+  },
+  {
+   "metadata": {
+    "annotations": {
+     "kubectl.kubernetes.io/last-applied-configuration": "{}"
+    },
+    "name": "m",
+    "namespace": "misc-dev",
+    "resourceVersion": "1",
+    "uid": "u-misc-dev-m"
+   },
+   "spec": {
+    "replicas": 1,
+    "selector": {
+     "matchLabels": {
+      "app": "m"
+     }
+    },
+    "template": {
+     "metadata": {
+      "labels": {
+       "app": "m",
+       "mapcolonies.io/component": "c",
+       "mapcolonies.io/environment": "dev",
+       "mapcolonies.io/owner": "nobody",
+       "mapcolonies.io/part-of": "p"
+      }
+     },
+     "spec": {
+      "containers": [
+       {
+        "env": [
+         {
+          "name": "PASSWORD",
+          "value": "must-not-leave-the-pod"
+         }
+        ],
+        "image": "registry.invalid/app:1",
+        "name": "app",
+        "resources": {
+         "limits": {
+          "cpu": "4"
+         },
+         "requests": {
+          "cpu": "1"
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "status": {
+    "replicas": 1
+   }
+  },
+  {
+   "metadata": {
+    "annotations": {
+     "kubectl.kubernetes.io/last-applied-configuration": "{}"
+    },
+    "name": "p",
+    "namespace": "prod",
+    "resourceVersion": "1",
+    "uid": "u-prod-p"
+   },
+   "spec": {
+    "replicas": 1,
+    "selector": {
+     "matchLabels": {
+      "app": "p"
+     }
+    },
+    "template": {
+     "metadata": {
+      "labels": {
+       "app": "p"
+      }
+     },
+     "spec": {
+      "containers": [
+       {
+        "env": [
+         {
+          "name": "PASSWORD",
+          "value": "must-not-leave-the-pod"
+         }
+        ],
+        "image": "registry.invalid/app:1",
+        "name": "app",
+        "resources": {
+         "limits": {
+          "cpu": "100m"
+         },
+         "requests": {
+          "cpu": "100m"
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "status": {
+    "replicas": 1
+   }
+  }
+ ],
+ "kind": "DeploymentList",
+ "metadata": {
+  "resourceVersion": "1"
+ }
+}

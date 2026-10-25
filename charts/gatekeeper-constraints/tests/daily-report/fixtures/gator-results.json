@@ -1,0 +1,172 @@
+[
+ {
+  "constraint": {
+   "kind": "K8sWorkloadCpuRatio",
+   "metadata": {
+    "name": "workload-cpu-ratio-enforced"
+   }
+  },
+  "enforcementAction": "warn",
+  "msg": "Deployment dem-dev/overlap container \"app\": CPU limit must be exactly 4x the CPU request (request: 100m, limit: 200m, expected limit: 400m). To exempt this workload, add it to the site-values exemption list or set the mapcolonies.io/exempt-cpu-ratio annotation to a reason.",
+  "violatingObject": {
+   "kind": "Deployment",
+   "metadata": {
+    "name": "overlap",
+    "namespace": "dem-dev"
+   }
+  }
+ },
+ {
+  "constraint": {
+   "kind": "K8sWorkloadCpuRatio",
+   "metadata": {
+    "name": "workload-cpu-ratio-warn"
+   }
+  },
+  "enforcementAction": "warn",
+  "msg": "Deployment dem-dev/overlap container \"app\": CPU limit must be exactly 4x the CPU request (request: 100m, limit: 200m, expected limit: 400m). To exempt this workload, add it to the site-values exemption list or set the mapcolonies.io/exempt-cpu-ratio annotation to a reason.",
+  "violatingObject": {
+   "kind": "Deployment",
+   "metadata": {
+    "name": "overlap",
+    "namespace": "dem-dev"
+   }
+  }
+ },
+ {
+  "constraint": {
+   "kind": "K8sWorkloadCpuRatio",
+   "metadata": {
+    "name": "workload-cpu-ratio-warn"
+   }
+  },
+  "enforcementAction": "warn",
+  "msg": "Deployment gateway-dev/gw container \"app\": CPU limit must be exactly 4x the CPU request (request: 100m, limit: 100m, expected limit: 400m). To exempt this workload, add it to the site-values exemption list or set the mapcolonies.io/exempt-cpu-ratio annotation to a reason.",
+  "violatingObject": {
+   "kind": "Deployment",
+   "metadata": {
+    "name": "gw",
+    "namespace": "gateway-dev"
+   }
+  }
+ },
+ {
+  "constraint": {
+   "kind": "K8sWorkloadCpuRatio",
+   "metadata": {
+    "name": "workload-cpu-ratio-warn"
+   }
+  },
+  "enforcementAction": "warn",
+  "msg": "Deployment raster-dev/api container \"app\": CPU limit must be exactly 4x the CPU request (request: 100m, limit: 100m, expected limit: 400m). To exempt this workload, add it to the site-values exemption list or set the mapcolonies.io/exempt-cpu-ratio annotation to a reason.",
+  "violatingObject": {
+   "kind": "Deployment",
+   "metadata": {
+    "name": "api",
+    "namespace": "raster-dev"
+   }
+  }
+ },
+ {
+  "constraint": {
+   "kind": "K8sWorkloadCpuRatio",
+   "metadata": {
+    "name": "workload-cpu-ratio-warn"
+   }
+  },
+  "enforcementAction": "warn",
+  "msg": "Deployment raster-dev/api container \"sidecar\": CPU limit must be exactly 4x the CPU request (request: none, limit: none, expected limit: 4x the request). To exempt this workload, add it to the site-values exemption list or set the mapcolonies.io/exempt-cpu-ratio annotation to a reason.",
+  "violatingObject": {
+   "kind": "Deployment",
+   "metadata": {
+    "name": "api",
+    "namespace": "raster-dev"
+   }
+  }
+ },
+ {
+  "constraint": {
+   "kind": "K8sWorkloadCpuRatio",
+   "metadata": {
+    "name": "workload-cpu-ratio-warn"
+   }
+  },
+  "enforcementAction": "warn",
+  "msg": "Deployment vector-dev/init-bad container \"migrate\": CPU limit must be exactly 4x the CPU request (request: 100m, limit: 1, expected limit: 400m). To exempt this workload, add it to the site-values exemption list or set the mapcolonies.io/exempt-cpu-ratio annotation to a reason.",
+  "violatingObject": {
+   "kind": "Deployment",
+   "metadata": {
+    "name": "init-bad",
+    "namespace": "vector-dev"
+   }
+  }
+ },
+ {
+  "constraint": {
+   "kind": "K8sWorkloadMcLabels",
+   "metadata": {
+    "name": "workload-mclabels-warn"
+   }
+  },
+  "enforcementAction": "warn",
+  "msg": "Deployment misc-dev/m: Pod template mclabels are missing or invalid: mapcolonies.io/owner (\"nobody\" is not one of 3d, app, automation, common, dem, infra, raster, vector). To exempt this workload, add it to the site-values exemption list or set the mapcolonies.io/exempt-mclabels annotation to a reason.",
+  "violatingObject": {
+   "kind": "Deployment",
+   "metadata": {
+    "name": "m",
+    "namespace": "misc-dev"
+   }
+  }
+ },
+ {
+  "constraint": {
+   "kind": "K8sWorkloadMcLabels",
+   "metadata": {
+    "name": "workload-mclabels-warn"
+   }
+  },
+  "enforcementAction": "warn",
+  "msg": "Deployment raster-dev/api: Pod template mclabels are missing or invalid: mapcolonies.io/component (missing), mapcolonies.io/environment (missing), mapcolonies.io/owner (missing), mapcolonies.io/part-of (missing). To exempt this workload, add it to the site-values exemption list or set the mapcolonies.io/exempt-mclabels annotation to a reason.",
+  "violatingObject": {
+   "kind": "Deployment",
+   "metadata": {
+    "name": "api",
+    "namespace": "raster-dev"
+   }
+  }
+ },
+ {
+  "constraint": {
+   "kind": "K8sWorkloadMcLabels",
+   "metadata": {
+    "name": "workload-mclabels-warn"
+   }
+  },
+  "enforcementAction": "warn",
+  "msg": "StatefulSet raster-dev/db: Pod template mclabels are missing or invalid: mapcolonies.io/component (empty). To exempt this workload, add it to the site-values exemption list or set the mapcolonies.io/exempt-mclabels annotation to a reason.",
+  "violatingObject": {
+   "kind": "StatefulSet",
+   "metadata": {
+    "name": "db",
+    "namespace": "raster-dev"
+   }
+  }
+ },
+ {
+  "constraint": {
+   "kind": "K8sWorkloadMcLabels",
+   "metadata": {
+    "name": "workload-mclabels-warn"
+   }
+  },
+  "enforcementAction": "warn",
+  "msg": "Deployment vector-dev/init-bad: Pod template mclabels are missing or invalid: mapcolonies.io/component (missing), mapcolonies.io/environment (\"undefined\" is not allowed), mapcolonies.io/part-of (empty). To exempt this workload, add it to the site-values exemption list or set the mapcolonies.io/exempt-mclabels annotation to a reason.",
+  "violatingObject": {
+   "kind": "Deployment",
+   "metadata": {
+    "name": "init-bad",
+    "namespace": "vector-dev"
+   }
+  }
+ }
+]

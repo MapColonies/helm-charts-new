@@ -1,0 +1,64 @@
+{
+ "apiVersion": "apps/v1",
+ "items": [
+  {
+   "metadata": {
+    "annotations": {
+     "kubectl.kubernetes.io/last-applied-configuration": "{}"
+    },
+    "name": "db",
+    "namespace": "raster-dev",
+    "resourceVersion": "1",
+    "uid": "u-raster-dev-db"
+   },
+   "spec": {
+    "replicas": 1,
+    "selector": {
+     "matchLabels": {
+      "app": "db"
+     }
+    },
+    "template": {
+     "metadata": {
+      "labels": {
+       "app": "db",
+       "mapcolonies.io/component": "",
+       "mapcolonies.io/environment": "dev",
+       "mapcolonies.io/owner": "raster",
+       "mapcolonies.io/part-of": "p"
+      }
+     },
+     "spec": {
+      "containers": [
+       {
+        "env": [
+         {
+          "name": "PASSWORD",
+          "value": "must-not-leave-the-pod"
+         }
+        ],
+        "image": "registry.invalid/pg:1",
+        "name": "pg",
+        "resources": {
+         "limits": {
+          "cpu": "2"
+         },
+         "requests": {
+          "cpu": "500m"
+         }
+        }
+       }
+      ]
+     }
+    }
+   },
+   "status": {
+    "replicas": 1
+   }
+  }
+ ],
+ "kind": "StatefulSetList",
+ "metadata": {
+  "resourceVersion": "1"
+ }
+}

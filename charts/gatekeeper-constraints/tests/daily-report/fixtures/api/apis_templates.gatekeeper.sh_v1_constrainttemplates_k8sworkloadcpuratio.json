@@ -1,0 +1,55 @@
+{
+ "apiVersion": "templates.gatekeeper.sh/v1beta1",
+ "kind": "ConstraintTemplate",
+ "metadata": {
+  "annotations": {
+   "helm.sh/hook": "pre-install,pre-upgrade"
+  },
+  "name": "k8sworkloadcpuratio"
+ },
+ "spec": {
+  "crd": {
+   "spec": {
+    "names": {
+     "kind": "K8sWorkloadCpuRatio"
+    },
+    "validation": {
+     "openAPIV3Schema": {
+      "properties": {
+       "exemptions": {
+        "items": {
+         "properties": {
+          "kind": {
+           "type": "string"
+          },
+          "name": {
+           "type": "string"
+          },
+          "namespace": {
+           "type": "string"
+          },
+          "reason": {
+           "type": "string"
+          }
+         },
+         "type": "object"
+        },
+        "type": "array"
+       }
+      },
+      "type": "object"
+     }
+    }
+   }
+  },
+  "targets": [
+   {
+    "libs": [
+     "package lib.workload\n\n# Shared by the workload rules.\n\n# Evaluate CREATE and audit always, UPDATE only when the Pod template changed.\nevaluate {\n\tobject.get(input.review, \"operation\", \"\") != \"UPDATE\"\n}\n\nevaluate {\n\tpod_template_changed\n}\n\npod_template_changed {\n\tnot is_object(input.review.oldObject)\n}\n\npod_template_changed {\n\tobject.get(input.review.oldObject, [\"spec\", \"template\"], null) != object.get(input.review.object, [\"spec\", \"template\"], null)\n}\n\n# Exempt via the exemption list or a non-empty <annotation> on the workload's own metadata.\nexempt(annotation) {\n\tentry := input.parameters.exemptions[_]\n\tentry.namespace == namespace\n\tentry.kind == input.review.object.kind\n\tentry.name == input.review.object.metadata.name\n}\n\nexempt(annotation) {\n\ttrim_space(object.get(input.review.object.metadata, [\"annotations\", annotation], \"\")) != \"\"\n}\n\nnamespace = ns {\n\tns := input.review.object.metadata.namespace\n\tns != \"\"\n} else = ns {\n\tns := object.get(input.review, \"namespace\", \"\")\n}\n"
+    ],
+    "rego": "package k8sworkloadcpuratio\n\nimport data.lib.workload\n\n# Containers and init containers need CPU limit == 4x request. One violation per container.\n\nviolation[{\"msg\": msg}] {\n\tworkload.evaluate\n\tnot workload.exempt(\"mapcolonies.io/exempt-cpu-ratio\")\n\tcontainer := pod_containers[_]\n\tnot compliant(container)\n\tmsg := sprintf(\"%v %v/%v container %q: CPU limit must be exactly 4x the CPU request (%v). To exempt this workload, add it to the site-values exemption list or set the mapcolonies.io/exempt-cpu-ratio annotation to a reason.\", [input.review.object.kind, workload.namespace, input.review.object.metadata.name, container.name, details(container)])\n}\n\npod_containers[c] {\n\tc := input.review.object.spec.template.spec.containers[_]\n}\n\npod_containers[c] {\n\tc := input.review.object.spec.template.spec.initContainers[_]\n}\n\ncpu(container, field) = q {\n\tq := container.resources[field].cpu\n}\n\ncompliant(container) {\n\trequest := nanocores(cpu(container, \"requests\"))\n\tlimit := nanocores(cpu(container, \"limits\"))\n\trequest > 0\n\tlimit == 4 * request\n}\n\ndetails(container) = s {\n\tnotes := [sprintf(\"; %q is not a valid CPU quantity\", [sprintf(\"%v\", [q])]) |\n\t\tfield := [\"requests\", \"limits\"][_]\n\t\tq := cpu(container, field)\n\t\tnot nanocores(q)\n\t]\n\ts := sprintf(\"request: %v, limit: %v, expected limit: %v%v\", [shown(container, \"requests\"), shown(container, \"limits\"), expected_limit(container), concat(\"\", notes)])\n}\n\nshown(container, field) = s {\n\ts := sprintf(\"%v\", [cpu(container, field)])\n} else = \"none\"\n\nexpected_limit(container) = s {\n\ts := format_nanocores(4 * nanocores(cpu(container, \"requests\")))\n} else = \"4x the request\"\n\n# CPU quantity (number or string, e.g. \"500m\", \"62500u\") as exact integer nanocores,\n# rounded up like Kubernetes. Undefined if invalid.\nnanocores(q) = n {\n\tis_number(q)\n\tn := parse_quantity(sprintf(\"%v\", [q]))\n}\n\nnanocores(q) = n {\n\tis_string(q)\n\tn := parse_quantity(q)\n}\n\nparse_quantity(s) = n {\n\t[_, int_part, frac_part, suffix] := regex.find_all_string_submatch_n(`^([0-9]*)(?:\\.([0-9]*))?(n|u|m|k|M|G|T|P|E|Ki|Mi|Gi|Ti|Pi|Ei|[eE][+-]?[0-9]+)?$`, s, 1)[0]\n\tcount(concat(\"\", [int_part, frac_part])) > 0\n\t[power, multiplier] := suffix_scale(suffix)\n\tn := scale_digits(concat(\"\", [int_part, frac_part]), (9 + power) - count(frac_part)) * multiplier\n}\n\ndecimal_suffixes := {\"n\": -9, \"u\": -6, \"m\": -3, \"\": 0, \"k\": 3, \"M\": 6, \"G\": 9, \"T\": 12, \"P\": 15, \"E\": 18}\n\nbinary_suffixes := {\"Ki\": 1024, \"Mi\": 1048576, \"Gi\": 1073741824, \"Ti\": 1099511627776, \"Pi\": 1125899906842624, \"Ei\": 1152921504606846976}\n\nsuffix_scale(suffix) = [power, 1] {\n\tpower := decimal_suffixes[suffix]\n}\n\nsuffix_scale(suffix) = [0, multiplier] {\n\tmultiplier := binary_suffixes[suffix]\n}\n\nsuffix_scale(suffix) = [power, 1] {\n\tregex.match(`^[eE]`, suffix)\n\tpower := to_number(substring(suffix, 1, -1))\n}\n\nzeros := \"0000000000000000000000000000000000000000000000000000000000000000\"\n\n# digits * 10^shift, rounded up.\nscale_digits(digits, shift) = n {\n\tshift >= 0\n\tshift <= count(zeros)\n\tn := digits_value(concat(\"\", [digits, substring(zeros, 0, shift)]))\n}\n\nscale_digits(digits, shift) = n {\n\tshift < 0\n\tkeep := max([count(digits) + shift, 0])\n\twhole := digits_value(substring(digits, 0, keep))\n\tn := whole + rounding(substring(digits, keep, -1))\n}\n\nrounding(dropped) = 1 {\n\ttrim_left(dropped, \"0\") != \"\"\n} else = 0\n\ndigits_value(digits) = n {\n\ttrimmed := trim_left(digits, \"0\")\n\ttrimmed != \"\"\n\tn := to_number(trimmed)\n} else = 0\n\nformat_nanocores(n) = s {\n\tn % 1000000000 == 0\n\ts := format_int(n / 1000000000, 10)\n} else = s {\n\tn % 1000000 == 0\n\ts := sprintf(\"%vm\", [format_int(n / 1000000, 10)])\n} else = s {\n\tn % 1000 == 0\n\ts := sprintf(\"%vu\", [format_int(n / 1000, 10)])\n} else = s {\n\ts := sprintf(\"%vn\", [format_int(n, 10)])\n}",
+    "target": "admission.k8s.gatekeeper.sh"
+   }
+  ]
+ }
+}
