@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.2.0...grafana-v1.3.0) (2026-10-25)
+
+
+### 🎉 Features
+
+* **grafana,gatekeeper-constraints:** readable message for no-resolve notifications ([#175](https://github.com/MapColonies/helm-charts-new/issues/175)) ([7695d71](https://github.com/MapColonies/helm-charts-new/commit/7695d712765cc5bfe4e8253c6142f655ef9da43c))
+
 ## [1.2.0](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.1.0...grafana-v1.2.0) (2026-10-21)
 
 
