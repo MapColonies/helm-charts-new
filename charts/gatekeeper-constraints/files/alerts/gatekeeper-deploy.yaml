@@ -63,6 +63,6 @@
     notify_resolved: "false"
   annotations:
     summary: "{{ $labels.resource_kind }} {{ $labels.resource_namespace }}/{{ $labels.resource_name }} breaks {{ $labels.constraint_name }}"
-    description: "{{ $labels.msg }}"
+    description: "{{ $labels.msg | reReplaceAll \"^Gatekeeper denied admission: \" \"\" | reReplaceAll \" To exempt this workload.*$\" \"\" }}"
     deployed_by: "{{ $labels.request_username }}"
     how_to_exempt: "Either add the workload to workloadPolicies.exemptions in the gatekeeper-constraints values (namespace, kind, name, rules, reason), or set the annotation mapcolonies.io/exempt-cpu-ratio or mapcolonies.io/exempt-mclabels on the workload metadata with the reason as its value."

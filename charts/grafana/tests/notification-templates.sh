@@ -16,6 +16,11 @@ grep -q 'notification-templates.yaml: |' <<<"$out" || fail "notification-templat
 grep -qF '{{ define "no_resolve_notification.title" -}}' <<<"$out" || fail "title template not rendered verbatim"
 grep -qF '{{ define "no_resolve_notification.message" -}}' <<<"$out" || fail "message template not rendered verbatim"
 
+# 1a. The template stays generic (rule wording is cleaned in the rule) and keeps the silence link.
+tpl=$(sed -n '/no_resolve_notification.message/,$p' files/notification-templates.yaml)
+grep -qF 'SilenceURL' <<<"$tpl" || fail "message must keep the Silence link"
+sed '/^ *#/d' files/notification-templates.yaml | grep -qi 'gatekeeper' && fail "template must not mention Gatekeeper wording; clean it in the rule"
+
 # 1b. No teams: nothing is provisioned, as before.
 none=$(helm template t . --namespace infra)
 grep -q 'notification-templates.yaml' <<<"$none" && fail "no teams: notification template must not be provisioned"
