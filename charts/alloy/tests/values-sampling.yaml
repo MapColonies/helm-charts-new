@@ -1,0 +1,6 @@
+sampling:
+  log:
+    trace: 0
+    debug: 0.25
+    info: 1
+    warn: 0.5
