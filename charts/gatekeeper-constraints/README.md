@@ -201,14 +201,14 @@ dashboards:
 
 #### Loki lines the dashboard reads
 
-The daily report pushes every run with stream labels `{job="<dailyReport.loki.job>", run_id="<UTC start, e.g. 2026-10-26T07:30:04Z>", team="<team|silenced|_run>", namespace="<namespace|_team|_run>"}`. One JSON object per line:
-
-| `type` | Stream | Fields |
-|---|---|---|
-| `summary` | `team=<team>, namespace=<ns>`, per namespace and rule | `rule` (`cpuRatio`/`mclabels`), `workloads`, `containers` (cpuRatio), `missing`, `invalid` (mclabels) |
-| `team_total` | `team=<team>, namespace="_team"`, per team and rule, zeros included, for every `namespaceTeams` team, the default team and `silenced` | `rule`, `workloads`, `containers`, `missing`, `invalid` |
-| `violation` | `team=<team>, namespace=<ns>`, per workload and rule | `rule`, `kind`, `workload`, `containers`, `problems: {missing: [...], invalid: [...]}`, `msg` |
-| `run` | `team="_run", namespace="_run"`, one per run | `status`, `reason`, `posted`, `failed`, `dryRun`, `auditCheck`, `gator`, `schedule` |
+The line format (stream labels and the JSON of each `type`) is the daily report's **Loki contract**, documented once under [Daily report](#daily-report). What the dashboard takes from it:
+- Every query selects `job="<dailyReport.loki.job>"` (the `__REPORT_JOB__` placeholder), and the selected-run panels also `run_id="$run"`.
+- `run` variable: the `run_id`s of the `namespace="_team"` streams, so a `skipped` run (it pushes no `team_total` lines) is not offered.
+- `summary` lines feed the stats, the per-namespace table and the bar chart. A stat reads `0`, not empty, when the run has no `summary` line in the filter (it falls back on the run's `team_total` lines).
+- `team_total` lines feed the per-team table and the trend, so every team shows, at 0 too.
+- `violation` lines feed the workload table and the messages.
+- `run` lines (`team="_run"`) feed the Runs table and the last-run stat.
+- **New at deploy** is the exception: it reads Gatekeeper's admission log lines, not the report.
 
 ## 📝 Operational notes
 
