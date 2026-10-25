@@ -143,6 +143,8 @@ dailyReport:
   #     reach back to the scheduled time from checkToHour and stay shorter than the gap
   #     to the previous run (07:30 run, 09-16 check -> 9h).
   #   gk-daily-report-failed: a run ended with status partial or skipped.
+  # enabled: false renders deleteRules for both uids instead. Deploy that before turning the
+  # report off or rolling back, or Grafana keeps the rules (see the README).
   alerts:
     enabled: true
     checkDays: [0, 1, 2, 3, 4]

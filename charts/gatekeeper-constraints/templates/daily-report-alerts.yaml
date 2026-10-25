@@ -10,9 +10,14 @@ is a multi-datasource Grafana rule:
   C  math: $A < 1 && $B > 0
 gk-daily-report-failed: a run line with status partial or skipped (covers a failed post to
 the infra channel itself).
+
+With alerts.enabled false the ConfigMap holds only deleteRules for both uids: Grafana keeps
+a provisioned rule that only disappears from the file (dev/prod store rules in Postgres), so
+turning the report off first needs a deploy that deletes them (see the README).
 */}}
-{{- if and .Values.dailyReport.enabled .Values.dailyReport.alerts.enabled }}
+{{- if .Values.dailyReport.enabled }}
 {{- include "gatekeeper-constraints.dailyReportValidate" . }}
+{{- if .Values.dailyReport.alerts.enabled }}
 {{- $r := .Values.dailyReport }}
 {{- $a := $r.alerts }}
 {{- $team := include "gatekeeper-constraints.deployAlertDefaultTeam" . }}
@@ -150,4 +155,21 @@ data:
             annotations:
               summary: "A Gatekeeper daily report run was partial or skipped"
               description: {{ printf "A run of %s/%s-daily-report in the last 3h ended with status partial or skipped. Its reason is in the run line: {job=%q, team=\"_run\"} in Loki, and in the Pod logs." $r.namespace .Release.Name $r.loki.job | quote }}
+{{- else }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-daily-report-alerts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    mapcolonies.io/grafana-alerts: "true"
+data:
+  gatekeeper-daily-report.yaml: |
+    apiVersion: 1
+    deleteRules:
+      - orgId: 1
+        uid: gk-daily-report-missing
+      - orgId: 1
+        uid: gk-daily-report-failed
+{{- end }}
 {{- end }}

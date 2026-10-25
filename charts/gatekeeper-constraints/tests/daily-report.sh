@@ -206,7 +206,15 @@ grep -q 'alert_team: devops' <<<"$out2" || fail "rules must go to deployAlerts.d
 grep -qF '(hour() >= bool 10) * (hour() < bool 16) * ((day_of_week() == bool 1) + (day_of_week() == bool 3))' <<<"$out2" \
   || fail "check window must follow dailyReport.alerts"
 grep -qF '{job=\"other\", team=\"_run\"} [5h]' <<<"$out2" || fail "lookback and job must follow dailyReport"
-render "${on[@]}" --set dailyReport.alerts.enabled=false | grep -q 'daily-report-alerts' && fail "alerts.enabled=false must drop the rules"
+# alerts.enabled=false keeps the ConfigMap with deleteRules only: Grafana keeps a provisioned
+# rule that only disappears from the file, so turning the rules off must delete them
+off=$(render "${on[@]}" --set dailyReport.alerts.enabled=false)
+[ "$(json "$off" "[(d['metadata']['namespace'], d['metadata']['labels']) for d in docs if d['metadata']['name'].endswith('daily-report-alerts')]")" = \
+  '[["gatekeeper-system", {"mapcolonies.io/grafana-alerts": "true"}]]' ] || fail "alerts.enabled=false must still render the rule ConfigMap"
+printf '%s\n' "$(json "$off" "[d for d in docs if d['metadata']['name'].endswith('daily-report-alerts')][0]['data']['gatekeeper-daily-report.yaml']")" > "$tmp/off.yaml"
+[ "$(tests/daily-report/yaml2json.sh "$tmp/off.yaml")" = \
+  '{"apiVersion":1,"deleteRules":[{"orgId":1,"uid":"gk-daily-report-missing"},{"orgId":1,"uid":"gk-daily-report-failed"}]}' ] \
+  || fail "alerts.enabled=false must render deleteRules for both uids and no groups"
 
 # 10. defaultTeam gets a webhook even when no namespaceTeams entry names it (skipped and
 # partial reports go only to defaultTeam)
