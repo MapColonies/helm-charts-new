@@ -92,6 +92,24 @@ workloadPolicies:
 - **Rendering fails** on an exemption entry without a `namespace`, `kind`, `name` or `reason`, on an unknown kind or rule, or on an `enforcementAction` other than `deny`, `warn` or `dryrun`.
 - `<rule>.enabled: false` removes that rule's ConstraintTemplate and Constraints.
 
+### Alloy access
+
+Alloy tails only Pods it is allowed to list, so the deploy alerts also need read access to this namespace for Alloy's ServiceAccount.
+
+```yaml
+alloyAccess:
+  enabled: false              # off by default: no Role or RoleBinding is rendered
+  serviceAccount:
+    name: alloy-kube-api      # also the name of the Role and RoleBinding
+    namespace: infra-dev      # where Alloy's ServiceAccount lives (required when enabled)
+```
+
+- It renders a `Role` and `RoleBinding` named after the ServiceAccount in the release namespace: get, list and watch on Pods, Pod logs and ReplicaSets.
+- To adopt Role and RoleBinding objects that already exist with that name (created by hand), label and annotate them first, or the install fails with an ownership error:
+  `kubectl -n <ns> label role,rolebinding <name> app.kubernetes.io/managed-by=Helm` and
+  `kubectl -n <ns> annotate role,rolebinding <name> meta.helm.sh/release-name=<release> meta.helm.sh/release-namespace=<ns>`.
+- The release is shared by azure-dev and azure-prod (one cluster), so the last apply wins: enable it in both values or the other apply removes it.
+
 ### Deploy alerts
 
 ```yaml
@@ -138,6 +156,7 @@ make -C charts/gatekeeper-constraints test
 ```
 
 This renders the chart with `tests/values.yaml` and runs the gator Suites in `tests/suites` against the sample objects in `tests/objects`. gator is pinned to the wrapped Gatekeeper version and downloaded into `.bin/`. The target also runs these checks:
+- `tests/alloy-access.sh`: `helm template` assertions on the Alloy Role and RoleBinding (off by default, names, namespaces, failure without a ServiceAccount namespace).
 - `tests/deploy-alerts.sh`: `helm template` assertions on the deploy-alert ConfigMap (off by default, namespace scope, labels, plain-text annotations, failure on empty scope).
 - `tests/gator-test/<case>`: renders the chart with the case's values, runs its objects through `gator test` and checks the outcome named in the case's `expect` file: `nothing`, `warnings-only` or `denials`. These cases cover which Constraints get rendered and with which enforcement action, e.g. that an empty namespace list really renders no Constraint.
 - `tests/render-failures/<values>`: checks that rendering fails with the error named on the file's first line (exemptions, enforcement action, and the deployAlerts / namespaceTeams validation).
