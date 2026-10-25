@@ -1,6 +1,6 @@
 # make test: render the chart with tests/values.yaml, then run tests/suites,
-# tests/gator-test, tests/render-failures, tests/deploy-alerts.sh and the daily report
-# tests (tests/daily-report.sh, tests/daily-report/).
+# tests/gator-test, tests/render-failures, tests/deploy-alerts.sh, tests/dashboards.sh and the
+# daily report tests (tests/daily-report.sh, tests/daily-report/).
 # make daily-report-fixtures: rewrite tests/daily-report/fixtures (parity.sh fails when stale).
 # gator matches the wrapped Gatekeeper version; set GATOR to use your own binary.
 
@@ -24,6 +24,7 @@ test: render $(GATOR)
 	python3 -I -B -m unittest discover -s tests/daily-report -t tests/daily-report
 	GATOR=$(GATOR) tests/daily-report/parity.sh
 	GATOR=$(GATOR) tests/daily-report/job-pod.sh
+	tests/dashboards.sh
 
 daily-report-fixtures: $(GATOR)
 	tests/daily-report/make-fixtures.sh $(GATOR) tests/daily-report/fixtures

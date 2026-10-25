@@ -1,0 +1,3 @@
+# expect-error: dashboards\.namespace is required when dashboards\.enabled
+dashboards:
+  enabled: true

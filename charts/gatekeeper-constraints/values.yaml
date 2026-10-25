@@ -151,3 +151,14 @@ dailyReport:
     checkFromHour: 9
     checkToHour: 16
     lookback: 9h
+
+# Grafana dashboard "Gatekeeper workload policy" (uid gk-workload-policy, see README).
+# It reads the Loki lines the daily report pushes (job dailyReport.loki.job, default
+# gatekeeper-workload-report), so it shows data only once that report runs.
+dashboards:
+  enabled: false
+  # Required when enabled: the namespace Grafana's dashboard sidecar watches
+  # (dev: infra-dev). The ConfigMap is rendered there, not in the release namespace.
+  namespace: ""
+  # Grafana folder (sidecar folder annotation).
+  folder: Gatekeeper

@@ -179,6 +179,37 @@ kill %1
 ```
 gator reads `<work>/in`: a rerun with the same `--work` replaces the files the last run wrote there, and any other file in it skips the run. `--from-files DIR` reads raw API JSON instead, one file per API path (`/apis/apps/v1/deployments` becomes `apis_apps_v1_deployments.json`), as in `tests/daily-report/fixtures/api`. To check a deployed job without posting, set `dryRun: true` and run `kubectl -n <namespace> create job --from=cronjob/<release>-daily-report <name>`. The messages are in the Pod log.
 
+### Dashboard
+
+```yaml
+dashboards:
+  enabled: false        # off by default: no ConfigMap is rendered
+  namespace: ""         # required when enabled: the namespace Grafana's dashboard sidecar watches (dev: infra-dev)
+  folder: Gatekeeper    # Grafana folder
+```
+
+- **What it renders.** With `dashboards.enabled`, a ConfigMap `<release>-dashboards` in `dashboards.namespace` (not the release namespace: the dashboard sidecar watches only Grafana's own namespace). It is labelled `mapcolonies.io/grafana-dashboards: "true"` and annotated `mapcolonies.io/grafana-dashboards-folder: <folder>`, with one key per `files/dashboards/*.json`, like the alloy chart. Grafana's provisioning does not keep UI edits, so the JSON in this chart is the source of truth.
+- **"Gatekeeper workload policy"** (uid `gk-workload-policy`, so links are `/d/gk-workload-policy?var-team=<team>&var-run=<run_id>`). It reads only what the daily report pushes to Loki (datasource variable `loki_datasource`, default uid `loki`), so Slack and the dashboard show the same numbers. `__REPORT_JOB__` in the JSON becomes `dailyReport.loki.job` (default `gatekeeper-workload-report`) at render time.
+  - **Variables:** `team` (`silenced` included), `namespace` (filtered by team), `run` (runs that pushed per-team totals, newest first; the default).
+  - **Selected run:** stats for CPU ratio (workloads, containers) and mclabels (workloads, missing, invalid); a per-team table (every team, including teams at 0 and `silenced`); a per-namespace table and bar chart; a workload table (one row per workload and rule) and the full Gatekeeper messages.
+  - **Trend:** last 14 days per team and rule, from the per-team total lines. Each point is the highest run of the previous 24 hours, so a same-day rerun replaces a run instead of adding to it, and a team at 0 shows 0. (A 1-day step would hide today's run: Grafana splits Loki range queries by day and aligns the end to the step.)
+  - **New at deploy:** distinct workloads with a workload-rule violation in Gatekeeper's admission log lines over the previous 24 hours (needs `deployAlerts`' prerequisites: `gatekeeper.logDenies` and the Alloy pipeline).
+  - **Runs:** status (`ok`, `partial`, `skipped`), failed teams, dry run, audit cross-check of every run; the last run's status as a stat.
+- **Counting** (decisions D7 and D8). CPU ratio counts workloads, with offending containers as a second number. mclabels counts workloads, split into *missing* (a required mclabel is absent) and *invalid* (an empty value, an owner outside the allowed list, or `environment=undefined`); a workload can be both. Namespaces with `silence: true` are reported under team `silenced`: never in Slack, shown here.
+- **Rendering fails** if `dashboards.namespace` is empty or not a namespace name, if `dashboards.folder` is empty, or if `dailyReport.loki.job` has characters other than letters, digits, `_`, `.` and `-`.
+- **Check after a deploy:** the sidecar logs `placing the <release>-dashboards in: /tmp/dashboards/<folder>` (`kubectl -n <namespace> logs deploy/<grafana> -c grafana-sc-dashboard`), and `/d/gk-workload-policy` opens.
+
+#### Loki lines the dashboard reads
+
+The daily report pushes every run with stream labels `{job="<dailyReport.loki.job>", run_id="<UTC start, e.g. 2026-10-26T07:30:04Z>", team="<team|silenced|_run>", namespace="<namespace|_team|_run>"}`. One JSON object per line:
+
+| `type` | Stream | Fields |
+|---|---|---|
+| `summary` | `team=<team>, namespace=<ns>`, per namespace and rule | `rule` (`cpuRatio`/`mclabels`), `workloads`, `containers` (cpuRatio), `missing`, `invalid` (mclabels) |
+| `team_total` | `team=<team>, namespace="_team"`, per team and rule, zeros included, for every `namespaceTeams` team, the default team and `silenced` | `rule`, `workloads`, `containers`, `missing`, `invalid` |
+| `violation` | `team=<team>, namespace=<ns>`, per workload and rule | `rule`, `kind`, `workload`, `containers`, `problems: {missing: [...], invalid: [...]}`, `msg` |
+| `run` | `team="_run", namespace="_run"`, one per run | `status`, `reason`, `posted`, `failed`, `dryRun`, `auditCheck`, `gator`, `schedule` |
+
 ## 📝 Operational notes
 
 - `helm upgrade --force` does not bypass the workload rules. Its delete-and-recreate goes through admission as a CREATE.
@@ -205,8 +236,9 @@ make -C charts/gatekeeper-constraints test
 
 This renders the chart with `tests/values.yaml` and runs the gator Suites in `tests/suites` against the sample objects in `tests/objects`. gator is pinned to the wrapped Gatekeeper version and downloaded into `.bin/`. The target also runs these checks:
 - `tests/deploy-alerts.sh`: `helm template` assertions on the deploy-alert ConfigMap (off by default, namespace scope, labels, plain-text annotations, failure on empty scope).
+- `tests/dashboards.sh`: `helm template` assertions on the dashboard ConfigMap (off by default, sidecar label, folder annotation and namespace, failure without a namespace) and on its JSON (valid, uid, datasources, variables, and every report query reading `dailyReport.loki.job` and the line contract above).
 - `tests/gator-test/<case>`: renders the chart with the case's values, runs its objects through `gator test` and checks the outcome named in the case's `expect` file: `nothing`, `warnings-only` or `denials`. These cases cover which Constraints get rendered and with which enforcement action, e.g. that an empty namespace list really renders no Constraint.
-- `tests/render-failures/<values>`: checks that rendering fails with the error named on the file's first line (exemptions, enforcement action, the deployAlerts / namespaceTeams validation, and the dailyReport validation).
+- `tests/render-failures/<values>`: checks that rendering fails with the error named on the file's first line (exemptions, enforcement action, the deployAlerts / namespaceTeams validation, the dailyReport validation, and the dashboards values).
 - `tests/daily-report.sh`: `helm template` assertions on the daily report. Covers: off by default; where each object lands; one optional `secretKeyRef` per team (defaultTeam included) and no literal webhook; `get`/`list`-only RBAC that follows `constraintKinds` (ConstraintTemplates: `get` on those names only); CPU limit = 4x request; the CronJob wiring (mounts, `--work` on an emptyDir, ServiceAccount, no retry); every value reaching the job env; the gator version matching the Makefile and the wrapped Gatekeeper; `teams.json` order; the two Grafana rules.
 - `tests/daily-report/test_report.py` (stdlib `unittest`): `report.py` on raw API fixtures with fake gator, webhook and Loki endpoints. Covers: projection, pagination, counting, missing vs invalid, routing, message capping, every failure path, `dryRun`, and the Loki payload. It also pins the Rego message formats that `report.py` parses.
 - `tests/daily-report/parity.sh`: runs gator on `tests/objects` as they are and on `report.py`'s projection of the same objects served as raw API JSON, and fails if the results differ. It also fails if `tests/daily-report/fixtures` is stale (`make daily-report-fixtures` rewrites it).
