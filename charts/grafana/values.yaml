@@ -50,7 +50,10 @@ grafana:
   # Each contact point reads its webhook URL from the env var `<TEAM>_WEBHOOK` (team upper-cased, `-` as `_`).
   # A team starting with a digit gets a `TEAM_` prefix, e.g. `3d` -> `TEAM_3D_WEBHOOK`, since env var
   # names cannot start with a digit. Team names may only contain a-z, 0-9, - and _ (else render fails).
-  # Every team also gets `<team>-alerts-no-resolve`: same webhook, no "resolved" messages. The
+  # Every team also gets `<team>-alerts-no-resolve`: same webhook, no "resolved" messages, and a
+  # compact message (alert summary as title, description and the other annotations as lines,
+  # see files/notification-templates.yaml) for slack and teams receivers. That message shows no
+  # labels, so a rule routed there needs a summary that is unique per alert. The
   # notification policy sends alerts labelled `notify_resolved="false"` there (one notification
   # per alert); all other alerts keep `<team>-alerts` and their resolved messages.
   #

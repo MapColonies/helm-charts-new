@@ -1,0 +1,30 @@
+apiVersion: 1
+templates:
+  - orgId: 1
+    name: no_resolve_notification
+    # Message layout for the <team>-alerts-no-resolve contact points (alerts labelled
+    # notify_resolved="false"). Not run through Helm tpl: the braces below are Grafana's.
+    # Title: the alert summary. Body, one block per alert: description, then every other
+    # annotation as "Name: value" (deployed_by -> "Deployed By: ..."). No label dump and no
+    # metrics values, which Grafana's default message adds. A last "Silence:" line keeps the
+    # link the default message had. Labels are not shown, so a rule routed here needs a summary
+    # that is unique per alert. Rule-specific wording belongs in the rule's annotations, not here.
+    template: |
+      {{ define "no_resolve_notification.title" -}}
+      {{ with index .Alerts 0 }}{{ .Annotations.summary }}{{ end }}{{ if gt (len .Alerts) 1 }} (and others){{ end }}
+      {{- end }}
+
+      {{ define "no_resolve_notification.message" -}}
+      {{ range $i, $a := .Alerts -}}
+      {{ if $i }}
+      {{ end -}}
+      {{ $a.Annotations.description }}
+      {{ range $a.Annotations.SortedPairs -}}
+      {{ if and (ne .Name "summary") (ne .Name "description") -}}
+      {{ .Name | reReplaceAll "_" " " | title }}: {{ .Value }}
+      {{ end -}}
+      {{ end -}}
+      {{ with $a.SilenceURL }}Silence: {{ . }}
+      {{ end -}}
+      {{ end -}}
+      {{- end }}
