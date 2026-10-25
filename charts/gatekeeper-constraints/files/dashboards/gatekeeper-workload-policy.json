@@ -663,8 +663,8 @@
       "title": "Per team",
       "description": "Selected run. Every team gets a total line, including teams with no violations (0) and silenced. Not filtered by namespace.",
       "gridPos": {
-        "h": 9,
-        "w": 11,
+        "h": 8,
+        "w": 24,
         "x": 0,
         "y": 4
       },
@@ -786,12 +786,12 @@
       },
       "type": "table",
       "title": "Per namespace",
-      "description": "Selected run, teams and namespaces.",
+      "description": "Selected run, teams and namespaces. A rule with no violations in a namespace shows 0.",
       "gridPos": {
-        "h": 9,
-        "w": 13,
-        "x": 11,
-        "y": 4
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 12
       },
       "targets": [
         {
@@ -801,7 +801,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "max by (team, namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, workloads | type=\"summary\" | rule=\"cpuRatio\" | unwrap workloads | __error__=\"\" [$__range]))",
+          "expr": "max by (team, namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, workloads | type=\"summary\" | rule=\"cpuRatio\" | unwrap workloads | __error__=\"\" [$__range])) or (0 * count by (team, namespace) (count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type | type=\"summary\" [$__range])))",
           "queryType": "instant"
         },
         {
@@ -811,7 +811,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "max by (team, namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, containers | type=\"summary\" | rule=\"cpuRatio\" | unwrap containers | __error__=\"\" [$__range]))",
+          "expr": "max by (team, namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, containers | type=\"summary\" | rule=\"cpuRatio\" | unwrap containers | __error__=\"\" [$__range])) or (0 * count by (team, namespace) (count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type | type=\"summary\" [$__range])))",
           "queryType": "instant"
         },
         {
@@ -821,7 +821,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "max by (team, namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, workloads | type=\"summary\" | rule=\"mclabels\" | unwrap workloads | __error__=\"\" [$__range]))",
+          "expr": "max by (team, namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, workloads | type=\"summary\" | rule=\"mclabels\" | unwrap workloads | __error__=\"\" [$__range])) or (0 * count by (team, namespace) (count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type | type=\"summary\" [$__range])))",
           "queryType": "instant"
         },
         {
@@ -831,7 +831,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "max by (team, namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, missing | type=\"summary\" | rule=\"mclabels\" | unwrap missing | __error__=\"\" [$__range]))",
+          "expr": "max by (team, namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, missing | type=\"summary\" | rule=\"mclabels\" | unwrap missing | __error__=\"\" [$__range])) or (0 * count by (team, namespace) (count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type | type=\"summary\" [$__range])))",
           "queryType": "instant"
         },
         {
@@ -841,7 +841,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "max by (team, namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, invalid | type=\"summary\" | rule=\"mclabels\" | unwrap invalid | __error__=\"\" [$__range]))",
+          "expr": "max by (team, namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, invalid | type=\"summary\" | rule=\"mclabels\" | unwrap invalid | __error__=\"\" [$__range])) or (0 * count by (team, namespace) (count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type | type=\"summary\" [$__range])))",
           "queryType": "instant"
         }
       ],
@@ -917,7 +917,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 13
+        "y": 23
       },
       "targets": [
         {
@@ -1013,7 +1013,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 21
+        "y": 31
       },
       "targets": [
         {
@@ -1119,7 +1119,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 33
+        "y": 43
       },
       "panels": []
     },
@@ -1131,7 +1131,7 @@
         "h": 3,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 44
       },
       "options": {
         "mode": "markdown",
@@ -1157,7 +1157,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 37
+        "y": 47
       },
       "interval": "1h",
       "timeFrom": "14d",
@@ -1282,7 +1282,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 37
+        "y": 47
       },
       "interval": "1h",
       "timeFrom": "14d",
@@ -1414,12 +1414,12 @@
       },
       "type": "timeseries",
       "title": "New at deploy: distinct workloads, previous 24 h",
-      "description": "Workloads that violated a workload rule when they were deployed (Gatekeeper admission log lines), counted once per workload over the previous 24 hours. These are deploy-time warnings, not the backlog above. Filtered by namespace only: admission lines carry no team, and All namespaces includes namespaces no report run has seen.",
+      "description": "Workloads that violated a workload rule when they were deployed (Gatekeeper admission log lines), counted once per workload and rule over the previous 24 hours, even when both the warn and the enforced constraint of a rule matched it. These are deploy-time warnings, not the backlog above. Filtered by namespace only: admission lines carry no team, and All namespaces includes namespaces no report run has seen.",
       "gridPos": {
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 46
+        "y": 56
       },
       "interval": "1h",
       "timeFrom": "14d",
@@ -1431,9 +1431,9 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "count by (resource_namespace, constraint_name) (count by (resource_namespace, resource_kind, resource_name, constraint_name) (count_over_time({k8s_namespace_name=\"gatekeeper-system\"} | json process, event_type, constraint_name, resource_namespace, resource_kind, resource_name | process=\"admission\" | event_type=\"violation\" | constraint_name=~\"workload-.*\" | resource_namespace=~\"$namespace\" [1d])))",
+          "expr": "count by (resource_namespace, constraint_kind) (count by (resource_namespace, resource_kind, resource_name, constraint_kind) (count_over_time({k8s_namespace_name=\"gatekeeper-system\"} | json process, event_type, constraint_kind, constraint_name, resource_namespace, resource_kind, resource_name | process=\"admission\" | event_type=\"violation\" | constraint_name=~\"workload-.*\" | resource_namespace=~\"$namespace\" [1d])))",
           "queryType": "range",
-          "legendFormat": "{{resource_namespace}} {{constraint_name}}",
+          "legendFormat": "{{resource_namespace}} {{constraint_kind}}",
           "step": "1h"
         }
       ],
@@ -1482,7 +1482,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 46
+        "y": 56
       },
       "targets": [
         {
@@ -1630,7 +1630,7 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 55
+        "y": 65
       },
       "targets": [
         {
@@ -1665,7 +1665,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 65
+        "y": 75
       },
       "options": {
         "mode": "markdown",

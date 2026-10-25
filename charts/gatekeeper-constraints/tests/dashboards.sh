@@ -133,6 +133,16 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
                      ("trend", "team_total"): {j, 'namespace="_team"', 'team=~"$team"'}}
         # A stat with no line in the filter shows 0 only when a run is selected, else "no run" (never a clean-looking 0).
         no_run_0 = ' or (0 * sum(count_over_time({%s, run_id="$run", namespace="_team"} [$__range])))' % j
+        ns_0 = (' or (0 * count by (team, namespace) (count_over_time({%s, run_id="$run", team=~"$team", namespace=~"$namespace"}'
+                ' | json type | type="summary" [$__range])))' % j)
+        # New at deploy: distinct workloads per namespace and rule over the previous 24 h. Grouped by
+        # constraint_kind, not constraint_name, so a workload hit by both <rule>-warn and <rule>-enforced
+        # (a namespace in both lists) counts once.
+        ADMISSION = ('count by (resource_namespace, constraint_kind) (count by (resource_namespace, resource_kind, '
+                     'resource_name, constraint_kind) (count_over_time({k8s_namespace_name="gatekeeper-system"} '
+                     '| json process, event_type, constraint_kind, constraint_name, resource_namespace, resource_kind, '
+                     'resource_name | process="admission" | event_type="violation" | constraint_name=~"workload-.*" '
+                     '| resource_namespace=~"$namespace" [1d])))')
 
         def selector(expr):
             m = re.search(r"\{([^}]*)\}", expr)
@@ -145,8 +155,11 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
                 title, ref, expr = p["title"], t["refId"], t["expr"]
                 where = f"{title} {ref}"
                 if "gatekeeper-system" in expr:   # admission lines, not report lines
-                    check("count by (resource_namespace, resource_kind, resource_name, constraint_name)" in expr,
-                          f"{where}: admission lines must be counted per distinct workload")
+                    check(expr == ADMISSION, f"{where}: admission query must be exactly\n    {ADMISSION}\n  got\n    {expr}")
+                    check(t.get("legendFormat") == "{{resource_namespace}} {{constraint_kind}}",
+                          f"{where}: legend must be per namespace and rule (constraint_kind)")
+                    check(t.get("queryType") == "range" and t.get("step") == "1h" and p.get("interval") == "1h",
+                          f"{where}: admission panel must be a range query at a 1h step")
                     continue
                 check(sel in expr, f"{where}: query must read {sel}}}: {expr}")
                 check("sum_over_time" not in expr, f"{where}: never sum lines over time (reruns would add up)")
@@ -159,6 +172,11 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
                     errors.append(f"{where}: report query with no expectation: {expr}"); continue
                 seen.add((title, ref))
                 scope, prefix, ltype, rule, field = expect[(title, ref)]
+                if prefix == NS:
+                    # A rule with no summary line in a namespace that has one for another rule reads 0, not an
+                    # empty cell (Grafana's noValue does not fill cells the merge transform leaves empty).
+                    check(expr.endswith(ns_0), f"{where}: must end with the per-namespace 0 fill {ns_0}: {expr}")
+                    expr = expr[:-len(ns_0)] if expr.endswith(ns_0) else expr
                 check(expr.startswith(prefix), f"{where}: must start with {prefix}: {expr}")
                 check(selector(expr) == selectors[(scope, ltype)],
                       f"{where}: selector {sorted(selector(expr))} != {sorted(selectors[(scope, ltype)])}")
@@ -216,6 +234,82 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
         adm = [t["expr"] for p in dash["panels"] for t in p.get("targets", []) if "gatekeeper-system" in t["expr"]]
         check(len(adm) == 1, f"one admission query expected, got {len(adm)}")
         check(any('team="_run"' in t["expr"] for t in panels.get("Runs", {}).get("targets", [])), "a Runs table must list every run")
+
+        # Datasource: a panel or target without one falls back to Grafana's default datasource
+        # (Prometheus on grafana-dev), where the LogQL fails.
+        loki_ds = {"type": "loki", "uid": "${loki_datasource}"}
+        for p in dash["panels"]:
+            if p.get("targets"):
+                check(p.get("datasource") == loki_ds, f"{p['title']}: panel datasource must be {loki_ds}, got {p.get('datasource')}")
+                for t in p["targets"]:
+                    check(t.get("datasource", loki_ds) == loki_ds, f"{p['title']} {t['refId']}: target datasource must be {loki_ds}")
+
+        # Time ranges: the dashboard default is 7 days (weekends still show Thursday's run; it also scopes
+        # the run variable, Last run and Runs). The trend and New at deploy panels show the last 14 days;
+        # every other panel follows the dashboard range.
+        check(dash.get("time", {}).get("from") == "now-7d", f"default time range must be now-7d, got {dash.get('time')}")
+        fourteen = {title for (title, _), v in expect.items() if v[0] == "trend"}
+        fourteen |= {p["title"] for p in dash["panels"] for t in p.get("targets", []) if "gatekeeper-system" in t["expr"]}
+        check(len(fourteen) == 3, f"expected 2 trend panels and New at deploy, got {sorted(fourteen)}")
+        for p in dash["panels"]:
+            want = "14d" if p["title"] in fourteen else None
+            check(p.get("timeFrom") == want, f"{p['title']}: timeFrom must be {want!r}, got {p.get('timeFrom')!r}")
+        for name in ("team", "namespace"):
+            check(tv[name].get("multi") is True and tv[name].get("includeAll") is True,
+                  f"{name} variable must be multi-select with All")
+
+        # Trend: teams are stacked, the dashed totals are not (else the top line reads twice the backlog).
+        for title in sorted(fourteen):
+            p = panels[title]
+            check(p["fieldConfig"]["defaults"]["custom"]["stacking"]["mode"] == "normal", f"{title}: series must be stacked")
+            if "gatekeeper-system" in p["targets"][0]["expr"]:
+                continue
+            ov = [o for o in p["fieldConfig"].get("overrides", []) if o["matcher"] == {"id": "byRegexp", "options": "^total.*"}]
+            props = {x["id"]: x["value"] for x in ov[0]["properties"]} if ov else {}
+            check(props.get("custom.stacking", {}).get("mode") == "none",
+                  f"{title}: an override matching ^total.* must set custom.stacking mode none")
+            totals = [t["legendFormat"] for t in p["targets"] if t.get("legendFormat") != "{{team}}"]
+            check(totals and all(re.match(r"^total", x) for x in totals), f"{title}: total legends {totals} must match ^total.*")
+
+        # Per team / Per namespace: full width, so every column (the mclabels missing/invalid split too) is
+        # visible without scrolling; an empty table must not read as a clean 0.
+        for title in ("Per team", "Per namespace"):
+            p = panels[title]
+            check(p["gridPos"]["w"] == 24, f"{title}: must be full width (w 24), got w {p['gridPos']['w']}")
+            check(p["fieldConfig"]["defaults"].get("noValue") is None, f"{title}: an empty table must not read as 0")
+
+        def json_fields(expr):
+            m = re.search(r"\| json ([^|]*)", expr)
+            return [x.strip() for x in m.group(1).split(",")] if m else []
+
+        # Workloads: the per-workload list the Slack message links to. Never truncated below one run,
+        # every column extracted and shown.
+        t = panels["Workloads"]["targets"][0]
+        check(t.get("maxLines", 0) >= 5000, f"Workloads: maxLines must be >= 5000 (one run has ~300 violation lines), got {t.get('maxLines')}")
+        cols_wl = ["type", "rule", "kind", "workload", "containers", 'missing="problems.missing"', 'invalid="problems.invalid"']
+        check(json_fields(t["expr"]) == cols_wl, f"Workloads: | json must extract {cols_wl}, got {json_fields(t['expr'])}")
+        tr = {x["id"]: x["options"] for x in panels["Workloads"].get("transformations", [])}
+        check(tr.get("extractFields", {}).get("source") == "labels", "Workloads: needs an extractFields transform on labels")
+        org = tr.get("organize", {})
+        shown = {"team", "namespace", "rule", "kind", "workload", "containers", "missing", "invalid"}
+        check(set(org.get("indexByName", {})) == shown, f"Workloads: columns {sorted(org.get('indexByName', {}))} != {sorted(shown)}")
+        hidden = {k for k, v in org.get("excludeByName", {}).items() if v} & shown
+        check(not hidden, f"Workloads: columns hidden: {sorted(hidden)}")
+        t = panels["Violation messages"]["targets"][0]
+        check(t["expr"].endswith('| json type, msg | type="violation" | line_format "{{.msg}}"') and t.get("maxLines", 0) >= 5000,
+              "Violation messages: must show the full msg of every violation line (line_format {{.msg}}, maxLines >= 5000)")
+
+        # Run status: ok green, partial orange, skipped red, on the newest run (Last run) and every run (Runs).
+        status_colors = {"ok": "green", "partial": "orange", "skipped": "red"}
+        for title in ("Last run", "Runs"):
+            ov = [o for o in panels[title]["fieldConfig"].get("overrides", []) if o["matcher"] == {"id": "byName", "options": "status"}]
+            maps = [x["value"] for x in ov[0]["properties"] if x["id"] == "mappings"] if ov else []
+            got = {k: v.get("color") for m in (maps[0] if maps else []) for k, v in m.get("options", {}).items()}
+            check(got == status_colors, f"{title}: status colours must be {status_colors}, got {got}")
+        check(panels["Last run"]["targets"][0].get("direction", "backward") == "backward",
+              "Last run: maxLines 1 must return the newest line (direction backward)")
+        runs_fields = ["status", "reason", "posted", "failed", "dryRun", "auditCheck", "gator"]
+        check(json_fields(panels["Runs"]["targets"][0]["expr"]) == runs_fields, f"Runs: | json must extract {runs_fields}")
 for e in errors:
     print("  " + e, file=sys.stderr)
 sys.exit(1 if errors else 0)
