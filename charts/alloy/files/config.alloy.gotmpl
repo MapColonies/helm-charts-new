@@ -36,6 +36,27 @@ loki.process "limit_time" {
     }
 {{- end }}
 {{- end }}
+
+{{- /* log sampling and dropping by level */}}
+{{- range $level, $rawVal := .Values.sampling.log }}
+{{- if not (or (kindIs "float64" $rawVal) (kindIs "int" $rawVal)) }}
+    {{- fail (printf "Log sampling values must be a number between 0 and 1, got '%v'" $rawVal) -}}
+{{- end }}
+{{- $val := $rawVal | float64 -}}
+{{- if or (lt $val 0.0) (gt $val 1.0) }}
+    {{- fail (printf "Log sampling values must be a number between 0 and 1, got '%v'" $rawVal) -}}
+{{- end }}
+{{- if lt $val 1.0 }}
+    stage.match {
+        selector = "{level=\"{{ $level }}\"}"
+        
+        stage.sampling {
+            rate = {{ $val }}
+            drop_counter_reason = "{{ $level }}_sampled"
+        }
+    }
+{{- end }}
+{{- end }}
 }
 
 otelcol.receiver.loki "default" {
