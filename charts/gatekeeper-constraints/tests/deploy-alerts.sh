@@ -35,10 +35,10 @@ grep -qF 'constraint_name=~\"workload-.*\"' <<<"$out" || fail "must be limited t
 out=$(render "${on[@]}" "${ns[@]}" --set deployAlerts.defaultTeam=raster)
 grep -q 'alert_team: raster' <<<"$out" || fail "defaultTeam not used"
 
-# 5b. description drops Gatekeeper's "denied admission" prefix (warnings are admitted) and its
+# 5b. description drops the "denied admission: " prefix of Gatekeeper's log message (with or without a leading "Gatekeeper ") (warnings are admitted) and its
 #     trailing exempt sentence (how_to_exempt says it), so the notification template stays generic
 desc=$(grep -m1 'description:' <<<"$out")
-grep -qF 'reReplaceAll \"^Gatekeeper denied admission: \" \"\"' <<<"$desc" || fail "description must cut the denied-admission prefix"
+grep -qF 'reReplaceAll \"^(Gatekeeper )?denied admission: \" \"\"' <<<"$desc" || fail "description must cut the denied-admission prefix"
 grep -qF 'reReplaceAll \" To exempt this workload.*$\" \"\"' <<<"$desc" || fail "description must cut the trailing exempt sentence"
 
 # 6. annotations are plain text: no Slack links, bold or emoji codes
