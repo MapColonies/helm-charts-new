@@ -502,7 +502,7 @@
         "x": 20,
         "y": 0
       },
-      "description": "Newest report run in the time range: status ok, partial (a team post, the Loki push or the audit cross-check failed) or skipped (no report), how long ago it ran, and the teams whose Slack post failed. See Runs below.",
+      "description": "Newest report run in the time range: status ok, partial (a team post or the audit cross-check failed; a run whose Loki push failed never reaches this dashboard: see the Pod log and the missing-run alert) or skipped (no report), how long ago it ran, and the teams whose Slack post failed. See Runs below.",
       "targets": [
         {
           "refId": "A",
