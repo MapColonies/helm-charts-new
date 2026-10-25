@@ -93,6 +93,7 @@
         "sort": 1,
         "multi": true,
         "includeAll": true,
+        "allValue": ".+",
         "current": {
           "selected": true,
           "text": [
@@ -134,7 +135,7 @@
       },
       "type": "stat",
       "title": "CPU ratio: workloads",
-      "description": "Selected run, teams and namespaces, summed from the run's per-namespace summary lines.",
+      "description": "Selected run, teams and namespaces, summed from the run's per-namespace summary lines. Shows 0 when the selected run has none in the filter, and \"no run\" when no run is selected.",
       "gridPos": {
         "h": 4,
         "w": 4,
@@ -149,7 +150,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, workloads | type=\"summary\" | rule=\"cpuRatio\" | unwrap workloads | __error__=\"\" [$__range])))",
+          "expr": "sum(max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, workloads | type=\"summary\" | rule=\"cpuRatio\" | unwrap workloads | __error__=\"\" [$__range]))) or (0 * sum(count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", namespace=\"_team\"} [$__range])))",
           "queryType": "instant"
         }
       ],
@@ -164,8 +165,12 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "text",
                 "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
               },
               {
                 "color": "orange",
@@ -173,7 +178,7 @@
               }
             ]
           },
-          "noValue": "0"
+          "noValue": "no run"
         },
         "overrides": []
       },
@@ -202,7 +207,7 @@
       },
       "type": "stat",
       "title": "CPU ratio: containers",
-      "description": "Selected run, teams and namespaces, summed from the run's per-namespace summary lines.",
+      "description": "Selected run, teams and namespaces, summed from the run's per-namespace summary lines. Shows 0 when the selected run has none in the filter, and \"no run\" when no run is selected.",
       "gridPos": {
         "h": 4,
         "w": 4,
@@ -217,7 +222,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, containers | type=\"summary\" | rule=\"cpuRatio\" | unwrap containers | __error__=\"\" [$__range])))",
+          "expr": "sum(max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, containers | type=\"summary\" | rule=\"cpuRatio\" | unwrap containers | __error__=\"\" [$__range]))) or (0 * sum(count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", namespace=\"_team\"} [$__range])))",
           "queryType": "instant"
         }
       ],
@@ -232,8 +237,12 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "text",
                 "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
               },
               {
                 "color": "orange",
@@ -241,7 +250,7 @@
               }
             ]
           },
-          "noValue": "0"
+          "noValue": "no run"
         },
         "overrides": []
       },
@@ -270,7 +279,7 @@
       },
       "type": "stat",
       "title": "mclabels: workloads",
-      "description": "Selected run, teams and namespaces, summed from the run's per-namespace summary lines.",
+      "description": "Selected run, teams and namespaces, summed from the run's per-namespace summary lines. Shows 0 when the selected run has none in the filter, and \"no run\" when no run is selected.",
       "gridPos": {
         "h": 4,
         "w": 4,
@@ -285,7 +294,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, workloads | type=\"summary\" | rule=\"mclabels\" | unwrap workloads | __error__=\"\" [$__range])))",
+          "expr": "sum(max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, workloads | type=\"summary\" | rule=\"mclabels\" | unwrap workloads | __error__=\"\" [$__range]))) or (0 * sum(count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", namespace=\"_team\"} [$__range])))",
           "queryType": "instant"
         }
       ],
@@ -300,8 +309,12 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "text",
                 "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
               },
               {
                 "color": "orange",
@@ -309,7 +322,7 @@
               }
             ]
           },
-          "noValue": "0"
+          "noValue": "no run"
         },
         "overrides": []
       },
@@ -338,7 +351,7 @@
       },
       "type": "stat",
       "title": "mclabels: missing",
-      "description": "Selected run, teams and namespaces, summed from the run's per-namespace summary lines. Workloads with at least one missing mclabel.",
+      "description": "Selected run, teams and namespaces, summed from the run's per-namespace summary lines. Workloads with at least one missing mclabel. Shows 0 when the selected run has none in the filter, and \"no run\" when no run is selected.",
       "gridPos": {
         "h": 4,
         "w": 4,
@@ -353,7 +366,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, missing | type=\"summary\" | rule=\"mclabels\" | unwrap missing | __error__=\"\" [$__range])))",
+          "expr": "sum(max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, missing | type=\"summary\" | rule=\"mclabels\" | unwrap missing | __error__=\"\" [$__range]))) or (0 * sum(count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", namespace=\"_team\"} [$__range])))",
           "queryType": "instant"
         }
       ],
@@ -368,8 +381,12 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "text",
                 "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
               },
               {
                 "color": "orange",
@@ -377,7 +394,7 @@
               }
             ]
           },
-          "noValue": "0"
+          "noValue": "no run"
         },
         "overrides": []
       },
@@ -406,7 +423,7 @@
       },
       "type": "stat",
       "title": "mclabels: invalid",
-      "description": "Selected run, teams and namespaces, summed from the run's per-namespace summary lines. Workloads with an empty value, a bad owner or environment=undefined.",
+      "description": "Selected run, teams and namespaces, summed from the run's per-namespace summary lines. Workloads with an empty value, a bad owner or environment=undefined. Shows 0 when the selected run has none in the filter, and \"no run\" when no run is selected.",
       "gridPos": {
         "h": 4,
         "w": 4,
@@ -421,7 +438,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, invalid | type=\"summary\" | rule=\"mclabels\" | unwrap invalid | __error__=\"\" [$__range])))",
+          "expr": "sum(max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, invalid | type=\"summary\" | rule=\"mclabels\" | unwrap invalid | __error__=\"\" [$__range]))) or (0 * sum(count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", namespace=\"_team\"} [$__range])))",
           "queryType": "instant"
         }
       ],
@@ -436,8 +453,12 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "text",
                 "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
               },
               {
                 "color": "orange",
@@ -445,7 +466,7 @@
               }
             ]
           },
-          "noValue": "0"
+          "noValue": "no run"
         },
         "overrides": []
       },
@@ -480,7 +501,7 @@
         "x": 20,
         "y": 0
       },
-      "description": "Status of the newest report run in the time range: ok, partial (a team post, the Loki push or the audit cross-check failed) or skipped (no report). See Runs below.",
+      "description": "Newest report run in the time range: status ok, partial (a team post, the Loki push or the audit cross-check failed) or skipped (no report), how long ago it ran, and the teams whose Slack post failed. See Runs below.",
       "targets": [
         {
           "refId": "A",
@@ -489,7 +510,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "{job=\"__REPORT_JOB__\", team=\"_run\"} | json status",
+          "expr": "{job=\"__REPORT_JOB__\", team=\"_run\"} | json status, failed",
           "queryType": "range",
           "maxLines": 1
         }
@@ -502,6 +523,18 @@
             "format": "auto",
             "replace": false,
             "keepTime": false
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "renameByName": {},
+            "indexByName": {
+              "status": 0,
+              "Time": 1,
+              "failed": 2
+            }
           }
         }
       ],
@@ -519,47 +552,105 @@
               }
             ]
           },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "ok": {
-                  "color": "green",
-                  "index": 0,
-                  "text": "ok"
-                },
-                "partial": {
-                  "color": "orange",
-                  "index": 1,
-                  "text": "partial"
-                },
-                "skipped": {
-                  "color": "red",
-                  "index": 2,
-                  "text": "skipped"
-                }
-              }
-            }
-          ],
           "noValue": "no run"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "ok": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "ok"
+                      },
+                      "partial": {
+                        "color": "orange",
+                        "index": 1,
+                        "text": "partial"
+                      },
+                      "skipped": {
+                        "color": "red",
+                        "index": 2,
+                        "text": "skipped"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "age"
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "failed"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "failed teams"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "[]": {
+                        "index": 0,
+                        "text": "none"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^status$/",
+          "fields": "/^(status|age|failed teams)$/",
           "values": false
         },
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "center",
-        "orientation": "auto",
-        "textMode": "value",
+        "orientation": "horizontal",
+        "textMode": "auto",
         "wideLayout": true,
-        "showPercentChange": false
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
       }
     },
     {
@@ -1044,7 +1135,7 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "Last 14 days. Each point is the highest report run of the previous 24 hours per team, stacked, so a same-day rerun replaces rather than adds, and a run shows from the hour after it. A team with no violations shows 0. Dashed lines: total of the selected teams. Gaps: no run in the previous 24 hours (weekends). Filtered by team only.",
+        "content": "Last 14 days, stacked per team. Each point is the highest report run of the previous 12 hours: runs only happen while the stack is up (04:00-16:00 UTC), so that is the highest run of that day so far, and a run shows from the hour after it. A same-day rerun is never added on top, but it does not replace an earlier, higher run of the same day either: a lower rerun shows only once the earlier run is more than 12 hours old, at the end of that day. A team with no violations shows 0. Dashed lines: total of the selected teams. Gaps: overnight and days without a run (weekends). Filtered by team only.",
         "code": {
           "language": "markdown",
           "showLineNumbers": false,
@@ -1061,7 +1152,7 @@
       },
       "type": "timeseries",
       "title": "CPU ratio: workloads per team",
-      "description": "Highest run of the previous 24 hours, from the per-team total lines.",
+      "description": "Highest run of the run day so far, from the per-team total lines.",
       "gridPos": {
         "h": 9,
         "w": 12,
@@ -1078,7 +1169,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "max by (team) (max_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, workloads | type=\"team_total\" | rule=\"cpuRatio\" | unwrap workloads | __error__=\"\" [1d]))",
+          "expr": "max by (team) (max_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, workloads | type=\"team_total\" | rule=\"cpuRatio\" | unwrap workloads | __error__=\"\" [12h]))",
           "queryType": "range",
           "legendFormat": "{{team}}",
           "step": "1h"
@@ -1090,7 +1181,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(max by (team) (max_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, workloads | type=\"team_total\" | rule=\"cpuRatio\" | unwrap workloads | __error__=\"\" [1d])))",
+          "expr": "sum(max by (team) (max_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, workloads | type=\"team_total\" | rule=\"cpuRatio\" | unwrap workloads | __error__=\"\" [12h])))",
           "queryType": "range",
           "legendFormat": "total workloads",
           "step": "1h"
@@ -1102,7 +1193,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(max by (team) (max_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, containers | type=\"team_total\" | rule=\"cpuRatio\" | unwrap containers | __error__=\"\" [1d])))",
+          "expr": "sum(max by (team) (max_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, containers | type=\"team_total\" | rule=\"cpuRatio\" | unwrap containers | __error__=\"\" [12h])))",
           "queryType": "range",
           "legendFormat": "total containers",
           "step": "1h"
@@ -1186,7 +1277,7 @@
       },
       "type": "timeseries",
       "title": "mclabels: workloads per team",
-      "description": "Highest run of the previous 24 hours, from the per-team total lines.",
+      "description": "Highest run of the run day so far, from the per-team total lines.",
       "gridPos": {
         "h": 9,
         "w": 12,
@@ -1203,7 +1294,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "max by (team) (max_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, workloads | type=\"team_total\" | rule=\"mclabels\" | unwrap workloads | __error__=\"\" [1d]))",
+          "expr": "max by (team) (max_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, workloads | type=\"team_total\" | rule=\"mclabels\" | unwrap workloads | __error__=\"\" [12h]))",
           "queryType": "range",
           "legendFormat": "{{team}}",
           "step": "1h"
@@ -1215,7 +1306,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(max by (team) (max_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, workloads | type=\"team_total\" | rule=\"mclabels\" | unwrap workloads | __error__=\"\" [1d])))",
+          "expr": "sum(max by (team) (max_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, workloads | type=\"team_total\" | rule=\"mclabels\" | unwrap workloads | __error__=\"\" [12h])))",
           "queryType": "range",
           "legendFormat": "total workloads",
           "step": "1h"
@@ -1227,7 +1318,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(max by (team) (max_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, missing | type=\"team_total\" | rule=\"mclabels\" | unwrap missing | __error__=\"\" [1d])))",
+          "expr": "sum(max by (team) (max_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, missing | type=\"team_total\" | rule=\"mclabels\" | unwrap missing | __error__=\"\" [12h])))",
           "queryType": "range",
           "legendFormat": "total missing",
           "step": "1h"
@@ -1239,7 +1330,7 @@
             "uid": "${loki_datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(max by (team) (max_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, invalid | type=\"team_total\" | rule=\"mclabels\" | unwrap invalid | __error__=\"\" [1d])))",
+          "expr": "sum(max by (team) (max_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, invalid | type=\"team_total\" | rule=\"mclabels\" | unwrap invalid | __error__=\"\" [12h])))",
           "queryType": "range",
           "legendFormat": "total invalid",
           "step": "1h"
@@ -1323,7 +1414,7 @@
       },
       "type": "timeseries",
       "title": "New at deploy: distinct workloads, previous 24 h",
-      "description": "Workloads that violated a workload rule when they were deployed (Gatekeeper admission log lines), counted once per workload over the previous 24 hours. These are deploy-time warnings, not the backlog above. Filtered by namespace.",
+      "description": "Workloads that violated a workload rule when they were deployed (Gatekeeper admission log lines), counted once per workload over the previous 24 hours. These are deploy-time warnings, not the backlog above. Filtered by namespace only: admission lines carry no team, and All namespaces includes namespaces no report run has seen.",
       "gridPos": {
         "h": 9,
         "w": 12,
@@ -1578,7 +1669,7 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "**What this shows.** The daily Gatekeeper workload report (chart `gatekeeper-constraints`, `dailyReport`) evaluates the live workload policies against every Deployment and StatefulSet and pushes each run to Loki (`job=\"__REPORT_JOB__\"`). Slack and this dashboard read the same numbers. Pick a **run** (the latest is the default), **teams** and **namespaces**.\n\n* **CPU ratio**: workloads with a container whose CPU limit is not exactly 4x its CPU request (or that has no request/limit). *Containers* counts the offending containers.\n* **mclabels**: workloads whose Pod template mclabels violate the policy. **missing**: a required mclabel is absent. **invalid**: an empty value, an owner outside the allowed list, or `environment=undefined`. A workload can be both, so missing + invalid can exceed workloads.\n* Teams come from `namespaceTeams` (e.g. dem-dev counts under 3d). **silenced** holds the namespaces with `silence: true`: they get no Slack message and are shown only here.\n* **Fix**: set the CPU limit to 4x the request, and put the mclabels on `spec.template.metadata.labels`. **Exempt**: see the [chart README](https://github.com/MapColonies/helm-charts-new/blob/master/charts/gatekeeper-constraints/README.md#exemptions).\n* Data exists only while the stack runs (Sun-Thu 04:00-16:00 UTC) and for the Loki retention (14 days). The trend shows the highest run of the previous 24 hours, so a same-day rerun is not added twice.",
+        "content": "**What this shows.** The daily Gatekeeper workload report (chart `gatekeeper-constraints`, `dailyReport`) evaluates the live workload policies against every Deployment and StatefulSet and pushes each run to Loki (`job=\"__REPORT_JOB__\"`). Slack and this dashboard read the same numbers. Pick a **run** (the latest is the default), **teams** and **namespaces**.\n\n* **CPU ratio**: workloads with a container whose CPU limit is not exactly 4x its CPU request (or that has no request/limit). *Containers* counts the offending containers.\n* **mclabels**: workloads whose Pod template mclabels violate the policy. **missing**: a required mclabel is absent. **invalid**: an empty value, an owner outside the allowed list, or `environment=undefined`. A workload can be both, so missing + invalid can exceed workloads.\n* Teams come from `namespaceTeams` (e.g. dem-dev counts under 3d). **silenced** holds the namespaces with `silence: true`: they get no Slack message and are shown only here.\n* **Fix**: set the CPU limit to 4x the request, and put the mclabels on `spec.template.metadata.labels`. **Exempt**: see the [chart README](https://github.com/MapColonies/helm-charts-new/blob/master/charts/gatekeeper-constraints/README.md#exemptions).\n* Data exists only while the stack runs (Sun-Thu 04:00-16:00 UTC) and for the Loki retention (14 days). The trend shows the highest run of each day, so a same-day rerun is not added twice.",
         "code": {
           "language": "markdown",
           "showLineNumbers": false,
