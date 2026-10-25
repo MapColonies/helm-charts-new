@@ -76,3 +76,75 @@ deployAlerts:
 #     silence: true           # mapped to no team: no alert
 # Exact namespaces win over globs; among globs the first listed wins.
 namespaceTeams: []
+
+# Daily workload report (MAPCO-11867, see README): a CronJob runs gator on the live
+# workloads with the live workload ConstraintTemplates and Constraints, posts one summary
+# per team to the team's webhook, and pushes the run to Loki.
+dailyReport:
+  enabled: false
+  # Namespace of the CronJob. Required. Must hold webhooksSecret (dev: infra-dev).
+  namespace: ""
+  # Cron, in UTC (this cluster has no CronJob timeZone). Default: Sun-Thu 07:30 UTC.
+  schedule: "30 7 * * 0-4"
+  # true: log the messages instead of posting them. Only Slack is suppressed: the
+  # Loki push still happens, so the dashboard and the alerts below see the run.
+  dryRun: false
+  # Also post to teams that have no violations.
+  postWhenClean: false
+  # Secret in `namespace` with one <TEAM>_WEBHOOK key per team (3d -> TEAM_3D_WEBHOOK).
+  # Read through secretKeyRef (optional), never copied. A missing key fails that team only.
+  webhooksSecret: grafana-webhooks-external
+  # Workload names shown per namespace and rule (the rest is "+N more"). A message longer
+  # than maxMessageChars is shrunk to 5 names, then to counts only.
+  maxNamesPerRule: 10
+  maxMessageChars: 3500
+  # Dashboard linked from every message ("Full list in Grafana"). Required.
+  dashboardUrl: ""
+  # "How to fix or exempt" link.
+  readmeUrl: https://github.com/MapColonies/helm-charts-new/blob/master/charts/gatekeeper-constraints/README.md
+  # mapcolonies.io/environment label of the job's Pod (the Pod follows the label rules
+  # too). Required.
+  environment: ""
+  # Constraint kinds the report evaluates. Each needs a ConstraintTemplate of the same
+  # name in lowercase, and at least one Constraint (otherwise the run is skipped).
+  constraintKinds:
+    - K8sWorkloadCpuRatio
+    - K8sWorkloadMcLabels
+  # gator release tarball, downloaded by the job and checked against sha256. url can
+  # point to a mirror. Keep version equal to the wrapped Gatekeeper and GATOR_VERSION
+  # in the Makefile (tests/daily-report.sh checks this).
+  gator:
+    version: v3.22.0
+    url: https://github.com/open-policy-agent/gatekeeper/releases/download/v3.22.0/gator-v3.22.0-linux-amd64.tar.gz
+    sha256: 45ba8c54a22261473bddf6f4f18b154058d45b0c64f3e7a67b2fa781f0791800
+  image:
+    registry: docker.io
+    repository: library/python
+    tag: 3.13-alpine@sha256:bf12ecc0bea3f171d55145dd02c78b5eeb09f30ee2ac9cc2b4c9e4e8f5e30741
+  # CPU limit = 4x request, like every workload.
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  loki:
+    # Loki push endpoint. Required (the dashboard and the alerts below read the run).
+    # dev: http://infra-loki-gateway.infra-dev/loki/api/v1/push
+    pushUrl: ""
+    # Value of the job stream label.
+    job: gatekeeper-workload-report
+  # Grafana rules (ConfigMap in the release namespace, alerts sidecar), sent to
+  # deployAlerts.defaultTeam:
+  #   gk-daily-report-missing: no run reached Loki within `lookback`, checked only on
+  #     checkDays (0 = Sunday) between checkFromHour and checkToHour (UTC). lookback must
+  #     reach back to the scheduled time from checkToHour and stay shorter than the gap
+  #     to the previous run (07:30 run, 09-16 check -> 9h).
+  #   gk-daily-report-failed: a run ended with status partial or skipped.
+  alerts:
+    enabled: true
+    checkDays: [0, 1, 2, 3, 4]
+    checkFromHour: 9
+    checkToHour: 16
+    lookback: 9h

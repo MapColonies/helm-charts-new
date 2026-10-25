@@ -1,0 +1,8 @@
+# expect-error: dailyReport\.environment must not be "undefined"
+dailyReport:
+  enabled: true
+  namespace: infra-dev
+  environment: undefined
+  dashboardUrl: https://grafana.invalid/d/gk-workload-policy
+  loki:
+    pushUrl: http://loki.invalid/loki/api/v1/push
