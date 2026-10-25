@@ -87,7 +87,8 @@ dailyReport:
   # Cron, in UTC (this cluster has no CronJob timeZone). Default: Sun-Thu 07:30 UTC.
   schedule: "30 7 * * 0-4"
   # true: log the messages instead of posting them. Only Slack is suppressed: the
-  # Loki push still happens, so the dashboard and the alerts below see the run.
+  # Loki push still happens, so the dashboard and the alerts below see the run. A team
+  # whose webhook key is missing still fails the run (partial), as it would when live.
   dryRun: false
   # Also post to teams that have no violations.
   postWhenClean: false

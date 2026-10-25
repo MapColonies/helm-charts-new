@@ -127,11 +127,13 @@ out3=$(render "${on[@]}" --set dailyReport.dryRun=true --set dailyReport.postWhe
   --set dailyReport.maxNamesPerRule=7 --set dailyReport.maxMessageChars=2000 \
   --set dailyReport.dashboardUrl=https://grafana.invalid/d/custom --set dailyReport.readmeUrl=https://readme.invalid/x \
   --set dailyReport.schedule='15 6 * * 1-5' --set 'dailyReport.constraintKinds={K8sWorkloadCpuRatio}' \
-  --set dailyReport.loki.job=other-job)
+  --set dailyReport.loki.job=other-job --set dailyReport.webhooksSecret=other-secret)
 [ "$(json "$out3" "{e['name']: e['value'] for e in $cron['spec']['containers'][0]['env'] if 'value' in e and e['name'] not in ('HOME', 'TMPDIR') and not e['name'].startswith('GATOR_')}")" = \
   '{"CONSTRAINT_KINDS": "K8sWorkloadCpuRatio", "DASHBOARD_URL": "https://grafana.invalid/d/custom", "DRY_RUN": "true", "LOKI_JOB": "other-job", "LOKI_URL": "http://infra-loki-gateway.infra-dev/loki/api/v1/push", "MAX_CHARS": "2000", "MAX_NAMES": "7", "POST_WHEN_CLEAN": "true", "README_URL": "https://readme.invalid/x", "SCHEDULE": "15 6 * * 1-5"}' ] \
   || fail "dailyReport values must reach the job env"
 [ "$(json "$out3" 'one("CronJob")["spec"]["schedule"]')" = '15 6 * * 1-5' ] || fail "schedule must reach the CronJob"
+[ "$(json "$out3" "sorted({e['valueFrom']['secretKeyRef']['name'] for e in $cron['spec']['containers'][0]['env'] if 'valueFrom' in e})")" = \
+  '["other-secret"]' ] || fail "webhooksSecret must name every webhook secretKeyRef"
 [ "$(json "$out3" 'sorted({x for r in one("ClusterRole")["rules"] for x in r["resources"] + r.get("resourceNames", []) if x.startswith("k8s")})')" = \
   '["k8sworkloadcpuratio"]' ] || fail "ClusterRole must follow constraintKinds"
 # and every env var report.py reads is rendered

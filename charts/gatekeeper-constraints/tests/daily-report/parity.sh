@@ -22,7 +22,8 @@ helm template gatekeeper-constraints . -f tests/values.yaml \
 mapfile -t objects < <(find tests/objects/cpu-ratio tests/objects/mclabels tests/objects/exemptions -name '*.yaml' | sort)
 "$here/yaml2json.sh" "$tmp/policies.yaml" "${objects[@]}" | python3 -I "$here/helpers.py" api "$tmp/api"
 printf '{"entries":[],"defaultTeam":"infra","teams":["infra"],"webhookEnv":{"infra":"INFRA_WEBHOOK"}}' > "$tmp/teams.json"
-env -i PATH="$PATH" python3 -I files/daily-report/report.py --from-files "$tmp/api" --dry-run \
+# a dry run still fails a team without a webhook; this one is never posted to
+env -i PATH="$PATH" INFRA_WEBHOOK=https://hooks.invalid/dry-run python3 -I files/daily-report/report.py --from-files "$tmp/api" --dry-run \
   --teams "$tmp/teams.json" --gator "$gator" --work "$tmp/work" > /dev/null 2> "$tmp/report.log" \
   || { cat "$tmp/report.log" >&2; fail "report.py --from-files failed"; }
 args=(-f "$tmp/policies.yaml")

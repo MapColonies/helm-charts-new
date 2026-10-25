@@ -95,6 +95,8 @@ def main(templates_jsonl, gator, out):
     ]
     statefulsets = [
         workload("raster-dev", "db", dict(OWNER_OK, **{"mapcolonies.io/component": ""}), [container("pg", "500m", "2")]),
+        # same name as the Deployment raster-dev/api: a different workload (R7 key has the kind)
+        workload("raster-dev", "api", OWNER_OK, [container("app", "100m", "100m")]),
     ]
     write("/apis/apps/v1/deployments", api_list("DeploymentList", deployments, "apps/v1"))
     write("/apis/apps/v1/statefulsets", api_list("StatefulSetList", statefulsets, "apps/v1"))
@@ -105,7 +107,7 @@ def main(templates_jsonl, gator, out):
                  "reason": "test"}
     # totalViolations = what the audit would count (checked by test_report.py against gator).
     write("/apis/constraints.gatekeeper.sh/v1beta1/k8sworkloadcpuratio", api_list("K8sWorkloadCpuRatioList", [
-        constraint("workload-cpu-ratio-warn", ["*-dev"], "warn", 7, [exemption]),
+        constraint("workload-cpu-ratio-warn", ["*-dev"], "warn", 8, [exemption]),
         constraint("workload-cpu-ratio-enforced", ["dem-dev"], "deny", 1),
     ], "constraints.gatekeeper.sh/v1beta1"))
     write("/apis/constraints.gatekeeper.sh/v1beta1/k8sworkloadmclabels", api_list("K8sWorkloadMcLabelsList", [

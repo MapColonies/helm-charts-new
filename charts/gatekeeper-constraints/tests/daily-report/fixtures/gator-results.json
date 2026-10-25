@@ -126,6 +126,23 @@
    }
   },
   "enforcementAction": "warn",
+  "msg": "StatefulSet raster-dev/api container \"app\": CPU limit must be exactly 4x the CPU request (request: 100m, limit: 100m, expected limit: 400m). To exempt this workload, add it to the site-values exemption list or set the mapcolonies.io/exempt-cpu-ratio annotation to a reason.",
+  "violatingObject": {
+   "kind": "StatefulSet",
+   "metadata": {
+    "name": "api",
+    "namespace": "raster-dev"
+   }
+  }
+ },
+ {
+  "constraint": {
+   "kind": "K8sWorkloadCpuRatio",
+   "metadata": {
+    "name": "workload-cpu-ratio-warn"
+   }
+  },
+  "enforcementAction": "warn",
   "msg": "Deployment vector-dev/init-bad container \"migrate\": CPU limit must be exactly 4x the CPU request (request: 100m, limit: 1, expected limit: 400m). To exempt this workload, add it to the site-values exemption list or set the mapcolonies.io/exempt-cpu-ratio annotation to a reason.",
   "violatingObject": {
    "kind": "Deployment",

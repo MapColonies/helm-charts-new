@@ -229,7 +229,7 @@ class PaginationTest(Base):
         def urlopen(req, timeout=None, context=None):
             raise urllib.error.HTTPError(req.full_url, 410, "Gone", {}, None)
 
-        with self.assertRaisesRegex(report.ReportError, "410"):
+        with self.assertRaisesRegex(report.ReportError, "410 Gone \\(list continue token expired\\)"):
             report.ClusterSource("http://x", urlopen=urlopen).list("/api/v1/namespaces")
 
     def test_every_api_error_skips_never_an_empty_list(self):
@@ -261,8 +261,10 @@ class ParseTest(Base):
         self.assertEqual(overlap["containers"], {"app"})
         self.assertEqual(len(overlap["msgs"]), 1)
         self.assertEqual(workloads[("cpuRatio", "Deployment", "raster-dev", "api")]["containers"], {"app", "sidecar"})
+        # a StatefulSet with the Deployment's name is another workload (R7: the key has the kind)
+        self.assertEqual(workloads[("cpuRatio", "StatefulSet", "raster-dev", "api")]["containers"], {"app"})
         self.assertEqual(workloads[("cpuRatio", "Deployment", "vector-dev", "init-bad")]["containers"], {"migrate"})
-        self.assertEqual(len([k for k in workloads if k[0] == "cpuRatio"]), 5)
+        self.assertEqual(len([k for k in workloads if k[0] == "cpuRatio"]), 6)
         self.assertEqual(len([k for k in workloads if k[0] == "mclabels"]), 4)
 
     def test_mclabels_missing_vs_invalid(self):
@@ -282,6 +284,7 @@ class ParseTest(Base):
         for order in (list(reversed(results)), random.Random(1).sample(results, len(results))):
             by_team, _ = report.summarize(report.group_workloads(report.parse_gator(order)), TEAMS, ["cpuRatio", "mclabels"])
             self.assertEqual(by_team["raster"]["raster-dev"]["mclabels"]["names"], ["api", "sts/db"])
+            self.assertEqual(by_team["raster"]["raster-dev"]["cpuRatio"]["names"], ["api", "sts/api"])
 
     def test_audit_check_is_per_constraint_and_order_free(self):
         stale = {"metadata": {"name": "workload-cpu-ratio-enforced"}}  # never audited
@@ -327,6 +330,9 @@ class RouteFormatTest(Base):
         self.assertEqual(report.route("gateway-dev", teams), "silenced")
         self.assertEqual(report.route("vector-dev", teams), "app")
         self.assertEqual(report.route("prod", teams), "infra")
+        # the whole name must match: a prefix of an entry is not that entry
+        self.assertEqual(report.route("raster-dev-old", teams), "rglob")
+        self.assertEqual(report.route("gateway-dev-old", teams), "infra")
         self.assertEqual(report.route("xraster-dev", {"entries": [{"regex": "raster-dev", "team": "r"}],
                                                        "defaultTeam": "infra"}), "infra")
 
@@ -369,8 +375,9 @@ class RunTest(Base):
         self.assertEqual(set(posts), {"RASTER_WEBHOOK", "VECTOR_WEBHOOK", "TEAM_3D_WEBHOOK", "INFRA_WEBHOOK"})
         raster = posts["RASTER_WEBHOOK"]
         self.assertIn("*Gatekeeper daily report: raster* (run %s, Deployments + StatefulSets)" % RUN_ID, raster)
-        self.assertIn("*raster-dev*: CPU limit not 4x request: 1 workloads (2 containers) · "
+        self.assertIn("*raster-dev*: CPU limit not 4x request: 2 workloads (3 containers) · "
                       "mclabels: 2 workloads (missing 1, invalid 1)", raster)
+        self.assertIn("• CPU: `api`, `sts/api`", raster)
         self.assertIn("• mclabels: `api`, `sts/db`", raster)
         self.assertNotIn("exempt-", raster)
         self.assertIn("*dem-dev*: CPU limit not 4x request: 1 workloads (1 containers)", posts["TEAM_3D_WEBHOOK"])
@@ -396,7 +403,8 @@ class RunTest(Base):
         self.assertEqual(totals[("3d", "mclabels")],
                          {"type": "team_total", "rule": "mclabels", "workloads": 0, "containers": 0, "missing": 0, "invalid": 0})
         self.assertEqual(totals[("silenced", "cpuRatio")]["workloads"], 1)
-        self.assertEqual(totals[("raster", "cpuRatio")]["containers"], 2)
+        self.assertEqual(totals[("raster", "cpuRatio")], {"type": "team_total", "rule": "cpuRatio", "workloads": 2,
+                                                        "containers": 3, "missing": 0, "invalid": 0})
         # a team total is the sum of its namespaces (R8): 3d = 3d-dev + dem-dev
         self.assertEqual(totals[("3d", "cpuRatio")],
                          {"type": "team_total", "rule": "cpuRatio", "workloads": 2, "containers": 3, "missing": 0, "invalid": 0})
@@ -413,6 +421,9 @@ class RunTest(Base):
                                       ("3d", "dem-dev", "overlap"), ("3d", "3d-dev", "tiler"),
                                       ("raster", "raster-dev", "api"), ("raster", "raster-dev", "db"),
                                       ("infra", "misc-dev", "m")})
+        api = sorted((x["kind"], x["workload"], x["containers"]) for x in map(json.loads, (v[1] for v in streams[("raster", "raster-dev")]["values"]))
+                     if x["type"] == "violation" and x["rule"] == "cpuRatio")
+        self.assertEqual(api, [("Deployment", "api", ["app", "sidecar"]), ("StatefulSet", "api", ["app"])])
         v = [json.loads(x[1]) for x in streams[("vector", "vector-dev")]["values"]
              if json.loads(x[1])["type"] == "violation" and json.loads(x[1])["rule"] == "mclabels"]
         self.assertEqual(v[0]["problems"], {"missing": ["mapcolonies.io/component"],
@@ -422,7 +433,7 @@ class RunTest(Base):
         (run,) = [json.loads(x[1]) for x in streams[("_run", "_run")]["values"]]
         self.assertEqual(run, {"type": "run", "status": "ok", "reason": "", "posted": ["3d", "infra", "raster", "vector"],
                                "failed": [], "dryRun": False, "gator": "v3.22.0", "schedule": "30 7 * * 0-4",
-                               "auditCheck": {"cpuRatio": {"gator": 8, "audit": 8}, "mclabels": {"gator": 4, "audit": 4}}})
+                               "auditCheck": {"cpuRatio": {"gator": 9, "audit": 9}, "mclabels": {"gator": 4, "audit": 4}}})
 
     def test_missing_webhook_fails_that_team_only(self):
         env = dict(WEBHOOKS, VECTOR_WEBHOOK="")
@@ -443,6 +454,10 @@ class RunTest(Base):
             "timeout": socket.timeout("timed out"),
             "slack error body": FakeResponse(200, b"invalid_payload"),
             "non-2xx response": FakeResponse(302, b""),
+            # bodies that echo the webhook path without a scheme: only hide() removes them
+            "slack body echoes the path": FakeResponse(200, b"invalid_token /services/RASTER-SECRET"),
+            "http body echoes the path": urllib.error.HTTPError(
+                WEBHOOKS["RASTER_WEBHOOK"], 404, "x", {}, io.BytesIO(b"no_team hooks.invalid/services/RASTER-SECRET")),
         }
         for label, outcome in failures.items():
             with self.subTest(label):
@@ -453,7 +468,8 @@ class RunTest(Base):
                 self.assertEqual(sorted(r.run_line["posted"]), ["3d", "infra", "vector"])
                 infra = [b["text"] for u, b in self.urlopen.calls if u == WEBHOOKS["INFRA_WEBHOOK"]]
                 self.assertTrue(any("report partial: raster: " in t for t in infra), infra)
-                everything = json.dumps(self.urlopen.calls[-1]) + json.dumps(r.run_line) + json.dumps(infra)
+                everything = (json.dumps(self.urlopen.loki()) + json.dumps(r.run_line) + json.dumps(infra)
+                              + self.log.getvalue() + self.out.getvalue())
                 self.assertNotIn("RASTER-SECRET", everything)
 
     def test_a_failed_post_to_infra_itself_is_partial(self):
@@ -489,6 +505,23 @@ class RunTest(Base):
         self.assertIn("--- dry run: message for raster (RASTER_WEBHOOK set)", self.out.getvalue())
         self.assertTrue(r.run_line["dryRun"])
 
+    def test_dry_run_without_a_webhook_fails_that_team(self):
+        # a dryRun deploy must show a missing <TEAM>_WEBHOOK Secret key in its run status
+        r = self.runner(c=cfg(dry_run=True), env=dict(WEBHOOKS, VECTOR_WEBHOOK=""))
+        self.assertEqual(r.run(), 1)
+        self.assertEqual(self.urlopen.posts(), {})
+        self.assertEqual((r.run_line["status"], r.run_line["failed"]), ("partial", ["vector"]))
+        self.assertEqual(r.run_line["posted"], ["3d", "infra", "raster"])
+        self.assertIn("report partial: vector: no webhook (VECTOR_WEBHOOK is empty)", r.run_line["reason"])
+        self.assertIn("--- dry run: message for vector (VECTOR_WEBHOOK NOT SET)", self.out.getvalue())
+        (payload,) = self.urlopen.loki()
+        (pushed,) = [json.loads(v[1]) for s in payload["streams"] if s["stream"]["team"] == "_run" for v in s["values"]]
+        self.assertEqual(pushed, r.run_line)
+        r = self.runner(c=cfg(dry_run=True), env={})
+        self.assertEqual(r.run(), 1)
+        self.assertEqual((r.run_line["status"], r.run_line["failed"], r.run_line["posted"]),
+                         ("partial", ["3d", "infra", "raster", "vector"], []))
+
     def test_post_when_clean(self):
         teams = dict(TEAMS, teams=TEAMS["teams"] + ["app"], webhookEnv=dict(TEAMS["webhookEnv"], app="APP_WEBHOOK"))
         env = dict(WEBHOOKS, APP_WEBHOOK="https://hooks.invalid/services/APP-SECRET")
@@ -510,6 +543,7 @@ class RunTest(Base):
         self.assertIn("*Gatekeeper daily report skipped*", posts["INFRA_WEBHOOK"])
         (payload,) = self.urlopen.loki()
         self.assertEqual([s["stream"]["team"] for s in payload["streams"]], ["_run"])
+        self.assertEqual(r.run_line["auditCheck"], {"cpuRatio": "skipped", "mclabels": "skipped"})
 
     def test_gator_failures_skip(self):
         cases = {
@@ -538,6 +572,19 @@ class RunTest(Base):
         r = self.runner()
         r.work = os.path.join(blocker, "work")  # /work not writable
         self.assert_skipped(r, "^(NotADirectoryError|FileExistsError): ")
+
+    def test_failure_after_counting_pushes_the_run_line_only(self):
+        # audit_check runs after summarize(): its counts must not reach Loki or Slack
+        src = report.FileSource(API)
+        orig = src.list
+
+        def bad_status(path):
+            items = orig(path)
+            if path.endswith("k8sworkloadcpuratio"):
+                items[0]["status"]["totalViolations"] = "x"
+            return items
+        src.list = bad_status
+        self.assert_skipped(self.runner(source=src), "^ValueError: invalid literal")
 
     def test_api_error_on_one_kind_skips_the_run(self):
         def urlopen(req, timeout=None, context=None):  # the API server, from the fixtures
@@ -594,7 +641,12 @@ class RunTest(Base):
                                                                              "totalViolations": 150}}]}
         f = [{"constraintKind": "K8sWorkloadCpuRatio", "constraint": "c"}] * 140
         self.assertEqual(report.audit_check(cs, f, NOW), ({"cpuRatio": {"gator": 140, "audit": 150}}, []))
+        self.assertEqual(report.audit_check(cs, f[:135], NOW)[1], [])  # 15 = max(5, 15): within
         self.assertEqual(len(report.audit_check(cs, f[:134], NOW)[1]), 1)  # 16 > max(5, 15)
+        zero = {"K8sWorkloadCpuRatio": [{"metadata": {"name": "c"}, "status": {"auditTimestamp": "2026-10-26T07:00:00Z",
+                                                                               "totalViolations": 0}}]}
+        self.assertEqual(report.audit_check(zero, f[:5], NOW)[1], [])  # the floor: 5 = max(5, 0)
+        self.assertEqual(len(report.audit_check(zero, f[:6], NOW)[1]), 1)
         cs["K8sWorkloadCpuRatio"][0]["status"]["auditTimestamp"] = "2026-10-26T05:00:00Z"
         self.assertEqual(report.audit_check(cs, [], NOW), ({"cpuRatio": "skipped"}, []))
 
@@ -668,8 +720,31 @@ class MainTest(Base):
         with contextlib.redirect_stdout(out):
             rc = report.main(["--from-files", API, "--dry-run", "--teams", teams, "--work", os.path.join(self.tmp, "w"),
                               "--gator", self.gators.printing(GATOR_RESULTS)], env=env)
-        self.assertEqual(rc, 0)
+        self.assertEqual(rc, 1)  # no webhook env: every team fails, in a dry run too
         self.assertIn("--- dry run: message for vector (VECTOR_WEBHOOK NOT SET)", out.getvalue())
+
+    def test_dry_run_env_alone_posts_nothing(self):
+        # the CronJob passes no --dry-run: dryRun reaches report.py as DRY_RUN="true" only
+        # (tests/daily-report.sh checks the rendered value)
+        self.assertEqual({k: report.env_config({"DRY_RUN": "true", "POST_WHEN_CLEAN": "true"})[k]
+                          for k in ("dry_run", "post_when_clean")}, {"dry_run": True, "post_when_clean": True})
+        self.assertEqual({k: report.env_config({})[k] for k in ("dry_run", "post_when_clean")},
+                         {"dry_run": False, "post_when_clean": False})
+        teams = os.path.join(self.tmp, "teams.json")
+        with open(teams, "w") as f:
+            json.dump(TEAMS, f)
+        env = dict(WEBHOOKS, DRY_RUN="true", GATOR_VERSION="v3.22.0", LOKI_URL=LOKI)
+        urlopen = FakeUrlopen()
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            rc = report.main(["--from-files", API, "--teams", teams, "--work", os.path.join(self.tmp, "w"),
+                              "--gator", self.gators.printing(GATOR_RESULTS)], env=env, urlopen=urlopen)
+        self.assertEqual(rc, 0)
+        self.assertEqual(urlopen.posts(), {})
+        (payload,) = urlopen.loki()
+        (run,) = [json.loads(v[1]) for s in payload["streams"] if s["stream"]["team"] == "_run" for v in s["values"]]
+        self.assertEqual((run["status"], run["dryRun"]), ("ok", True))
+        self.assertIn("--- dry run: message for raster (RASTER_WEBHOOK set)", out.getvalue())
 
 
 if __name__ == "__main__":

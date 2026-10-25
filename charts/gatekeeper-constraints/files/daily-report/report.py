@@ -626,21 +626,25 @@ class Runner:
         self.posted, self.failed, self.problems = [], [], []
 
     def send(self, team, text):
-        """Post (or, in a dry run, print) one message. Records the outcome."""
+        """Post (or, in a dry run, print) one message. Records the outcome. A team with no
+        webhook fails in a dry run too, so a dryRun deploy shows a missing Secret key."""
         env_name = self.teams["webhookEnv"].get(team)
         url = (self.env.get(env_name) or "").strip() if env_name else ""
         if self.cfg["dry_run"]:
             print("--- dry run: message for %s (%s %s)\n%s\n" % (
                 team, env_name, "set" if url else "NOT SET", text), file=self.out, flush=True)
-            self.posted.append(team)
-            return True
-        reason = "no webhook (%s is empty)" % env_name if not url else post(url, text, self.urlopen)
+        if not url:
+            reason = "no webhook (%s is empty)" % env_name
+        elif self.cfg["dry_run"]:
+            reason = None
+        else:
+            reason = post(url, text, self.urlopen)
         if reason:
             log("post to %s failed: %s" % (team, reason))
             self.failed.append(team)
             self.problems.append("%s: %s" % (team, reason))
             return False
-        log("posted to %s" % team)
+        log(("dry run, not posted to %s" if self.cfg["dry_run"] else "posted to %s") % team)
         self.posted.append(team)
         return True
 
@@ -670,7 +674,7 @@ class Runner:
             else:  # unexpected (a bug, /work not writable, ...): keep the trace in the log
                 reason = redact("%s: %s" % (type(e).__name__, e))
                 log(redact(traceback.format_exc()))
-            status, check = "skipped", {}
+            status, check = "skipped", dict.fromkeys(rules, "skipped")
             by_team, totals, workloads = {}, {}, {}  # a skipped run pushes its run line only
             log("report skipped: " + reason)
             self.send(self.teams["defaultTeam"], "*Gatekeeper daily report skipped* (run %s): %s" % (self.run_id, reason))
@@ -715,7 +719,7 @@ class Runner:
         return 0 if status == "ok" else 1
 
 
-def main(argv=None, env=None):
+def main(argv=None, env=None, urlopen=urllib.request.urlopen):
     env = dict(os.environ) if env is None else env
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     src = p.add_argument_group("source").add_mutually_exclusive_group(required=True)
@@ -731,7 +735,7 @@ def main(argv=None, env=None):
     with open(args.teams) as f:
         teams = json.load(f)
     source = FileSource(args.from_files) if args.from_files else ClusterSource(env.get("KUBE_API"))
-    return Runner(cfg, teams, env, source, gator=args.gator, work=args.work).run()
+    return Runner(cfg, teams, env, source, gator=args.gator, work=args.work, urlopen=urlopen).run()
 
 
 if __name__ == "__main__":
