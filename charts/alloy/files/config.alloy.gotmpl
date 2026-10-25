@@ -38,8 +38,8 @@ loki.process "limit_time" {
 {{- end }}
 
 {{- /* log sampling and dropping by level */}}
-{{- range $level, $rawVal := .Values.sampling.log }}
-{{- if not (or (kindIs "float64" $rawVal) (kindIs "int" $rawVal)) }}
+{{- range $level, $rawVal := (.Values.sampling | default dict).log }}
+{{- if not (or (kindIs "float64" $rawVal) (kindIs "int" $rawVal) (kindIs "int64" $rawVal)) }}
     {{- fail (printf "Log sampling values must be a number between 0 and 1, got '%v'" $rawVal) -}}
 {{- end }}
 {{- $val := $rawVal | float64 -}}
