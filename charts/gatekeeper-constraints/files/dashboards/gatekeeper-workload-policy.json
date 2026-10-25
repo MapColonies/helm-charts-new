@@ -14,7 +14,7 @@
   "schemaVersion": 41,
   "version": 1,
   "time": {
-    "from": "now-7d",
+    "from": "now-14d",
     "to": "now"
   },
   "timepicker": {},
@@ -67,6 +67,7 @@
         "sort": 1,
         "multi": true,
         "includeAll": true,
+        "allValue": ".+",
         "current": {
           "selected": true,
           "text": [

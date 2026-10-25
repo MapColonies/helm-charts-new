@@ -94,6 +94,17 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
               and not tv["run"]["multi"], "run variable: runs with team_total lines only, newest first, single value")
         check(tv["namespace"].get("allValue") == ".+",
               "namespace variable: All must be .+ so namespaces no report run has seen still show (New at deploy)")
+        check(tv["team"].get("allValue") == ".+",
+              "team variable: All must be .+, else with no run in the dashboard range All matches nothing and the 14-day trend is empty")
+        # Datasource: a variable, panel or target without one falls back to Grafana's default datasource
+        # (Prometheus on grafana-dev), where the LogQL fails: no options, an empty $run, every panel empty.
+        loki_ds = {"type": "loki", "uid": "${loki_datasource}"}
+        qvars = [v for v in dash["templating"]["list"] if v.get("type") == "query"]
+        check(sorted(v["name"] for v in qvars) == ["namespace", "run", "team"], f"query variables: {[v['name'] for v in qvars]}")
+        for v in qvars:
+            check(v.get("datasource") == loki_ds, f"variable {v['name']}: datasource must be {loki_ds}, got {v.get('datasource')}")
+            check(v.get("refresh") in (1, 2), f"variable {v['name']}: refresh must be 1 or 2 (query the options on load), got {v.get('refresh')}")
+        check(tv["run"].get("includeAll") is False, 'run variable must not offer All (run_id="$run" selects one run)')
 
         # Every report query, per panel title and refId: scope, outer aggregation, line type, rule and
         # unwrapped field, so each number reads the line it is labelled with. "run": the selected run only.
@@ -149,6 +160,17 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
             return set(m.group(1).split(", ")) if m else set()
 
         panels = {p["title"]: p for p in dash["panels"]}
+        types = {"CPU ratio: workloads": "stat", "CPU ratio: containers": "stat", "mclabels: workloads": "stat",
+                 "mclabels: missing": "stat", "mclabels: invalid": "stat", "Last run": "stat", "Per team": "table",
+                 "Per namespace": "table", "Workloads by namespace and rule": "barchart", "Workloads": "table",
+                 "Trend": "row", "": "text", "CPU ratio: workloads per team": "timeseries",
+                 "mclabels: workloads per team": "timeseries", "New at deploy: distinct workloads, previous 24 h": "timeseries",
+                 "Runs": "table", "Violation messages": "logs", "About": "text"}
+        got_types = {p["title"]: p["type"] for p in dash["panels"]}
+        check(len(dash["panels"]) == len(types) and got_types == types,
+              f"panel types: {sorted(set(got_types.items()) ^ set(types.items()))} differ from the expected types")
+        check(panels["Workloads by namespace and rule"].get("options", {}).get("xField") == "namespace",
+              "Workloads by namespace and rule: xField must be namespace (the queries are max by (namespace))")
         seen = set()
         for p in dash["panels"]:
             for t in p.get("targets", []):
@@ -216,6 +238,18 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
             names = org[0]["options"]["renameByName"] if org else {}
             want = {"Value #" + ref: col for ref, (_, _, col) in cols.items()}
             check(names == want, f"{title}: column names {names} != {want}")
+        # One table: merge first (else Grafana shows one frame per query with a frame picker), then organize,
+        # with the key columns shown.
+        for title, keys in (("Per team", {"team"}), ("Per namespace", {"team", "namespace"}),
+                            ("Workloads by namespace and rule", {"namespace"})):
+            tr = panels[title].get("transformations", [])
+            ids = [x["id"] for x in tr]
+            check(ids[:2] == ["merge", "organize"], f"{title}: transformations must start with merge, organize, got {ids}")
+            org = next((x["options"] for x in tr if x["id"] == "organize"), {})
+            hidden = {k for k, v in org.get("excludeByName", {}).items() if v} & keys
+            check(not hidden, f"{title}: key columns hidden: {sorted(hidden)}")
+            if panels[title]["type"] == "table":
+                check(keys <= set(org.get("indexByName", {})), f"{title}: key columns {sorted(keys)} must be placed (indexByName)")
         org = [x for x in panels["Workloads by namespace and rule"].get("transformations", []) if x["id"] == "organize"]
         check(org and org[0]["options"]["renameByName"] == {"Value #A": "CPU ratio", "Value #B": "mclabels"},
               "Workloads by namespace and rule: A must be named CPU ratio and B mclabels")
@@ -235,19 +269,19 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
         check(len(adm) == 1, f"one admission query expected, got {len(adm)}")
         check(any('team="_run"' in t["expr"] for t in panels.get("Runs", {}).get("targets", [])), "a Runs table must list every run")
 
-        # Datasource: a panel or target without one falls back to Grafana's default datasource
-        # (Prometheus on grafana-dev), where the LogQL fails.
-        loki_ds = {"type": "loki", "uid": "${loki_datasource}"}
         for p in dash["panels"]:
             if p.get("targets"):
                 check(p.get("datasource") == loki_ds, f"{p['title']}: panel datasource must be {loki_ds}, got {p.get('datasource')}")
                 for t in p["targets"]:
                     check(t.get("datasource", loki_ds) == loki_ds, f"{p['title']} {t['refId']}: target datasource must be {loki_ds}")
 
-        # Time ranges: the dashboard default is 7 days (weekends still show Thursday's run; it also scopes
-        # the run variable, Last run and Runs). The trend and New at deploy panels show the last 14 days;
-        # every other panel follows the dashboard range.
-        check(dash.get("time", {}).get("from") == "now-7d", f"default time range must be now-7d, got {dash.get('time')}")
+        # Time ranges: the dashboard default is the Loki retention, 14 days. The Slack link carries only
+        # var-team and var-run, and a selected-run query reads [$__range] up to now, so a shorter default
+        # turns the link of any retained run older than it into "no run". It also scopes the run variable,
+        # Last run and Runs. The trend and New at deploy panels always show the last 14 days; every other
+        # panel follows the dashboard range.
+        check(dash.get("time") == {"from": "now-14d", "to": "now"},
+              f"default time range must be now-14d..now (the Loki retention, so every retained run's link works), got {dash.get('time')}")
         fourteen = {title for (title, _), v in expect.items() if v[0] == "trend"}
         fourteen |= {p["title"] for p in dash["panels"] for t in p.get("targets", []) if "gatekeeper-system" in t["expr"]}
         check(len(fourteen) == 3, f"expected 2 trend panels and New at deploy, got {sorted(fourteen)}")
@@ -308,6 +342,19 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
             check(got == status_colors, f"{title}: status colours must be {status_colors}, got {got}")
         check(panels["Last run"]["targets"][0].get("direction", "backward") == "backward",
               "Last run: maxLines 1 must return the newest line (direction backward)")
+        # In a Loki logs frame the | json fields exist only inside the labels field until extractFields runs.
+        for title in ("Last run", "Runs", "Workloads"):
+            tr = panels[title].get("transformations", [])
+            got = [(x["id"], x["options"].get("source")) for x in tr]
+            check(got[:2] == [("extractFields", "labels"), ("organize", None)],
+                  f"{title}: transformations must start with extractFields (source labels), organize, got {got}")
+        org = next((x["options"] for x in panels["Runs"].get("transformations", []) if x["id"] == "organize"), {})
+        need = {"run_id", "status", "failed", "reason"}
+        check(need <= set(org.get("indexByName", {})), f"Runs: columns {sorted(need)} must be placed (indexByName)")
+        hidden = {k for k, v in org.get("excludeByName", {}).items() if v} & need
+        check(not hidden, f"Runs: columns hidden: {sorted(hidden)}")
+        check(panels["Runs"]["targets"][0].get("maxLines", 0) >= 100,
+              "Runs: maxLines must be >= 100 (every run in the range, about 10 in 14 days, plus manual reruns)")
         runs_fields = ["status", "reason", "posted", "failed", "dryRun", "auditCheck", "gator"]
         check(json_fields(panels["Runs"]["targets"][0]["expr"]) == runs_fields, f"Runs: | json must extract {runs_fields}")
 for e in errors:
