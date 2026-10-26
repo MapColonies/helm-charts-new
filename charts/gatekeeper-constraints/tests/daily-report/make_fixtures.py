@@ -69,6 +69,13 @@ def main(templates_jsonl, gator, out):
         for line in f:
             t = json.loads(line)
             if t.get("kind") == "ConstraintTemplate":
+                # Helm 3 and Helm 4 disagree on the rego block's trailing newline; gator doesn't
+                # care, and the fixtures must not depend on the Helm version.
+                for target in t["spec"].get("targets", []):
+                    target["rego"] = target["rego"].rstrip("\n") + "\n"
+                    target["libs"] = [lib.rstrip("\n") + "\n" for lib in target.get("libs", [])]
+                    if not target["libs"]:
+                        del target["libs"]
                 write("/apis/templates.gatekeeper.sh/v1/constrainttemplates/" + t["metadata"]["name"], t)
 
     deployments = [
