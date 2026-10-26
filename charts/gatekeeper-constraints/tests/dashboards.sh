@@ -108,11 +108,15 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
 
         # Every report query, per panel title and refId: scope, outer aggregation, line type, rule and
         # unwrapped field, so each number reads the line it is labelled with. "run": the selected run only.
-        # "trend": every run, per-team totals, highest run of the previous 12 h at a 1 h step (runs only
-        # happen 04:00-16:00 UTC, so that is the run day: a rerun is counted once, yesterday never mixes in).
+        # "trend": every run, per-team totals as daily bars: the LAST run of each UTC day per team (1d window,
+        # 1d step). Every run is its own stream (run_id), so the grouping must be last_over_time(...) by (team):
+        # max by (team) over the streams would pick the larger of a rerun, not the later one.
+        # "latest": the newest run per team over the panel range (instant), so today's run shows before its
+        # bar does (Loki puts a day's point at the next UTC midnight, after now until the day is over).
         STAT, BAR = "sum(max by (namespace) (max_over_time(", "max by (namespace) (max_over_time("
         TEAM, NS = "max by (team) (max_over_time(", "max by (team, namespace) (max_over_time("
         TOTAL, LOGS = "sum(max by (team) (max_over_time(", "{"
+        DAY, DAY_TOTAL = "last_over_time(", "sum(last_over_time("
         cols = {"A": ("cpuRatio", "workloads", "CPU workloads"), "B": ("cpuRatio", "containers", "CPU containers"),
                 "C": ("mclabels", "workloads", "mclabels workloads"), "D": ("mclabels", "missing", "mclabels missing"),
                 "E": ("mclabels", "invalid", "mclabels invalid")}
@@ -126,13 +130,15 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
             ("Workloads by namespace and rule", "B"): ("run", BAR, "summary", "mclabels", "workloads"),
             ("Workloads", "A"): ("run", LOGS, "violation", None, None),
             ("Violation messages", "A"): ("run", LOGS, "violation", None, None),
-            ("CPU ratio: workloads per team", "A"): ("trend", TEAM, "team_total", "cpuRatio", "workloads"),
-            ("CPU ratio: workloads per team", "B"): ("trend", TOTAL, "team_total", "cpuRatio", "workloads"),
-            ("CPU ratio: workloads per team", "C"): ("trend", TOTAL, "team_total", "cpuRatio", "containers"),
-            ("mclabels: workloads per team", "A"): ("trend", TEAM, "team_total", "mclabels", "workloads"),
-            ("mclabels: workloads per team", "B"): ("trend", TOTAL, "team_total", "mclabels", "workloads"),
-            ("mclabels: workloads per team", "C"): ("trend", TOTAL, "team_total", "mclabels", "missing"),
-            ("mclabels: workloads per team", "D"): ("trend", TOTAL, "team_total", "mclabels", "invalid"),
+            ("CPU ratio: workloads per team", "A"): ("trend", DAY, "team_total", "cpuRatio", "workloads"),
+            ("CPU ratio: workloads per team", "B"): ("trend", DAY_TOTAL, "team_total", "cpuRatio", "workloads"),
+            ("CPU ratio: workloads per team", "C"): ("trend", DAY_TOTAL, "team_total", "cpuRatio", "containers"),
+            ("CPU ratio: workloads per team", "L"): ("latest", DAY, "team_total", "cpuRatio", "workloads"),
+            ("mclabels: workloads per team", "A"): ("trend", DAY, "team_total", "mclabels", "workloads"),
+            ("mclabels: workloads per team", "B"): ("trend", DAY_TOTAL, "team_total", "mclabels", "workloads"),
+            ("mclabels: workloads per team", "C"): ("trend", DAY_TOTAL, "team_total", "mclabels", "missing"),
+            ("mclabels: workloads per team", "D"): ("trend", DAY_TOTAL, "team_total", "mclabels", "invalid"),
+            ("mclabels: workloads per team", "L"): ("latest", DAY, "team_total", "mclabels", "workloads"),
         }
         for ref, (rule, field, _) in cols.items():
             expect[("Per team", ref)] = ("run", TEAM, "team_total", rule, field)
@@ -141,7 +147,8 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
         per_ns = {j, 'run_id="$run"', 'team=~"$team"', 'namespace=~"$namespace"'}
         selectors = {("run", "summary"): per_ns, ("run", "violation"): per_ns,
                      ("run", "team_total"): {j, 'run_id="$run"', 'namespace="_team"', 'team=~"$team"'},
-                     ("trend", "team_total"): {j, 'namespace="_team"', 'team=~"$team"'}}
+                     ("trend", "team_total"): {j, 'namespace="_team"', 'team=~"$team"'},
+                     ("latest", "team_total"): {j, 'namespace="_team"', 'team=~"$team"'}}
         # A stat with no line in the filter shows 0 only when a run is selected, else "no run" (never a clean-looking 0).
         no_run_0 = ' or (0 * sum(count_over_time({%s, run_id="$run", namespace="_team"} [$__range])))' % j
         ns_0 = (' or (0 * count by (team, namespace) (count_over_time({%s, run_id="$run", team=~"$team", namespace=~"$namespace"}'
@@ -214,13 +221,20 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
                 if scope == "run":
                     check(expr.count("[$__range]") == expr.count("[") and t.get("queryType") == "instant",
                           f"{where}: a selected-run number is an instant query over [$__range]")
-                else:
-                    check(expr.count("[12h]") == 1 and "[" not in expr.replace("[12h]", ""),
-                          f"{where}: trend window must be [12h] (the run day)")
-                    check(t.get("queryType") == "range" and t.get("step") == "1h" and p.get("interval") == "1h",
-                          f"{where}: trend must be a range query at a 1h step")
-                    legend = "{{team}}" if prefix == TEAM else "total " + field
+                elif scope == "trend":
+                    # The last run of each UTC day per team: window = step = 1d, grouped by team on the range
+                    # aggregation itself (not max by (team) over the run_id streams), summed only for totals.
+                    tail = "[1d]) by (team)" + (")" if prefix == DAY_TOTAL else "")
+                    check(expr.endswith(tail) and expr.count("[") == 1,
+                          f"{where}: trend must end with {tail!r} (last run of the day per team): {expr}")
+                    check(t.get("queryType") == "range" and t.get("step") == "1d" and p.get("interval") == "1d",
+                          f"{where}: trend must be a range query at a 1d step (one bar per UTC day)")
+                    legend = "{{team}}" if prefix == DAY else "total " + field
                     check(t.get("legendFormat") == legend, f"{where}: legend must be {legend!r}")
+                else:
+                    check(expr.endswith("[$__range]) by (team)") and expr.count("[") == 1 and t.get("queryType") == "instant",
+                          f"{where}: latest run must be an instant last_over_time(...[$__range]) by (team): {expr}")
+                    check(t.get("legendFormat") == "{{team}} latest run", f"{where}: legend must be '{{{{team}}}} latest run'")
                 if prefix == STAT:
                     check(expr.endswith(no_run_0) and expr.count("max_over_time") == 1,
                           f"{where}: a stat must fall back to 0 only for a selected run: {expr}")
@@ -229,6 +243,9 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
                     steps = p["fieldConfig"]["defaults"]["thresholds"]["steps"]
                     check([s["color"] for s in steps if s["value"] is None] == ["text"],
                           f"{where}: 'no run' must not be coloured green")
+                elif scope in ("trend", "latest"):
+                    check(expr.count("last_over_time") == 1 and "max" not in expr,
+                          f"{where}: one last_over_time and no max (a rerun replaces, it does not keep the larger): {expr}")
                 else:
                     check(expr.count("max_over_time") == 1, f"{where}: one max_over_time only: {expr}")
         missing = set(expect) - seen
@@ -302,8 +319,28 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
             props = {x["id"]: x["value"] for x in ov[0]["properties"]} if ov else {}
             check(props.get("custom.stacking", {}).get("mode") == "none",
                   f"{title}: an override matching ^total.* must set custom.stacking mode none")
-            totals = [t["legendFormat"] for t in p["targets"] if t.get("legendFormat") != "{{team}}"]
+            totals = [t["legendFormat"] for t in p["targets"] if t["refId"] not in ("A", "L")]
             check(totals and all(re.match(r"^total", x) for x in totals), f"{title}: total legends {totals} must match ^total.*")
+            # Daily bars, each drawn ending at its point: Loki puts the last run of day D at D+1 00:00 UTC, so
+            # barAlignment -1 puts the bar on day D (0 would straddle two days, 1 would draw it on D+1).
+            custom = p["fieldConfig"]["defaults"]["custom"]
+            check(custom.get("drawStyle") == "bars" and custom.get("barAlignment") == -1,
+                  f"{title}: must be bars with barAlignment -1, got {custom.get('drawStyle')!r}, {custom.get('barAlignment')!r}")
+            # Latest run: Grafana's Loki datasource returns an instant result as one table (Time, team, Value #L),
+            # so it is split per team, then drawn as dots in their own stack (an override by refId no longer
+            # matches after the split; Grafana anchors the regexp, hence the trailing .*).
+            check([t["refId"] for t in p["targets"]].count("L") == 1, f"{title}: needs one latest-run target (refId L)")
+            check(p.get("transformations") == [{"id": "partitionByValues", "filter": {"id": "byRefId", "options": "L"},
+                                                 "options": {"fields": ["team"], "keepFields": False, "naming": {"asLabels": True}}}],
+                  f"{title}: the latest-run table must be split per team (partitionByValues on team, refId L only)")
+            ov = [o for o in p["fieldConfig"].get("overrides", []) if o["matcher"] == {"id": "byRegexp", "options": "Value #L.*"}]
+            props = {x["id"]: x["value"] for x in ov[0]["properties"]} if ov else {}
+            check(props.get("custom.drawStyle") == "points" and props.get("custom.showPoints") == "always",
+                  f"{title}: the latest-run series (override Value #L.*) must be drawn as points")
+            check(props.get("custom.stacking", {}).get("mode") == "normal" and props["custom.stacking"].get("group") != "A",
+                  f"{title}: latest-run dots must stack in their own group, not on top of the bars")
+            check(props.get("displayName") == "${__field.labels.team} latest run" and props.get("custom.hideFrom", {}).get("tooltip") is False,
+                  f"{title}: latest-run dots must be named '<team> latest run' and shown in the tooltip")
 
         # Per team / Per namespace: full width, so every column (the mclabels missing/invalid split too) is
         # visible without scrolling; an empty table must not read as a clean 0.
