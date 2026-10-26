@@ -1055,7 +1055,8 @@
               "service_name": true,
               "__error__": true,
               "__error_details__": true,
-              "run_id": true
+              "run_id": true,
+              "traceID": true
             },
             "indexByName": {
               "team": 0,
@@ -1656,7 +1657,8 @@
               "__error__": true,
               "__error_details__": true,
               "team": true,
-              "namespace": true
+              "namespace": true,
+              "traceID": true
             },
             "indexByName": {
               "Time": 0,

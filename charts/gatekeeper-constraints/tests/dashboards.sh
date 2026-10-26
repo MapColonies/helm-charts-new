@@ -392,6 +392,10 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
         check(not hidden, f"Runs: columns hidden: {sorted(hidden)}")
         check(panels["Runs"]["targets"][0].get("maxLines", 0) >= 100,
               "Runs: maxLines must be >= 100 (every run in the range, about 10 in 14 days, plus manual reruns)")
+        # The Loki datasource's derived field adds an empty traceID column to logs-based tables.
+        for title in ("Runs", "Workloads"):
+            o = next((x["options"] for x in panels[title].get("transformations", []) if x["id"] == "organize"), {})
+            check(o.get("excludeByName", {}).get("traceID") is True, f"{title}: the derived traceID column must be hidden")
         runs_fields = ["status", "reason", "posted", "failed", "dryRun", "auditCheck", "gator"]
         check(json_fields(panels["Runs"]["targets"][0]["expr"]) == runs_fields, f"Runs: | json must extract {runs_fields}")
 for e in errors:
