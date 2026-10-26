@@ -47,9 +47,12 @@ alloy:
       name: infra-alloy
 
 # Collects the logs of pods labeled mapcolonies.io/alloy-api-logs=true through the Kubernetes API.
-# A StatefulSet, so each replica keeps its read positions on its own PVC across restarts and
-# rollouts and resumes instead of re-reading the logs. The replicas split the pods between them
-# (clustering), so each line is shipped once.
+# The replicas split the pods between them (clustering), so each line is shipped once, and each
+# keeps its read positions on its own PVC. A replica restart (rollout, eviction) still re-sends
+# lines: its peers take over its pods without its positions and read them from the start (back to
+# maxLogAge); once it's back, it resumes from its own positions, re-sending what the peers shipped
+# meanwhile; and the peers keep tailing its pods until they drop its old membership (seen 2-45s).
+# tests/clustering-e2e.sh checks this.
 alloy-logs:
   image:
     repository: infra/grafana/alloy

@@ -42,12 +42,12 @@ grep -rq 'cursor-ns/pod:app:uid-1' "$work/pvc" || fail "no read position saved u
 
 # 2. restart on the same storage resumes: at most the last line again
 run restarted "$work/pvc" 2
-echo "  restart on the same PVC: re-shipped $(shipped restarted) of $LINES lines (sinceTime $(sed -n 2p "$work/since"))"
+echo "  restart on the same PVC: re-shipped $(shipped restarted) of $LINES lines (sinceTime $(sed -n "2s/.* //p" "$work/since"))"
 [[ $(shipped restarted) -le 1 ]] || fail "restarted replica re-shipped $(shipped restarted) lines"
 
 # 3. control: empty storage reads the whole log again
 run fresh "$work/new-pvc" 2
-echo "  start on a new PVC:      re-shipped $(shipped fresh) of $LINES lines (sinceTime $(sed -n 3p "$work/since"))"
+echo "  start on a new PVC:      re-shipped $(shipped fresh) of $LINES lines (sinceTime $(sed -n "3s/.* //p" "$work/since"))"
 [[ $(shipped fresh) -eq $LINES ]] || fail "replica on new storage shipped $(shipped fresh) of $LINES lines"
 
 echo "OK"

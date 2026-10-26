@@ -1,5 +1,6 @@
 """Minimal Kubernetes API for the e2e tests: serves the logs of every container (LINES lines, one
-per second, ending now) and records the sinceTime of every log request. Anything else is a 404."""
+per second, ending now) and records every log request as "<namespace>/<pod> <sinceTime or none>".
+Anything else is a 404."""
 import json, sys, time
 from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -28,8 +29,9 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             return
         since = parse_qs(url.query).get("sinceTime", [""])[0]
+        namespace, pod = url.path.split("/")[4], url.path.split("/")[6]  # /api/v1/namespaces/<ns>/pods/<pod>/log
         with open(record, "a") as f:
-            f.write((since or "none") + "\n")
+            f.write(f"{namespace}/{pod} {since or 'none'}\n")
         start = datetime.fromisoformat(since.replace("Z", "+00:00")) if since else None
         self.send_response(200)
         self.send_header("Content-Type", "text/plain")
