@@ -1,10 +1,26 @@
+{{- if empty .Values.namespaces }}
+{{- fail "At least one namespace must be specified in the values file." }}
+{{- end }}
+{{- /* The Deployment that receives OTLP over HTTP/gRPC */}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: infra-alloy
+  name: {{ .Values.alloy.alloy.configMap.name }}
   namespace: {{ .Release.Namespace }}
   labels:
     mapcolonies.io/owner: infra
 data:
   config.alloy: |-
 {{ tpl (.Files.Get "files/config.alloy.gotmpl") . | indent 4 }}
+---
+{{- /* The StatefulSet that collects pod logs through the Kubernetes API */}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ (index .Values "alloy-logs").alloy.configMap.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    mapcolonies.io/owner: infra
+data:
+  config.alloy: |-
+{{ tpl (.Files.Get "files/pod-logs.alloy.gotmpl") . | indent 4 }}

@@ -10,3 +10,8 @@ dependencies:
   - name: alloy
     repository: https://grafana.github.io/helm-charts
     version: 1.10.0
+  # Same chart again, as the StatefulSet that collects pod logs (values under `alloy-logs`)
+  - name: alloy
+    alias: alloy-logs
+    repository: https://grafana.github.io/helm-charts
+    version: 1.10.0

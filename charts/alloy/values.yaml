@@ -46,6 +46,76 @@ alloy:
       create: false
       name: infra-alloy
 
+# Collects the logs of pods labeled mapcolonies.io/alloy-api-logs=true through the Kubernetes API.
+# A StatefulSet, so each replica keeps its read positions on its own PVC across restarts and
+# rollouts and resumes instead of re-reading the logs. The replicas split the pods between them
+# (clustering), so each line is shipped once.
+alloy-logs:
+  image:
+    repository: infra/grafana/alloy
+  serviceAccount:
+    create: false
+    name: alloy-kube-api
+  rbac:
+    create: false
+  configReloader:
+    image:
+      repository: infra/grafana/prometheus-operator/prometheus-config-reloader
+      tag: v0.91.0
+
+  crds:
+    create: false
+
+  controller:
+    type: 'statefulset'
+    replicas: 3
+    # Delete a replica's PVC when it's scaled away (and on uninstall), so a later scale-up starts
+    # that replica clean instead of resuming from positions that are stale by then
+    enableStatefulSetAutoDeletePVC: true
+    # Uses the cluster's default StorageClass; to choose one, set spec.storageClassName here.
+    # Overriding this list replaces it, so give the whole claim template (not --set on one field).
+    volumeClaimTemplates:
+      - metadata:
+          name: storage
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+    podLabels:
+      mapcolonies.io/component: "infrastructure"
+      mapcolonies.io/part-of: "monitoring"
+      mapcolonies.io/owner: "infra"
+      mapcolonies.io/criticality: "internal"
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "12345"
+
+  alloy:
+    enableReporting: false
+    stabilityLevel: "experimental"
+    clustering:
+      enabled: true
+      # Keeps its cluster metrics (and the clustering alerts) apart from the OTLP Deployment's
+      name: alloy-logs
+    # Alloy's state, including the log read positions, lives on the PVC
+    storagePath: /var/lib/alloy
+    mounts:
+      extra:
+        - name: storage
+          mountPath: /var/lib/alloy
+    configMap:
+      create: false
+      name: infra-alloy-logs
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+
 batching: {}
 exporter:
   sending_queue: {}
