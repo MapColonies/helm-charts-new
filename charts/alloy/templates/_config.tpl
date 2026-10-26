@@ -1,8 +1,9 @@
 {{/*
 The export end of both Alloy configs: health filter -> batch -> OTLP/HTTP exporter, and Alloy's own traces.
+Takes (dict "root" $ "values" <the workload's subchart `alloy` values>), which size the exporter queue.
 */}}
 {{- define "alloy-wrapper.config.export" -}}
-{{- $root := . -}}
+{{- $root := .root -}}
 otelcol.processor.filter "health_filter" {
     error_mode = "ignore"
     logs {
@@ -36,7 +37,9 @@ otelcol.exporter.otlphttp "default" {
     sending_queue {
         enabled      = true
         num_consumers = {{ $root.Values.exporter.sending_queue.num_consumers | default 4 }}
-        queue_size   = {{ $root.Values.exporter.sending_queue.queue_size | default 2000 }}
+        // Sized to the pod's memory limit; when full, new batches are dropped instead of blocking
+        queue_size   = {{ include "alloy-wrapper.queueSize" . }}
+        block_on_overflow = false
     }
     retry_on_failure {
         enabled         = true

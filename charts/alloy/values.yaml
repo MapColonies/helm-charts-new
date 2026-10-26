@@ -123,7 +123,15 @@ maxLogAge: 7m30s
 
 batching: {}
 exporter:
-  sending_queue: {}
+  sending_queue:
+    # queue_size: batches the exporter may queue. Unset, it's sized to each pod's memory limit
+    # (2000 when there's no limit), so a backlog drops data instead of OOM-killing the pod:
+    #   memory limit * memory_share / (batching.send_batch_max_size * bytes_per_record)
+    # memory_share leaves the rest of the limit to the rest of the pipeline and the Go runtime.
+    memory_share: 0.5
+    # In-memory size of one log record, an estimate: prod held ~1000 queued batches when it hit
+    # its 1Gi limit, which is ~512 B per record if they were full (2048+ records), as in a backlog.
+    bytes_per_record: 1024
   retry_on_failure: {}
 
 # Keep or drop log lines by content, before they are exported. Off by default.

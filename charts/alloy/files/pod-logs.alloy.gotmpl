@@ -158,4 +158,4 @@ otelcol.processor.transform "default" {
     }
 }
 
-{{ include "alloy-wrapper.config.export" . }}
+{{ include "alloy-wrapper.config.export" (dict "root" . "values" (index .Values "alloy-logs").alloy) }}

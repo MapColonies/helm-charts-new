@@ -57,4 +57,4 @@ otelcol.processor.k8sattributes "add_k8s_attributes_{{ $namespace | snakecase }}
 }
 {{ end }}
 
-{{ include "alloy-wrapper.config.export" . }}
+{{ include "alloy-wrapper.config.export" (dict "root" . "values" .Values.alloy.alloy) }}
