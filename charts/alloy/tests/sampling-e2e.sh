@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Runs the real Alloy binary against the rendered log pipeline (loki.process, OTel parsing,
 # health filter and sampling), with the batcher swapped for loki.echo. Pushes N pod-style
-# JSON lines per severity, with SeverityText in the body and no level label, and counts
-# what survives.
+# JSON lines per severity, with SeverityText in the body and no level label, and checks
+# what survives against the sampling.log rates in the chart values: rates 0 and 1 exactly,
+# others within 5 standard deviations. Fails on any leftover sampling.* attribute.
 # Usage: ALLOY=/path/to/alloy tests/sampling-e2e.sh [helm template args...]
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -26,6 +27,11 @@ block() { awk -v hdr="$1 {" '!done && index($0, hdr) && $0 !~ /^ *\/\// {p=1} p{
   done
 } | sed 's|otelcol.processor.batch.default.input|otelcol.exporter.loki.out.input|' >"$work/pipeline.alloy"
 grep -q 'otelcol.processor.filter "health_filter"' "$work/pipeline.alloy" || { echo "failed to extract the pipeline" >&2; exit 1; }
+
+# Expected keep rates: sampling.log from the merged values, via a throwaway template in a copy of the chart
+cp -r . "$work/chart"
+echo '{{ (.Values.sampling | default dict).log | default dict | toJson }}' >"$work/chart/templates/zz-sampling-rates.yaml"
+helm template alloy "$work/chart" "$@" --show-only templates/zz-sampling-rates.yaml | tail -1 >"$work/rates.json"
 
 cat >"$work/config.alloy" <<CFG
 loki.source.api "in" {
@@ -68,18 +74,47 @@ PY
   curl -sf -H 'Content-Type: application/json' --data-binary @"$work/push-$lvl.json" \
     "http://127.0.0.1:$PUSH_PORT/loki/api/v1/push"
 done
-sleep 5
 
-printf '\n%-6s %8s %8s %8s\n' level sent kept ratio
-for lvl in "${levels[@]}"; do
-  kept=$( (grep -o "$lvl-line-[0-9]*" "$work/alloy.log" || true) | sort -u | wc -l)
-  printf '%-6s %8d %8d %8.3f\n' "$lvl" "$N" "$kept" "$(echo "$kept/$N" | bc -l)"
+# Wait until the output stops growing
+prev=-1
+for i in $(seq 60); do
+  sleep 1
+  cur=$(grep -c 'loki.echo.out' "$work/alloy.log" || true)
+  [ "$i" -ge 3 ] && [ "$cur" -eq "$prev" ] && break
+  prev=$cur
 done
+
+failed=0
+counts=()
+for lvl in "${levels[@]}"; do
+  counts+=("$lvl=$( (grep -o "$lvl-line-[0-9]*" "$work/alloy.log" || true) | sort -u | wc -l)")
+done
+echo
+python3 -I - "$work/rates.json" "$N" "${counts[@]}" <<'PY' || failed=1
+import json, math, sys
+rates = {k.lower(): float(v) for k, v in json.load(open(sys.argv[1])).items()}
+n, failed = int(sys.argv[2]), False
+print(f"{'level':6} {'sent':>6} {'kept':>6} {'ratio':>6} {'rate':>6} {'allowed':>11}")
+for arg in sys.argv[3:]:
+    lvl, kept = arg.split("=")
+    kept, p = int(kept), rates.get(lvl, 1.0)
+    # rates 0 and 1 are exact; otherwise allow 5 standard deviations of binomial(n, p)
+    margin = 5 * math.sqrt(n * p * (1 - p))
+    lo, hi = math.ceil(n * p - margin), math.floor(n * p + margin)
+    ok = lo <= kept <= hi
+    failed |= not ok
+    print(f"{lvl:6} {n:6} {kept:6} {kept / n:6.3f} {p:6g} {f'{lo}-{hi}':>11}  {'ok' if ok else 'FAIL'}")
+sys.exit(failed)
+PY
+
 echo; echo "--- output lines with leftover sampling attributes (expect none)"
-grep 'loki.echo' "$work/alloy.log" | grep 'sampling\.' | head -3 || echo "(none)"
+if grep 'loki.echo' "$work/alloy.log" | grep 'sampling\.' | head -3; then failed=1; else echo "(none)"; fi
 echo; echo "--- example output line"
 grep 'loki.echo' "$work/alloy.log" | grep -m1 'error-line-' || true
 echo; echo "--- sampler metrics"
 curl -s http://127.0.0.1:12399/metrics | grep -E '^otelcol_processor_probabilistic_sampler' || echo "(none)"
 echo; echo "--- alloy errors"
 grep -iE 'level=(error|warn)' "$work/alloy.log" | head -5 || echo "(none)"
+
+echo
+[ "$failed" -eq 0 ] && echo "OK" || { echo "FAIL"; exit 1; }
