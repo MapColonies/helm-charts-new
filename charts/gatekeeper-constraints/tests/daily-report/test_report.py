@@ -741,6 +741,19 @@ class RunTest(Base):
         cs["K8sWorkloadCpuRatio"][0]["status"]["auditTimestamp"] = "2026-10-26T05:00:00Z"
         self.assertEqual(report.audit_check(cs, [], NOW), ({"cpuRatio": "skipped"}, []))
 
+    def test_audit_right_after_the_constraint_was_recreated_is_not_compared(self):
+        # helm upgrade recreates the Constraints; their first audits can read 0 (seen on dev)
+        f = [{"constraintKind": "K8sWorkloadCpuRatio", "constraint": "c"}] * 157
+
+        def cs(created):
+            return {"K8sWorkloadCpuRatio": [{"metadata": {"name": "c", "creationTimestamp": created},
+                                             "status": {"auditTimestamp": "2026-10-26T07:00:00Z", "totalViolations": 0}}]}
+        self.assertEqual(report.audit_check(cs("2026-10-26T06:51:00Z"), f, NOW), ({"cpuRatio": "skipped"}, []))
+        self.assertEqual(report.audit_check(cs("2026-10-26T07:01:00Z"), f, NOW), ({"cpuRatio": "skipped"}, []))
+        settled = report.audit_check(cs("2026-10-26T06:50:00Z"), f, NOW)
+        self.assertEqual(settled[0], {"cpuRatio": {"gator": 157, "audit": 0}})
+        self.assertEqual(len(settled[1]), 1)
+
     def test_stale_audit_is_recorded_not_an_error(self):
         r = self.runner()
         r.now = NOW + datetime.timedelta(hours=3)

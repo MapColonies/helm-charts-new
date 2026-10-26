@@ -46,6 +46,9 @@ KIND_PREFIX = {"Deployment": "", "StatefulSet": "sts/"}
 SILENCED = "silenced"
 PAGE_SIZE = 500
 AUDIT_MAX_AGE = datetime.timedelta(hours=2)
+# An upgrade recreates the ConstraintTemplates, so their Constraints too; the first audits
+# after that can report totalViolations 0 before the template is loaded.
+AUDIT_SETTLE = datetime.timedelta(minutes=10)
 GATOR_TIMEOUT = 300
 HTTP_TIMEOUT = 30
 LAST_APPLIED = "kubectl.kubernetes.io/last-applied-configuration"
@@ -317,12 +320,17 @@ def parse_time(value):
     return datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.timezone.utc)
 
 
-def audit_fresh(status, now):
+def audit_fresh(status, now, created=None):
+    """An audit counts when it is under AUDIT_MAX_AGE old and started at least AUDIT_SETTLE
+    after the Constraint was created (created: its metadata.creationTimestamp, if known)."""
     ts = status.get("auditTimestamp")
     if not ts or "totalViolations" not in status:
         return False
     try:
-        return now - parse_time(ts) < AUDIT_MAX_AGE
+        audited = parse_time(ts)
+        if created and audited - parse_time(created) < AUDIT_SETTLE:
+            return False
+        return now - audited < AUDIT_MAX_AGE
     except ValueError:
         return False
 
@@ -343,7 +351,7 @@ def audit_check(constraints_by_kind, findings, now):
         for c in sorted(constraints, key=lambda c: c["metadata"]["name"]):
             name = c["metadata"]["name"]
             status = c.get("status") or {}
-            if not audit_fresh(status, now):
+            if not audit_fresh(status, now, c["metadata"].get("creationTimestamp")):
                 skipped.append(name)
                 continue
             gator, audit = counts.get((kind, name), 0), int(status["totalViolations"])
