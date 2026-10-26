@@ -77,8 +77,9 @@ loki.source.kubernetes "pod_logs" {
 
 loki.process "limit_time" {
     forward_to = [otelcol.receiver.loki.default.receiver]
+    // Loki would reject older lines (see maxLogAge in values.yaml), so drop them here
     stage.drop {
-        older_than          = "1h"
+        older_than          = {{ .Values.maxLogAge | quote }}
         drop_counter_reason = "too_old"
     }
 {{- /* logFilters: values-driven keep/drop by log line content. Selector = namespace matcher + LogQL line filter, each regex JSON-quoted twice (LogQL string, then Alloy string).

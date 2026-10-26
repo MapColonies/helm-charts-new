@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Asserts on the pod logs pipeline's age filter: older_than is maxLogAge, and maxLogAge is within
+# Loki's out-of-order window, max_chunk_age/2 of the Loki chart (charts/loki), so Alloy never
+# sends a line Loki rejects as too old. A shorter maxLogAge is fine.
+source "$(dirname "$0")/lib.sh"
+
+older_than() { config "$LOGS_CONFIG" "$@" | sed -n 's/^ *older_than *= *"\(.*\)"$/\1/p'; }
+# seconds <duration>: seconds in a duration of whole h/m/s parts, like 7m30s or 2h
+seconds() {
+  local total=0
+  [[ -n $1 && $1 =~ ^([0-9]+h)?([0-9]+m)?([0-9]+s)?$ ]] || fail "'$1' is not a duration of whole h/m/s parts"
+  [[ $1 =~ ([0-9]+)h ]] && total=$((total + BASH_REMATCH[1] * 3600))
+  [[ $1 =~ ([0-9]+)m ]] && total=$((total + BASH_REMATCH[1] * 60))
+  [[ $1 =~ ([0-9]+)s ]] && total=$((total + BASH_REMATCH[1]))
+  echo "$total"
+}
+
+# 1. older_than is maxLogAge as is
+[[ $(older_than --set maxLogAge=5m) == 5m ]] || fail "older_than must be maxLogAge"
+
+# 2. maxLogAge is no longer than Loki's out-of-order window (its chart default is 2h when unset)
+loki=../loki
+ls "$loki"/charts/*.tgz >/dev/null 2>&1 || helm dependency build "$loki" >/dev/null
+max_chunk_age=$(helm template loki "$loki" --set loki.loki.storage.bucketNames.chunks=c \
+  --set loki.loki.storage.bucketNames.ruler=r --set loki.loki.storage.bucketNames.admin=a \
+  | sed -n 's/^ *max_chunk_age: *//p' | sort -u)
+max_chunk_age=${max_chunk_age:-2h}
+[[ $(wc -l <<<"$max_chunk_age") == 1 ]] || fail "Loki renders more than one max_chunk_age: $max_chunk_age"
+window=$(($(seconds "$max_chunk_age") / 2))
+max_log_age=$(older_than)
+(($(seconds "$max_log_age") <= window)) \
+  || fail "maxLogAge $max_log_age is longer than Loki's out-of-order window, ${window}s (max_chunk_age $max_chunk_age / 2); Loki rejects the lines in between"
+
+echo "OK"

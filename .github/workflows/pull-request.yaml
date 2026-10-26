@@ -115,13 +115,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Check for alloy changes
+      # tests/loki-window.sh checks maxLogAge against the Loki chart's max_chunk_age
+      - name: Check for alloy or loki changes
         uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
             chart:
               - 'charts/alloy/**'
+              - 'charts/loki/**'
 
       - name: Set up Helm
         if: steps.filter.outputs.chart == 'true'
