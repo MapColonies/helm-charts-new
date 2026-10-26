@@ -169,15 +169,20 @@ alloy-logs:
 maxLogAge: 5m30s
 
 sampling:
-  # Sampling is disabled by default. If you want to enable it, set the sampling rate to a value between 0 and 1.
-  # For example, to sample 10% of traces, set the sampling rate to 0.1.
-  # Sampling rate of 0 means no traces are sampled, and a sampling rate of 1 means all traces are sampled.
-  # Note that sampling is applied after the log has been received, so it does not reduce the amount of data sent to Alloy.
-  log:
-    trace: 0
-    debug: 0
-    info: 0.1
-    warn: 0.5
+  # Log sampling by severity. Off by default: set rates per environment.
+  # Each key is a severity, matched case-insensitively against the log record's severity_text
+  # after OTel parsing (e.g. `info` matches "INFO" and "Info"). Any severity string is accepted.
+  # Each value is the fraction of logs to keep, between 0 and 1: 0 drops all of them, 0.1 keeps 10%,
+  # 1 keeps all. Severities that are not listed, and logs without a severity, are kept at 100%.
+  # Plain-text lines have no severity_text, so they are never sampled.
+  # Sampling happens inside Alloy, so it does not reduce the amount of data sent to Alloy.
+  # Example:
+  # log:
+  #   trace: 0
+  #   debug: 0
+  #   info: 0.2
+  #   warn: 0.5
+  log: {}
 
 batching: {}
 exporter:
