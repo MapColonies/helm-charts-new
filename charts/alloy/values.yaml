@@ -119,10 +119,12 @@ alloy-logs:
         cpu: "1"
         memory: 1Gi
 
-# Pod log lines older than this are dropped instead of sent. Keep it within Loki's out-of-order
-# window, max_chunk_age/2 (7m30s for charts/loki's 15m): Loki rejects lines further behind the
-# newest line of their stream ("entry too far behind"). tests/loki-window.sh checks it.
-maxLogAge: 7m30s
+# Pod log lines older than this are dropped instead of sent. Loki rejects lines more than
+# max_chunk_age/2 (7m30s for charts/loki's 15m) behind the newest line of their stream ("entry too
+# far behind"), and a line ages further on its way there: up to the batch timeout plus the
+# exporter's retry max_elapsed_time (5s + 60s by default). Keep it under the window minus that;
+# tests/loki-window.sh checks it.
+maxLogAge: 6m
 
 batching: {}
 exporter:
