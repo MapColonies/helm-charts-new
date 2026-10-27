@@ -32,11 +32,18 @@ awk '/otelcol.processor.filter "health_filter"/{h=NR} /otelcol.processor.filter.
      END{exit !(h<a && a<d && d<e && e<p && p<s && s<c && c<b)}' <<<"$out" || fail "sampling components wired in the wrong order"
 grep -qF 'delete_key(attributes, "sampling.priority")' <<<"$out" || fail "cleanup must remove sampling.priority"
 grep -qF 'delete_key(attributes, "sampling.key")' <<<"$out" || fail "cleanup must remove sampling.key"
+awk '/otelcol.processor.transform "log_sampling_priority"/{p=1} p && /delete_key\(attributes, "sampling.priority"\)/{if(!d)d=NR} p && /set\(attributes\[\\"sampling.priority/{if(!s)s=NR} END{exit !(d && d<s)}' <<<"$out" \
+  || fail "an incoming sampling.priority must be deleted before the severity rates are set"
 for attr in sampling.randomness sampling.threshold; do
   grep -qF "delete_key(attributes, \"$attr\")" <<<"$out" || fail "cleanup must remove $attr added by the sampler"
 done
 
-# 4. only rate 0, or only 0 < rate < 1, skips the other component
+# 4. pino JSON severity ("level") is read when there is no SeverityText
+out=$(render)
+grep -qF '`set(severity_text, cache["level"]) where IsMap(cache) and cache["SeverityText"] == nil and IsString(cache["level"])`' <<<"$out" \
+  || fail "pino level must set severity_text"
+
+# 5. only rate 0, or only 0 < rate < 1, skips the other component
 out=$(render --set sampling.log.trace=0)
 grep -q 'probabilistic_sampler' <<<"$out" && fail "rate 0 alone must not render the sampler"
 grep -A12 'otelcol.processor.filter "log_sampling_drop"' <<<"$out" | grep -qF 'logs = [otelcol.processor.batch.default.input]' \
@@ -44,14 +51,16 @@ grep -A12 'otelcol.processor.filter "log_sampling_drop"' <<<"$out" | grep -qF 'l
 out=$(render --set sampling.log.info=0.5)
 grep -q 'log_sampling_drop' <<<"$out" && fail "no rate 0 must not render the drop filter"
 
-# 5. a quote in a severity key is escaped, not injected
+# 6. a quote in a severity key is escaped, not injected
 out=$(render --set-json 'sampling.log={"we\"ird":0.3}')
 grep -qF '== \"we\\\"ird\""' <<<"$out" || fail "severity key not escaped"
 
-# 6. validation
+# 7. validation
 rejects --set-json 'sampling.log={"info":1.5}'
 rejects --set-json 'sampling.log={"info":-0.1}'
 rejects --set sampling.log.info=abc
+rejects --set-json 'sampling.log={"info":0.000000001}'
+accepts --set-json 'sampling.log={"info":0.0001}'
 rejects --set-json 'sampling.log={"info":0.1,"INFO":0.2}'
 accepts --set sampling.log.info=0
 accepts --set sampling.log.info=1
