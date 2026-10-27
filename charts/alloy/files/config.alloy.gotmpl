@@ -67,6 +67,8 @@ otelcol.processor.transform "default" {
         statements = [
             `set(cache, ParseJSON(body))`,
             `set(severity_text, cache["SeverityText"]) where IsMap(cache)`,
+            // pino JSON without OTel (js-logger) carries the severity in "level"
+            `set(severity_text, cache["level"]) where IsMap(cache) and cache["SeverityText"] == nil and IsString(cache["level"])`,
             `set(severity_number, Int(cache["SeverityNumber"])) where IsMap(cache)`,
             `set(attributes, cache["Attributes"]) where IsMap(cache)`,
             `set(resource.attributes["_temp_resource"], cache["Resource"]) where IsMap(cache)`,
@@ -166,6 +168,10 @@ otelcol.processor.k8sattributes "add_k8s_attributes_{{ $namespace | snakecase }}
 {{- if or (lt $val 0.0) (gt $val 1.0) }}
     {{- fail (printf "sampling.log.%s must be a number between 0 and 1, got '%v'" $level $rawVal) -}}
 {{- end }}
+{{- /* smaller rates would round to priority 0, which the sampler ignores (keeping everything) */}}
+{{- if and (gt $val 0.0) (lt $val 0.0001) }}
+    {{- fail (printf "sampling.log.%s must be 0 or at least 0.0001, got '%v'" $level $rawVal) -}}
+{{- end }}
 {{- $key := lower $level }}
 {{- if hasKey $seen $key }}
     {{- fail (printf "sampling.log has the severity '%s' more than once (keys are case-insensitive)" $key) -}}
@@ -223,6 +229,8 @@ otelcol.processor.transform "log_sampling_priority" {
     log_statements {
         context = "log"
         statements = [
+            // an incoming sampling.priority from the app must not override the configured rates
+            `delete_key(attributes, "sampling.priority")`,
             `set(attributes["sampling.key"], UUID())`,
 {{- range $level, $val := $sampling }}
             {{ printf "set(attributes[\"sampling.priority\"], %v) where ToLowerCase(severity_text) == %s" (round (mulf $val 100) 6) ($level | toJson) | toJson }},
