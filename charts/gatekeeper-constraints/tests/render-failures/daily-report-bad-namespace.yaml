@@ -1,0 +1,8 @@
+# expect-error: dailyReport\.namespace "Infra Dev" is not a namespace name
+dailyReport:
+  enabled: true
+  namespace: "Infra Dev"
+  environment: dev
+  dashboardUrl: https://grafana.invalid/d/gk-workload-policy
+  loki:
+    pushUrl: http://loki.invalid/loki/api/v1/push

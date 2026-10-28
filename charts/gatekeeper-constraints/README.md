@@ -113,6 +113,104 @@ namespaceTeams:                     # namespace -> owning team (exact name or gl
 - **Rendering fails** if no namespace is in scope, if a namespace has characters other than `a-z`, `0-9`, `-`, `*`, `?`, if `defaultTeam` or a mapped `team` is not a plain team name, or if a `namespaceTeams` entry sets both or neither of `team` and `silence`.
 - **Prerequisites outside this chart.** `gatekeeper.logDenies: true`, the Alloy log pipeline collecting `gatekeeper-system` (keeping only `workload-*` violations), and Grafana's alert sidecar searching the release namespace (`grafana.sidecar.alerts.searchNamespace`).
 
+### Daily report
+
+A CronJob that posts one summary per team, on a schedule, of every Deployment and StatefulSet that breaks a workload rule today (MAPCO-11867). The deploy alerts above only see deploys; this sees the whole backlog. It also pushes each run to Loki, for the workload policy dashboard.
+
+```yaml
+dailyReport:
+  enabled: false                 # off by default: nothing is rendered
+  namespace: ""                  # required; must hold webhooksSecret (dev: infra-dev)
+  schedule: "30 7 * * 0-4"       # UTC, Sun-Thu 07:30
+  dryRun: false                  # log the messages instead of posting; Loki still gets the run
+  postWhenClean: false           # also post "no violations" to clean teams
+  webhooksSecret: grafana-webhooks-external   # <TEAM>_WEBHOOK keys, 3d -> TEAM_3D_WEBHOOK
+  maxNamesPerRule: 10            # names per namespace and rule, then "+N more"
+  maxMessageChars: 3500          # longer messages shrink to 5 names, then to counts only
+  dashboardUrl: ""               # required; linked from every message
+  readmeUrl: <this README>       # "How to fix or exempt" link
+  environment: ""                # required; mapcolonies.io/environment of the job Pod
+  constraintKinds: [K8sWorkloadCpuRatio, K8sWorkloadMcLabels]
+  gator: {version: v3.22.0, url: <release tarball>, sha256: <pinned>}
+  image: {registry: docker.io, repository: library/python, tag: 3.13-alpine@sha256:<pinned>}
+  resources: {requests: {cpu: 50m, memory: 128Mi}, limits: {cpu: 200m, memory: 256Mi}}   # 1:4
+  loki: {pushUrl: "", job: gatekeeper-workload-report}   # pushUrl required
+  alerts: {enabled: true, checkDays: [0, 1, 2, 3, 4], checkFromHour: 9, checkToHour: 16, lookback: 9h}
+```
+
+- **What it renders.** In `dailyReport.namespace`: a ConfigMap with `report.py` (`files/daily-report/report.py`) and `teams.json`, a ServiceAccount, and a CronJob (`concurrencyPolicy: Forbid`, `backoffLimit: 0`, one Python container, read-only root, non-root, all capabilities dropped). Cluster-wide: a ClusterRole and ClusterRoleBinding with `list` on Deployments, StatefulSets, Namespaces and the Constraints of `constraintKinds`, and `get` on their ConstraintTemplates (by name). No Secrets, no `pods/log`, no write verbs. In the release namespace: the rule ConfigMap below.
+- **How it counts.** The job downloads the pinned gator tarball and checks its sha256. It reads the live ConstraintTemplates and Constraints of `constraintKinds`, the Namespaces, and every workload kind those Constraints match, keeping only what the rules read (no env, images or volumes). Then it runs `gator test` on them. Every Constraint runs as `warn` under its own name, so gator does not stop at a deny. No Rego is copied: the result is what Gatekeeper's audit sees, exemptions included. A workload counts once per rule even when a warn and an enforced Constraint both match it. The CPU rule counts workloads, with the offending containers in brackets. mclabels counts workloads, split into **missing** (a label is absent) and **invalid** (empty, an owner outside the list, `environment=undefined`). A workload can be both.
+- **Routing.** `namespaceTeams` again: exact names before globs, the first match wins, and an unmatched namespace goes to `deployAlerts.defaultTeam`. `silence: true` namespaces are not posted anywhere. They are pushed to Loki under team `silenced`, so the dashboard shows them.
+- **Message.** One per team with violations. Per namespace it gives the counts per rule, then up to `maxNamesPerRule` names per rule, sorted (StatefulSets as `sts/<name>`), then "+N more", then a link to the dashboard for that team and run.
+- **Failures.** Every failure is told to `defaultTeam` and makes the job exit 1. The run status says what happened:
+  - `skipped` (no report was sent): an API error, a configured kind with no Constraint, a gator download or sha256 failure, gator exiting non-zero, printing a warning, timing out or printing something that is not JSON. Any unexpected error (a bug, `/work` not writable) is also `skipped`, with the exception's type and text as the reason and the traceback in the Pod log.
+  - `partial` (some reports went out): a team whose webhook is missing or malformed, or whose post failed (non-2xx, a Slack error body, a timeout). The other teams are still posted. A missing webhook fails its team in a `dryRun` too, so a dry run shows a missing Secret key in its status (`posted` then lists the teams that would have been posted). A failed Loki push (an error or a non-2xx answer) is also `partial`; the run line in the Pod log then says so.
+  - Audit check, per Constraint: when its audit is less than 2 h old and gator's count differs from its `status.totalViolations` by more than max(5, 10%) (or gator finds 0 and audit doesn't), the run is `partial` with a "gator N vs audit M" line. A Constraint with an older (or no) audit, or with an audit that started less than 10 minutes after the Constraint was created, is skipped, not an error (a chart upgrade recreates the ConstraintTemplates and Constraints, and their first audits can read 0): it is left out of the rule's `auditCheck` counts and named in the Pod log, and the rule's `auditCheck` is `skipped` when none of its Constraints had a fresh audit.
+  - Error texts never contain a URL.
+- **Grafana rules** (`alerts.enabled`; folder Gatekeeper, `alert_team=<defaultTeam>`, `notify_resolved=false`):
+  - `gk-daily-report-missing` fires when no run reached Loki within `lookback` (no data counts as no run). It is checked only on `checkDays` (0 = Sunday) between `checkFromHour` and `checkToHour` UTC, because the stack runs only part of the day and a plain "last run is old" rule would fire every morning. It is one Grafana rule over two datasources: Loki counts runs, Prometheus `hour()`/`day_of_week()` gives the check window, and a math expression combines them. `lookback` must reach back to the scheduled time from `checkToHour` and stay shorter than the gap to the previous run (07:30 run, 09:00-16:00 check: `9h`). A query error is not a missing run: the rule keeps its last state (`execErrState: KeepLast`), so Loki or Prometheus not being ready when the stack starts, or a transient error, alerts nobody and the check window and `for` still hold. A Loki that is down when the job runs is reported by the job itself (the push fails, the run is `partial` and infra is told). On the day the rules are first deployed no run is in Loki yet, so a deploy inside the check window fires the rule 15 minutes later: deploy outside the window, or start a run (`kubectl create job --from=cronjob/...`, a dry run counts) within 15 minutes of the deploy.
+  - `gk-daily-report-failed` fires on a run line with status `partial` or `skipped` in the last 3 h. This also covers a failed post to the infra channel itself.
+  - With `alerts.enabled: false` the rule ConfigMap still renders, holding only `deleteRules` for both uids. Grafana keeps a provisioned rule that only disappears from the file (dev/prod Grafana store rules in Postgres, so they stay), and with no runs in Loki `gk-daily-report-missing` would then fire every check day. **To turn the report off, or to roll back to a chart version without it, first deploy with `dailyReport.alerts.enabled: false`** so Grafana deletes both rules, and only then set `dailyReport.enabled: false` (or `helm rollback`). Deleting a uid that does not exist is a no-op.
+- **Decisions.**
+  - "Daily" means the Israeli work week, Sun-Thu (the job runs at 07:30 UTC).
+  - mclabels reports every violation of the deployed rule, split into missing and invalid.
+  - Silenced namespaces appear on the dashboard only.
+  - gator is downloaded at run time (point `gator.url` at a mirror if github.com is not reachable).
+- **Rendering fails** when the report is enabled without `namespace`, `schedule`, `webhooksSecret`, `dashboardUrl`, `environment` or `loki.pushUrl`. It also fails on a URL that is not http(s) (`dashboardUrl`, `readmeUrl`, `loki.pushUrl`, `gator.url`), `environment: undefined`, a `gator.sha256` that is not 64 hex characters, a `gator.url` that does not contain `gator.version` (a mirror may have it in the file name only), `constraintKinds` that is not a list or has a malformed entry, a `maxNamesPerRule` or `maxMessageChars` that is not a number >= 0, or a bad `alerts` window (`lookback`, `checkDays`, the hours).
+
+**Loki contract** (shared with the workload policy dashboard). Stream labels: `{job="<loki.job>", run_id="<UTC start, e.g. 2026-10-26T07:30:04Z>", team="<team|silenced|_run>", namespace="<namespace|_team|_run>"}`. Every line of a run has the run's start time plus 1 ns per line. The line is JSON, by `type`:
+- `summary` (one per namespace and rule with violations): `{"type":"summary","rule":"cpuRatio","workloads":43,"containers":56}`, and for mclabels `{"type":"summary","rule":"mclabels","workloads":55,"missing":54,"invalid":1}`.
+- `team_total` (stream `namespace="_team"`, one per team and rule, every run, zeros included; teams are `namespaceTeams` teams, `defaultTeam` and `silenced`): `{"type":"team_total","rule":"cpuRatio","workloads":0,"containers":0,"missing":0,"invalid":0}`.
+- `violation` (one per workload and rule): `{"type":"violation","rule":"mclabels","kind":"Deployment","workload":"api","containers":[],"problems":{"missing":["mapcolonies.io/owner"],"invalid":[]},"msg":"<gator message(s)>"}`.
+- `run` (stream `team="_run", namespace="_run"`): `{"type":"run","status":"ok|partial|skipped","reason":"...","posted":["3d"],"failed":[],"dryRun":false,"auditCheck":{"cpuRatio":{"gator":157,"audit":157},"mclabels":"skipped"},"gator":"v3.22.0","schedule":"30 7 * * 0-4"}`. In a dry run `posted` lists the teams that would have been posted. A rule's `auditCheck` is `"skipped"` when the run was skipped or none of its Constraints had a fresh audit, and `{"gator":N,"audit":M}` otherwise. When only some of a rule's Constraints had a fresh audit, `gator`/`audit` cover those only, and the Pod log names the others ("audit check: <rule>: no fresh audit, not compared: ...").
+
+**Run it locally** (read-only; posts nothing, and pushes nothing while `LOKI_URL` is unset). Without `<TEAM>_WEBHOOK` env vars every team is reported as failed and the run ends `partial`; set them to any value (nothing is posted) to see an `ok` run:
+```bash
+cd charts/gatekeeper-constraints   # .bin/gator is downloaded by make test
+helm template gatekeeper-constraints . -f <site-values dev.yaml> --set dailyReport.enabled=true \
+  --set dailyReport.namespace=infra-dev --set dailyReport.environment=dev \
+  --set dailyReport.dashboardUrl=https://grafana.example/d/x --set dailyReport.loki.pushUrl=http://unused/ \
+  -s templates/daily-report.yaml | sed -n 's/^  teams.json: //p' \
+  | python3 -I -c 'import json,sys; sys.stdout.write(json.loads(sys.stdin.read()))' > /tmp/teams.json
+kubectl proxy --port=8001 &
+KUBE_API=http://127.0.0.1:8001 python3 -I files/daily-report/report.py --from-cluster --dry-run \
+  --teams /tmp/teams.json --gator .bin/gator --work "$(mktemp -d)"
+kill %1
+```
+gator reads `<work>/in`: a rerun with the same `--work` replaces the files the last run wrote there, and any other file in it skips the run. `--from-files DIR` reads raw API JSON instead, one file per API path (`/apis/apps/v1/deployments` becomes `apis_apps_v1_deployments.json`), as in `tests/daily-report/fixtures/api`. To check a deployed job without posting, set `dryRun: true` and run `kubectl -n <namespace> create job --from=cronjob/<release>-daily-report <name>`. The messages are in the Pod log.
+
+### Dashboard
+
+```yaml
+dashboards:
+  enabled: false        # off by default: no ConfigMap is rendered
+  namespace: ""         # required when enabled: the namespace Grafana's dashboard sidecar watches (dev: infra-dev)
+  folder: Gatekeeper    # Grafana folder
+```
+
+- **What it renders.** With `dashboards.enabled`, a ConfigMap `<release>-dashboards` in `dashboards.namespace` (not the release namespace: the dashboard sidecar watches only Grafana's own namespace). It is labelled `mapcolonies.io/grafana-dashboards: "true"` and annotated `mapcolonies.io/grafana-dashboards-folder: <folder>`, with one key per `files/dashboards/*.json`, like the alloy chart. Grafana's provisioning does not keep UI edits, so the JSON in this chart is the source of truth.
+- **"Gatekeeper workload policy"** (uid `gk-workload-policy`, so links are `/d/gk-workload-policy?var-team=<team>&var-run=<run_id>`). The default time range is the last 14 days, the Loki retention: the link carries no time range and the selected-run panels read the dashboard range, so a link to any run Loki still holds finds that run (with a shorter default, a link older than it would read `no run`). It reads only what the daily report pushes to Loki (datasource variable `loki_datasource`, default uid `loki`), so Slack and the dashboard show the same numbers. `__REPORT_JOB__` in the JSON becomes `dailyReport.loki.job` (default `gatekeeper-workload-report`) at render time.
+  - **Variables:** `team` (`silenced` included; *All* matches every team, so the 14-day trend still shows when the time range holds no run), `namespace` (filtered by team; *All* matches every namespace, including ones no report run has seen), `run` (runs that pushed per-team totals, newest first; the default).
+  - **Selected run:** stats for CPU ratio (workloads, containers) and mclabels (workloads, missing, invalid), which show `0` for a run with nothing in the filter and `no run` when no run is selected (e.g. no run in the time range); a per-team table (every team, including teams at 0 and `silenced`) and a per-namespace table (a rule with no violations in a namespace reads 0), both full width; a per-namespace bar chart; a workload table (one row per workload and rule) and the full Gatekeeper messages.
+  - **Trend:** last 14 days per team and rule, from the per-team total lines, as daily bars stacked per team: one bar per UTC day with a run (1-day step, `last_over_time(... [1d]) by (team)`), whose value is the last run of that day. A same-day rerun replaces the earlier number, lower or higher, and is never added on top; a team at 0 shows 0; a day without a run (weekend, stack down, a `skipped` run) has no bar. Loki aligns 1-day steps to UTC midnight and each point covers the day before it, so the bars are drawn ending at their point (`barAlignment: -1`) and sit on their own day. Outlined bars are the totals of the selected teams. Today's point lies after now, so Grafana does not draw today's bar until 00:00 UTC; until then, a *latest run* series (an instant query over the panel range, one dot per team at the right edge, stacked like the bars, shown in the tooltip) shows the newest run.
+  - **New at deploy:** distinct workloads with a workload-rule violation in Gatekeeper's admission log lines over the previous 24 hours, per namespace and rule (`constraint_kind`), filtered by namespace only (admission lines carry no team). A workload that both the warn and the enforced constraint of a rule flagged (a namespace in both lists) counts once. Hourly steps end at the last whole hour, so an instant query adds *now* dots at the right edge (one per namespace and rule, stacked, in the tooltip): a deploy from the current hour shows there right away. Needs `deployAlerts`' prerequisites: `gatekeeper.logDenies` and the Alloy pipeline.
+  - **Runs:** status (`ok`, `partial`, `skipped`), failed teams, dry run, audit cross-check of every run; the newest run's status, age and failed teams as a stat.
+- **Counting** (decisions D7 and D8). CPU ratio counts workloads, with offending containers as a second number. mclabels counts workloads, split into *missing* (a required mclabel is absent) and *invalid* (an empty value, an owner outside the allowed list, or `environment=undefined`); a workload can be both. Namespaces with `silence: true` are reported under team `silenced`: never in Slack, shown here.
+- **Rendering fails** if `dashboards.namespace` is empty or not a namespace name, if `dashboards.folder` is empty or blank, or if `dailyReport.loki.job` has characters other than letters, digits, `_`, `.` and `-`.
+- **First install: duplicate folder.** On a Grafana that has no `<folder>` yet, the dashboard sidecar and the alert-rule provisioning (`deployAlerts`, `dailyReport.alerts`) can each create a folder with that title in the same second: one gets the dashboard and the rules, the other stays empty (seen on a fresh Grafana 12.3.1). Delete the empty one once, or avoid it by deploying the alert rules first and enabling `dashboards` in a later deploy, so the folder exists before the sidecar loads the dashboard.
+- **Check after a deploy:** the sidecar logs `placing the <release>-dashboards in: /tmp/dashboards/<folder>` (`kubectl -n <namespace> logs deploy/<grafana> -c grafana-sc-dashboard`), and `/d/gk-workload-policy` opens.
+
+#### Loki lines the dashboard reads
+
+The line format (stream labels and the JSON of each `type`) is the daily report's **Loki contract**, documented once under [Daily report](#daily-report). What the dashboard takes from it:
+- Every query selects `job="<dailyReport.loki.job>"` (the `__REPORT_JOB__` placeholder), and the selected-run panels also `run_id="$run"`.
+- `run` variable: the `run_id`s of the `namespace="_team"` streams, so a `skipped` run (it pushes no `team_total` lines) is not offered.
+- `summary` lines feed the stats, the per-namespace table and the bar chart. A stat reads `0`, not empty, when the run has no `summary` line in the filter (it falls back on the run's `team_total` lines).
+- `team_total` lines feed the per-team table and the trend, so every team shows, at 0 too.
+- `violation` lines feed the workload table and the messages.
+- `run` lines (`team="_run"`) feed the Runs table and the last-run stat.
+- **New at deploy** is the exception: it reads Gatekeeper's admission log lines, not the report.
+
 ## 📝 Operational notes
 
 - `helm upgrade --force` does not bypass the workload rules. Its delete-and-recreate goes through admission as a CREATE.
@@ -139,7 +237,12 @@ make -C charts/gatekeeper-constraints test
 
 This renders the chart with `tests/values.yaml` and runs the gator Suites in `tests/suites` against the sample objects in `tests/objects`. gator is pinned to the wrapped Gatekeeper version and downloaded into `.bin/`. The target also runs these checks:
 - `tests/deploy-alerts.sh`: `helm template` assertions on the deploy-alert ConfigMap (off by default, namespace scope, labels, plain-text annotations, failure on empty scope).
+- `tests/dashboards.sh`: `helm template` assertions on the dashboard ConfigMap (off by default, sidecar label, folder annotation and namespace, failure without a namespace) and on its JSON (valid, uid, panel types, the Loki datasource on every query variable, panel and target, variables, time ranges, and, per panel query, the selector, line type, rule, unwrapped field, outer aggregation, grouping and window it must use; the trend's daily bars (1-day step, bar style and alignment) and latest-run series; the exact admission query; the Workloads and Runs fields, columns and line caps; the run-status colours; the trend stacking; the table layout, transformations and shown key columns).
 - `tests/gator-test/<case>`: renders the chart with the case's values, runs its objects through `gator test` and checks the outcome named in the case's `expect` file: `nothing`, `warnings-only` or `denials`. These cases cover which Constraints get rendered and with which enforcement action, e.g. that an empty namespace list really renders no Constraint.
-- `tests/render-failures/<values>`: checks that rendering fails with the error named on the file's first line (exemptions, enforcement action, and the deployAlerts / namespaceTeams validation).
+- `tests/render-failures/<values>`: checks that rendering fails with the error named on the file's first line (exemptions, enforcement action, the deployAlerts / namespaceTeams validation, the dailyReport validation, and the dashboards values).
+- `tests/daily-report.sh`: `helm template` assertions on the daily report. Covers: off by default; where each object lands; one optional `secretKeyRef` per team (defaultTeam included) and no literal webhook; `get`/`list`-only RBAC that follows `constraintKinds` (ConstraintTemplates: `get` on those names only); CPU limit = 4x request; the CronJob wiring (mounts, `--work` on an emptyDir, ServiceAccount, no retry); every value reaching the job env; the gator version matching the Makefile and the wrapped Gatekeeper; `teams.json` order; the two Grafana rules.
+- `tests/daily-report/test_report.py` (stdlib `unittest`): `report.py` on raw API fixtures with fake gator, webhook and Loki endpoints. Covers: projection, pagination, counting, missing vs invalid, routing, message capping, every failure path, `dryRun`, and the Loki payload. It also pins the Rego message formats that `report.py` parses.
+- `tests/daily-report/parity.sh`: runs gator on `tests/objects` as they are and on `report.py`'s projection of the same objects served as raw API JSON, and fails if the results differ. It also fails if `tests/daily-report/fixtures` is stale (`make daily-report-fixtures` rewrites it).
+- `tests/daily-report/job-pod.sh`: the job's own Pod passes every rule of this chart (Pod labels, annotations, 1:4 CPU, mclabels).
 
 The PR workflow runs the same target when files under this chart change.

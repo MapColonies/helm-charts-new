@@ -1,0 +1,42 @@
+{
+ "apiVersion": "constraints.gatekeeper.sh/v1beta1",
+ "items": [
+  {
+   "metadata": {
+    "generation": 1,
+    "name": "workload-mclabels-warn"
+   },
+   "spec": {
+    "enforcementAction": "warn",
+    "match": {
+     "kinds": [
+      {
+       "apiGroups": [
+        "apps"
+       ],
+       "kinds": [
+        "Deployment",
+        "StatefulSet"
+       ]
+      }
+     ],
+     "namespaces": [
+      "*-dev"
+     ],
+     "scope": "Namespaced"
+    },
+    "parameters": {
+     "exemptions": []
+    }
+   },
+   "status": {
+    "auditTimestamp": "2026-10-26T07:00:00Z",
+    "totalViolations": 4
+   }
+  }
+ ],
+ "kind": "K8sWorkloadMcLabelsList",
+ "metadata": {
+  "resourceVersion": "1"
+ }
+}

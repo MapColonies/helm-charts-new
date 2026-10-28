@@ -1,0 +1,86 @@
+{
+ "apiVersion": "v1",
+ "items": [
+  {
+   "metadata": {
+    "labels": {
+     "kubernetes.io/metadata.name": "raster-dev"
+    },
+    "name": "raster-dev"
+   },
+   "status": {
+    "phase": "Active"
+   }
+  },
+  {
+   "metadata": {
+    "labels": {
+     "kubernetes.io/metadata.name": "vector-dev"
+    },
+    "name": "vector-dev"
+   },
+   "status": {
+    "phase": "Active"
+   }
+  },
+  {
+   "metadata": {
+    "labels": {
+     "kubernetes.io/metadata.name": "3d-dev"
+    },
+    "name": "3d-dev"
+   },
+   "status": {
+    "phase": "Active"
+   }
+  },
+  {
+   "metadata": {
+    "labels": {
+     "kubernetes.io/metadata.name": "dem-dev"
+    },
+    "name": "dem-dev"
+   },
+   "status": {
+    "phase": "Active"
+   }
+  },
+  {
+   "metadata": {
+    "labels": {
+     "kubernetes.io/metadata.name": "gateway-dev"
+    },
+    "name": "gateway-dev"
+   },
+   "status": {
+    "phase": "Active"
+   }
+  },
+  {
+   "metadata": {
+    "labels": {
+     "kubernetes.io/metadata.name": "misc-dev"
+    },
+    "name": "misc-dev"
+   },
+   "status": {
+    "phase": "Active"
+   }
+  },
+  {
+   "metadata": {
+    "labels": {
+     "kubernetes.io/metadata.name": "prod"
+    },
+    "name": "prod"
+   },
+   "status": {
+    "phase": "Active"
+   }
+  }
+ ],
+ "kind": "NamespaceList",
+ "metadata": {
+  "resourceVersion": "1"
+ }
+}
