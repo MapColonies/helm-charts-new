@@ -58,3 +58,57 @@ groups:
         annotations:
           summary: Pod logs are not being collected.
           description: "{{ $value }} replica(s) of StatefulSet {{ $labels.namespace }}/{{ $labels.statefulset }} not ready for 5m, so pod logs aren't tailed, and lines older than maxLogAge by the time it's back are lost. If its pod is stuck Terminating on a failed node, fence the node or force-delete the pod (oc delete pod --force --grace-period=0) so it's recreated elsewhere."
+
+      - uid: alloy-pod-logs-too-old
+        title: AlloyPodLogsTooOld
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: 'sum by (cluster, namespace, job) (increase(loki_process_dropped_lines_total{component_id="loki.process.limit_time", reason="too_old"}[10m])) > 0'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        labels:
+          severity: warning
+          alert_team: infra
+        annotations:
+          summary: Pod log lines were dropped as older than maxLogAge.
+          description: "Pod log lines older than maxLogAge were dropped in the last 10m under job {{ $labels.job }}. After an outage of the alloy-logs StatefulSet longer than maxLogAge, these are its oldest backlog lines, and they're lost. Otherwise they're re-read lines Loki would reject anyway (a new PVC, or a peer taking over pods when scaled out)."

@@ -89,8 +89,11 @@ done
   || fail "StatefulSet must have a liveness probe on /-/ready"
 yq 'select(.kind == "PodDisruptionBudget")' <<<"$out" | grep -q alloy-logs \
   && fail "a PDB on a single replica would block node drains"
-yq 'select(.kind == "ConfigMap" and .metadata.name == "alloy-alerts") | .data["alloy_pod_logs.yaml"]' <<<"$out" \
-  | yq '.groups[].rules[].title' | grep -qx AlloyPodLogsDown || fail "the AlloyPodLogsDown alert must be provisioned"
+alerts=$(yq 'select(.kind == "ConfigMap" and .metadata.name == "alloy-alerts") | .data["alloy_pod_logs.yaml"]' <<<"$out" \
+  | yq '.groups[].rules[].title')
+for alert in AlloyPodLogsDown AlloyPodLogsTooOld; do
+  grep -qx "$alert" <<<"$alerts" || fail "the $alert alert must be provisioned"
+done
 
 # 9. a small send queue, so a crash loses little of what was read but not yet sent; changing
 # queue_config needs the experimental stability level

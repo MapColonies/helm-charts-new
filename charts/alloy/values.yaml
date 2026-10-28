@@ -165,6 +165,7 @@ alloy-logs:
 # lines. A collection outage (the StatefulSet down: node failure, upgrade) leaves a backlog that
 # arrives in order, which Loki would accept, but the drop applies to it too: an outage longer than
 # maxLogAge loses its oldest lines, all of them older than maxLogAge when they're read.
+# AlloyPodLogsTooOld fires when it drops lines.
 maxLogAge: 5m30s
 
 batching: {}

@@ -78,3 +78,44 @@ tests:
         exp_alerts:
           - exp_labels: {job: k8s-scrape, namespace: infra-services}
           - exp_labels: {job: k8s-scrape, namespace: infra-services, cluster_name: alloy-logs}
+
+  # Pod log lines dropped as too old (after an outage longer than maxLogAge): only the age filter's
+  # too_old drops count, and the alert clears 10m after the last one
+  - interval: 1m
+    input_series:
+      - series: 'loki_process_dropped_lines_total{job="k8s-scrape",namespace="infra-services",instance="deployment-0",component_id="loki.process.limit_time",component_path="/",reason="too_old"}'
+        values: '0x3 38753x30'
+      - series: 'loki_process_dropped_lines_total{job="k8s-scrape",namespace="infra-services",instance="deployment-0",component_id="loki.process.limit_time",component_path="/",reason="log_filter_drop"}'
+        values: '0+100x33'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: AlloyPodLogsTooOld
+        exp_alerts: []
+      - eval_time: 5m
+        alertname: AlloyPodLogsTooOld
+        exp_alerts:
+          - exp_labels: {job: k8s-scrape, namespace: infra-services}
+      - eval_time: 20m
+        alertname: AlloyPodLogsTooOld
+        exp_alerts: []
+
+  # The pod logs StatefulSet without a ready replica: fires on the desired-but-not-ready count
+  # (a pod stuck on a failed node still counts as desired)
+  - interval: 1m
+    input_series:
+      - series: 'kube_statefulset_replicas{job="kube-state-metrics",namespace="infra-services",statefulset="infra-alloy-alloy-logs"}'
+        values: '1x10'
+      - series: 'kube_statefulset_status_replicas_ready{job="kube-state-metrics",namespace="infra-services",statefulset="infra-alloy-alloy-logs"}'
+        values: '1x3 0x7'
+      - series: 'kube_statefulset_replicas{job="kube-state-metrics",namespace="infra-services",statefulset="other"}'
+        values: '1x10'
+      - series: 'kube_statefulset_status_replicas_ready{job="kube-state-metrics",namespace="infra-services",statefulset="other"}'
+        values: '0x10'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: AlloyPodLogsDown
+        exp_alerts: []
+      - eval_time: 6m
+        alertname: AlloyPodLogsDown
+        exp_alerts:
+          - exp_labels: {namespace: infra-services, statefulset: infra-alloy-alloy-logs}
