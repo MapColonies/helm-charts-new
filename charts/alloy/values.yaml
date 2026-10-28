@@ -92,8 +92,13 @@ alloy-logs:
         operator: Exists
         effect: NoExecute
         tolerationSeconds: 30
-    # Delete a replica's PVC when it's scaled away (and on uninstall), so a later scale-up starts
-    # that replica clean instead of resuming from positions that are stale by then
+    # Delete a replica's PVC when it's scaled away and on uninstall, so a later scale-up or install
+    # starts clean instead of resuming from stale positions. Needs Kubernetes 1.27+ (or the
+    # StatefulSetAutoDeletePVC feature gate): older API servers silently drop it and keep the PVCs.
+    # There, a scale-up or reinstall resumes from the old positions: lines older than maxLogAge are
+    # dropped (too_old), and newer ones another replica already shipped are sent again. For a clean
+    # start, delete the PVCs first:
+    #   oc delete pvc -n <namespace> -l app.kubernetes.io/name=alloy-logs,app.kubernetes.io/instance=<release>
     enableStatefulSetAutoDeletePVC: true
     # Uses the cluster's default StorageClass; to choose one, set spec.storageClassName here.
     # Overriding this list replaces it, so give the whole claim template (not --set on one field).
