@@ -185,6 +185,11 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
                 where = f"{title} {ref}"
                 if "gatekeeper-system" in expr:   # admission lines, not report lines
                     check(expr == ADMISSION, f"{where}: admission query must be exactly\n    {ADMISSION}\n  got\n    {expr}")
+                    if ref == "L":   # the "now" dots: the same 24 h count, instant at now
+                        check(t.get("legendFormat") == "{{resource_namespace}} {{constraint_kind}} now",
+                              f"{where}: legend must be per namespace and rule, ending in 'now'")
+                        check(t.get("queryType") == "instant", f"{where}: the now series must be an instant query")
+                        continue
                     check(t.get("legendFormat") == "{{resource_namespace}} {{constraint_kind}}",
                           f"{where}: legend must be per namespace and rule (constraint_kind)")
                     check(t.get("queryType") == "range" and t.get("step") == "1h" and p.get("interval") == "1h",
@@ -283,7 +288,7 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
             check(ov.get("failed", {}).get("displayName") == "failed teams", "Last run: failed must be shown as failed teams")
             check(last["fieldConfig"]["defaults"].get("noValue") == "no run", "Last run: noValue must be 'no run'")
         adm = [t["expr"] for p in dash["panels"] for t in p.get("targets", []) if "gatekeeper-system" in t["expr"]]
-        check(len(adm) == 1, f"one admission query expected, got {len(adm)}")
+        check(len(adm) == 2, f"two admission queries expected (New at deploy: hourly + now), got {len(adm)}")
         check(any('team="_run"' in t["expr"] for t in panels.get("Runs", {}).get("targets", [])), "a Runs table must list every run")
 
         for p in dash["panels"]:
@@ -341,6 +346,26 @@ for path, job in ((sys.argv[1], "gatekeeper-workload-report"), (sys.argv[2], "cu
                   f"{title}: latest-run dots must stack in their own group, not on top of the bars")
             check(props.get("displayName") == "${__field.labels.team} latest run" and props.get("custom.hideFrom", {}).get("tooltip") is False,
                   f"{title}: latest-run dots must be named '<team> latest run' and shown in the tooltip")
+
+        # New at deploy: hourly steps end at the last whole hour, so a deploy from the current hour would
+        # show only after the next one starts; an instant query adds it now, split and drawn like the
+        # trend panels' latest-run dots.
+        p = panels["New at deploy: distinct workloads, previous 24 h"]
+        title = p["title"]
+        check([t["refId"] for t in p["targets"]] == ["A", "L"], f"{title}: needs the range target A and the now target L")
+        check(p.get("transformations") == [{"id": "partitionByValues", "filter": {"id": "byRefId", "options": "L"},
+                                             "options": {"fields": ["resource_namespace", "constraint_kind"], "keepFields": False,
+                                                         "naming": {"asLabels": True}}}],
+              f"{title}: the now table must be split per namespace and rule (partitionByValues, refId L only)")
+        ov = [o for o in p["fieldConfig"].get("overrides", []) if o["matcher"] == {"id": "byRegexp", "options": "Value #L.*"}]
+        props = {x["id"]: x["value"] for x in ov[0]["properties"]} if ov else {}
+        check(props.get("custom.drawStyle") == "points" and props.get("custom.showPoints") == "always",
+              f"{title}: the now series (override Value #L.*) must be drawn as points")
+        check(props.get("custom.stacking", {}).get("mode") == "normal" and props["custom.stacking"].get("group") != "A",
+              f"{title}: now dots must stack in their own group, not on top of the hourly series")
+        check(props.get("displayName") == "${__field.labels.resource_namespace} ${__field.labels.constraint_kind} now"
+              and props.get("custom.hideFrom", {}).get("tooltip") is False,
+              f"{title}: now dots must be named '<namespace> <rule> now' and shown in the tooltip")
 
         # Per team / Per namespace: full width, so every column (the mclabels missing/invalid split too) is
         # visible without scrolling; an empty table must not read as a clean 0.

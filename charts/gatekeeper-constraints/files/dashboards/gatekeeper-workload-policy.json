@@ -1548,7 +1548,7 @@
       },
       "type": "timeseries",
       "title": "New at deploy: distinct workloads, previous 24 h",
-      "description": "Workloads that violated a workload rule when they were deployed (Gatekeeper admission log lines), counted once per workload and rule over the previous 24 hours, even when both the warn and the enforced constraint of a rule matched it. These are deploy-time warnings, not the backlog above. Filtered by namespace only: admission lines carry no team, and All namespaces includes namespaces no report run has seen.",
+      "description": "Workloads that violated a workload rule when they were deployed (Gatekeeper admission log lines), counted once per workload and rule over the previous 24 hours, even when both the warn and the enforced constraint of a rule matched it. These are deploy-time warnings, not the backlog above. Filtered by namespace only: admission lines carry no team, and All namespaces includes namespaces no report run has seen. The hourly steps end at the last whole hour, so dots at the right edge show the same count for the 24 hours up to now: a deploy from the current hour shows there right away.",
       "gridPos": {
         "h": 9,
         "w": 12,
@@ -1569,6 +1569,17 @@
           "queryType": "range",
           "legendFormat": "{{resource_namespace}} {{constraint_kind}}",
           "step": "1h"
+        },
+        {
+          "refId": "L",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by (resource_namespace, constraint_kind) (count by (resource_namespace, resource_kind, resource_name, constraint_kind) (count_over_time({k8s_namespace_name=\"gatekeeper-system\"} | json process, event_type, constraint_kind, constraint_name, resource_namespace, resource_kind, resource_name | process=\"admission\" | event_type=\"violation\" | constraint_name=~\"workload-.*\" | resource_namespace=~\"$namespace\" [1d])))",
+          "queryType": "instant",
+          "legendFormat": "{{resource_namespace}} {{constraint_kind}} now"
         }
       ],
       "fieldConfig": {
@@ -1589,7 +1600,54 @@
             }
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Value #L.*"
+            },
+            "properties": [
+              {
+                "id": "custom.drawStyle",
+                "value": "points"
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 10
+              },
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "mode": "normal",
+                  "group": "now"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              },
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": true,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "${__field.labels.resource_namespace} ${__field.labels.constraint_kind} now"
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "legend": {
@@ -1601,7 +1659,26 @@
           "mode": "multi",
           "sort": "desc"
         }
-      }
+      },
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "filter": {
+            "id": "byRefId",
+            "options": "L"
+          },
+          "options": {
+            "fields": [
+              "resource_namespace",
+              "constraint_kind"
+            ],
+            "keepFields": false,
+            "naming": {
+              "asLabels": true
+            }
+          }
+        }
+      ]
     },
     {
       "id": 17,
