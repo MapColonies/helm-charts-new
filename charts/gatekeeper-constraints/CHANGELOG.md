@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/MapColonies/helm-charts-new/compare/gatekeeper-constraints-v1.3.0...gatekeeper-constraints-v1.4.0) (2026-10-28)
+
+
+### 🎉 Features
+
+* **gatekeeper-constraints:** daily workload policy report (MAPCO-11867) ([#187](https://github.com/MapColonies/helm-charts-new/issues/187)) ([2eb63ee](https://github.com/MapColonies/helm-charts-new/commit/2eb63eeb20004ade456a12490b53dc415693e49c)), closes [#188](https://github.com/MapColonies/helm-charts-new/issues/188)
+
 ## [1.3.0](https://github.com/MapColonies/helm-charts-new/compare/gatekeeper-constraints-v1.2.0...gatekeeper-constraints-v1.3.0) (2026-10-25)
 
 
