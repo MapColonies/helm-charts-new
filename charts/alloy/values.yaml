@@ -61,6 +61,8 @@ alloy:
 # It can scale out (clustering is on): the replicas then split the pods, but a replica restart
 # makes its peers re-read its pods and re-sends lines (tests/clustering-e2e.sh).
 alloy-logs:
+  # It doesn't inherit alloy.* values: set the image registry and pull secrets under the top-level
+  # global.image, which both workloads use. The render fails if their registries differ.
   image:
     repository: infra/grafana/alloy
   serviceAccount:

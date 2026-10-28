@@ -62,3 +62,29 @@ own helper so it follows the release name and fullnameOverride.
 {{- $service := include "alloy.fullname" (dict "Values" .Values.alloy "Chart" (dict "Name" "alloy") "Release" .Release) }}
 {{- printf "http://%s:%v/loki/api/v1/push" $service (include "alloy-wrapper.podLogsPortEntry" . | fromYaml).port -}}
 {{- end }}
+
+{{/*
+The registries and pull secrets a workload's pods pull with, as the alloy chart picks them: global.image (from
+the top-level global or that workload's own), else the workload's own image settings.
+Takes the workload's values (.Values.alloy or .Values.alloy-logs).
+*/}}
+{{- define "alloy-wrapper.imageSources" -}}
+{{- $global := dig "global" "image" dict . }}
+{{- toYaml (dict
+  "alloy" ($global.registry | default (dig "image" "registry" "" .))
+  "configReloader" ($global.registry | default (dig "configReloader" "image" "registry" "" .))
+  "pullSecrets" ($global.pullSecrets | default (dig "image" "pullSecrets" list .))) }}
+{{- end }}
+
+{{/*
+Fails the render when the two workloads would pull from different registries or with different pull secrets.
+The alloy-logs StatefulSet doesn't inherit alloy.* values, so a registry set only under alloy.global.image
+would leave it pulling from docker.io and quay.io.
+*/}}
+{{- define "alloy-wrapper.validateImages" -}}
+{{- $deployment := include "alloy-wrapper.imageSources" .Values.alloy }}
+{{- $statefulset := include "alloy-wrapper.imageSources" (index .Values "alloy-logs") }}
+{{- if ne $deployment $statefulset }}
+{{- fail (printf "alloy-logs would pull its images from other registries than alloy:\n  alloy:\n%s\n  alloy-logs:\n%s\nSet the registry and pull secrets under the top-level global.image, which both use, instead of alloy.global.image." ($deployment | indent 4) ($statefulset | indent 4)) }}
+{{- end }}
+{{- end }}

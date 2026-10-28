@@ -99,4 +99,16 @@ grep -q 'batch_size = "256KiB"' <<<"$write_block" || fail "loki.write must send 
 grep -q 'capacity = "256KiB"' <<<"$write_block" || fail "loki.write must queue at most 256KiB"
 args "$sts" | grep -qx -- '--stability.level=experimental' || fail "StatefulSet must run at the experimental stability level"
 
+# 10. both workloads pull from the same registry with the same pull secrets: alloy-logs doesn't
+# inherit alloy.global.image, so a registry set only there fails the render
+if err=$(render --set alloy.global.image.registry=acr.example.io 2>&1 >/dev/null); then
+  fail "a registry set only under alloy.global.image must fail the render"
+fi
+grep -qF 'top-level global.image' <<<"$err" || fail "unexpected error for a registry under alloy only: $err"
+images=$(render --set global.image.registry=acr.example.io --set 'global.image.pullSecrets[0].name=acr-registry' \
+  | yq -N 'select(.kind == "Deployment" or .kind == "StatefulSet") | .spec.template.spec | (.containers[].image, .imagePullSecrets[].name)')
+grep -v -e '^acr.example.io/' -e '^acr-registry$' <<<"$images" && fail "a top-level global.image must apply to both workloads"
+[[ $(grep -c '^acr.example.io/' <<<"$images") == 4 && $(grep -c '^acr-registry$' <<<"$images") == 2 ]] \
+  || fail "both workloads must pull both images from the top-level global.image registry, got: $images"
+
 echo "OK"
