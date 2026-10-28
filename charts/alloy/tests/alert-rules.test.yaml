@@ -11,31 +11,31 @@ tests:
   - interval: 1m
     input_series:
       - series: 'cluster_node_info{job="k8s-scrape",namespace="infra-services",instance="deployment-0",state="participant"}'
-        values: '1x10'
+        values: '1x30'
       - series: 'cluster_node_info{job="k8s-scrape",namespace="infra-services",instance="deployment-1",state="participant"}'
-        values: '1x10'
+        values: '1x30'
       - series: 'cluster_node_info{job="k8s-scrape",namespace="infra-services",instance="statefulset-0",state="participant"}'
-        values: '1x10'
+        values: '1x30'
       - series: 'cluster_node_peers{job="k8s-scrape",namespace="infra-services",instance="deployment-0",state="participant"}'
-        values: '2x10'
+        values: '2x30'
       - series: 'cluster_node_peers{job="k8s-scrape",namespace="infra-services",instance="deployment-1",state="participant"}'
-        values: '2x10'
+        values: '2x30'
       - series: 'cluster_node_peers{job="k8s-scrape",namespace="infra-services",instance="statefulset-0",cluster_name="alloy-logs",state="participant"}'
-        values: '1x10'
+        values: '1x30'
       - series: 'alloy_config_hash{job="k8s-scrape",namespace="infra-services",instance="deployment-0",sha256="aaa"}'
-        values: '1x10'
+        values: '1x30'
       - series: 'alloy_config_hash{job="k8s-scrape",namespace="infra-services",instance="deployment-1",sha256="aaa"}'
-        values: '1x10'
+        values: '1x30'
       - series: 'alloy_config_hash{job="k8s-scrape",namespace="infra-services",instance="statefulset-0",cluster_name="alloy-logs",sha256="bbb"}'
-        values: '1x10'
+        values: '1x30'
     alert_rule_test:
-      - eval_time: 5m
+      - eval_time: 20m
         alertname: ClusterNodeCountMismatch
         exp_alerts: []
-      - eval_time: 5m
+      - eval_time: 20m
         alertname: ClusterConfigurationDrift
         exp_alerts: []
-      - eval_time: 5m
+      - eval_time: 20m
         alertname: ClusterNotConverging
         exp_alerts: []
 
@@ -44,36 +44,36 @@ tests:
   - interval: 1m
     input_series:
       - series: 'cluster_node_info{job="k8s-scrape",namespace="infra-services",instance="deployment-0",state="participant"}'
-        values: '1x10'
+        values: '1x30'
       - series: 'cluster_node_info{job="k8s-scrape",namespace="infra-services",instance="deployment-1",state="participant"}'
-        values: '1x10'
+        values: '1x30'
       - series: 'cluster_node_info{job="k8s-scrape",namespace="infra-services",instance="statefulset-0",state="participant"}'
-        values: '1x10'
+        values: '1x30'
       - series: 'cluster_node_info{job="k8s-scrape",namespace="infra-services",instance="statefulset-1",state="participant"}'
-        values: '1x10'
+        values: '1x30'
       - series: 'cluster_node_peers{job="k8s-scrape",namespace="infra-services",instance="deployment-0",state="participant"}'
-        values: '2x10'
+        values: '2x30'
       - series: 'cluster_node_peers{job="k8s-scrape",namespace="infra-services",instance="deployment-1",state="participant"}'
-        values: '1x10'
+        values: '1x30'
       - series: 'cluster_node_peers{job="k8s-scrape",namespace="infra-services",instance="statefulset-0",cluster_name="alloy-logs",state="participant"}'
-        values: '1x10'
+        values: '1x30'
       - series: 'cluster_node_peers{job="k8s-scrape",namespace="infra-services",instance="statefulset-1",cluster_name="alloy-logs",state="participant"}'
-        values: '2x10'
+        values: '2x30'
       - series: 'alloy_config_hash{job="k8s-scrape",namespace="infra-services",instance="deployment-0",sha256="aaa"}'
-        values: '1x10'
+        values: '1x30'
       - series: 'alloy_config_hash{job="k8s-scrape",namespace="infra-services",instance="deployment-1",sha256="ccc"}'
-        values: '1x10'
+        values: '1x30'
       - series: 'alloy_config_hash{job="k8s-scrape",namespace="infra-services",instance="statefulset-0",cluster_name="alloy-logs",sha256="bbb"}'
-        values: '1x10'
+        values: '1x30'
       - series: 'alloy_config_hash{job="k8s-scrape",namespace="infra-services",instance="statefulset-1",cluster_name="alloy-logs",sha256="ddd"}'
-        values: '1x10'
+        values: '1x30'
     alert_rule_test:
-      - eval_time: 5m
+      - eval_time: 20m
         alertname: ClusterNodeCountMismatch
         exp_alerts:
           - exp_labels: {job: k8s-scrape, namespace: infra-services, instance: deployment-1}
           - exp_labels: {job: k8s-scrape, namespace: infra-services, instance: statefulset-0, cluster_name: alloy-logs}
-      - eval_time: 5m
+      - eval_time: 20m
         alertname: ClusterConfigurationDrift
         exp_alerts:
           - exp_labels: {job: k8s-scrape, namespace: infra-services}
@@ -99,8 +99,8 @@ tests:
         alertname: AlloyPodLogsTooOld
         exp_alerts: []
 
-  # The pod logs StatefulSet without a ready replica: fires on the desired-but-not-ready count
-  # (a pod stuck on a failed node still counts as desired)
+  # The pod logs StatefulSet without a ready replica: fires 1m after it has fewer ready replicas
+  # than desired (a pod stuck on a failed node still counts as desired), before lines are lost
   - interval: 1m
     input_series:
       - series: 'kube_statefulset_replicas{job="kube-state-metrics",namespace="infra-services",statefulset="infra-alloy-alloy-logs"}'
@@ -112,10 +112,10 @@ tests:
       - series: 'kube_statefulset_status_replicas_ready{job="kube-state-metrics",namespace="infra-services",statefulset="other"}'
         values: '0x10'
     alert_rule_test:
-      - eval_time: 2m
+      - eval_time: 4m # not ready since 4m: pending for its 1m
         alertname: AlloyPodLogsDown
         exp_alerts: []
-      - eval_time: 6m
+      - eval_time: 5m
         alertname: AlloyPodLogsDown
         exp_alerts:
           - exp_labels: {namespace: infra-services, statefulset: infra-alloy-alloy-logs}

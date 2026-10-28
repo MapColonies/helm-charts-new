@@ -51,13 +51,13 @@ groups:
               type: classic_conditions
         noDataState: OK
         execErrState: Error
-        for: 5m
+        for: 1m
         labels:
           severity: critical
           alert_team: infra
         annotations:
           summary: Pod logs are not being collected.
-          description: "{{ $value }} replica(s) of StatefulSet {{ $labels.namespace }}/{{ $labels.statefulset }} not ready for 5m, so pod logs aren't tailed, and lines older than maxLogAge by the time it's back are lost. If its pod is stuck Terminating on a failed node, fence the node or force-delete the pod (oc delete pod --force --grace-period=0) so it's recreated elsewhere."
+          description: "{{ $value }} replica(s) of StatefulSet {{ $labels.namespace }}/{{ $labels.statefulset }} not ready for 1m, so pod logs aren't tailed, and lines older than maxLogAge by the time it's back are lost. If its pod is stuck Terminating on a failed node, fence the node or force-delete the pod (oc delete pod --force --grace-period=0) so it's recreated elsewhere."
 
       - uid: alloy-pod-logs-too-old
         title: AlloyPodLogsTooOld
