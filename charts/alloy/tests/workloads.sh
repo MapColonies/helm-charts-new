@@ -94,6 +94,16 @@ alerts=$(yq 'select(.kind == "ConfigMap" and .metadata.name == "alloy-alerts") |
 for alert in AlloyPodLogsDown AlloyPodLogsTooOld; do
   grep -qx "$alert" <<<"$alerts" || fail "the $alert alert must be provisioned"
 done
+# AlloyPodLogsDown watches the rendered StatefulSet, also with a fullnameOverride
+for override in "" pod-logs; do
+  args=()
+  [[ -z $override ]] || args=(--set "alloy-logs.fullnameOverride=$override")
+  rendered=$(render "${args[@]}")
+  name=$(yq 'select(.kind == "StatefulSet") | .metadata.name' <<<"$rendered")
+  watched=$(yq 'select(.kind == "ConfigMap" and .metadata.name == "alloy-alerts") | .data["alloy_pod_logs.yaml"]' <<<"$rendered" \
+    | yq '.groups[].rules[] | select(.title == "AlloyPodLogsDown") | .data[0].model.expr' | grep -o 'statefulset="[^"]*"' | sort -u)
+  [[ $watched == "statefulset=\"$name\"" ]] || fail "AlloyPodLogsDown must watch StatefulSet $name, got $watched"
+done
 
 # 9. a small send queue, so a crash loses little of what was read but not yet sent; changing
 # queue_config needs the experimental stability level

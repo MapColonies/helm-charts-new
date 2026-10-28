@@ -55,6 +55,14 @@ The port the alloy Deployment listens on for the pod logs.
 {{- end }}
 
 {{/*
+The alloy-logs StatefulSet's name, from the alloy chart's own helper, so it follows the release name and
+alloy-logs.fullnameOverride.
+*/}}
+{{- define "alloy-wrapper.podLogsStatefulSet" -}}
+{{- include "alloy.fullname" (dict "Values" (index .Values "alloy-logs") "Chart" (dict "Name" "alloy-logs") "Release" .Release) -}}
+{{- end }}
+
+{{/*
 Where the alloy-logs StatefulSet sends the pod logs: the alloy Deployment's Service, named by the alloy chart's
 own helper so it follows the release name and fullnameOverride.
 */}}

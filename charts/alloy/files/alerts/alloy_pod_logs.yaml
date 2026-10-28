@@ -19,7 +19,8 @@ groups:
                 type: prometheus
                 uid: prometheus
               editorMode: code
-              expr: sum by (cluster, namespace, statefulset) (kube_statefulset_replicas{statefulset=~".*alloy-logs"} - kube_statefulset_status_replicas_ready{statefulset=~".*alloy-logs"}) > 0
+              # The StatefulSet's name is filled in when the chart renders (templates/alerts.yaml)
+              expr: sum by (cluster, namespace, statefulset) (kube_statefulset_replicas{statefulset="__ALLOY_LOGS_STATEFULSET__"} - kube_statefulset_status_replicas_ready{statefulset="__ALLOY_LOGS_STATEFULSET__"}) > 0
               instant: true
               intervalMs: 1000
               maxDataPoints: 43200

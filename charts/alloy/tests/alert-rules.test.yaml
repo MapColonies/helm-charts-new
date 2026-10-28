@@ -103,9 +103,9 @@ tests:
   # than desired (a pod stuck on a failed node still counts as desired), before lines are lost
   - interval: 1m
     input_series:
-      - series: 'kube_statefulset_replicas{job="kube-state-metrics",namespace="infra-services",statefulset="infra-alloy-alloy-logs"}'
+      - series: 'kube_statefulset_replicas{job="kube-state-metrics",namespace="infra-services",statefulset="alloy-alloy-logs"}'
         values: '1x10'
-      - series: 'kube_statefulset_status_replicas_ready{job="kube-state-metrics",namespace="infra-services",statefulset="infra-alloy-alloy-logs"}'
+      - series: 'kube_statefulset_status_replicas_ready{job="kube-state-metrics",namespace="infra-services",statefulset="alloy-alloy-logs"}'
         values: '1x3 0x7'
       - series: 'kube_statefulset_replicas{job="kube-state-metrics",namespace="infra-services",statefulset="other"}'
         values: '1x10'
@@ -118,4 +118,4 @@ tests:
       - eval_time: 5m
         alertname: AlloyPodLogsDown
         exp_alerts:
-          - exp_labels: {namespace: infra-services, statefulset: infra-alloy-alloy-logs}
+          - exp_labels: {namespace: infra-services, statefulset: alloy-alloy-logs}
