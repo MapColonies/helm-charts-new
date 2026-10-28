@@ -1,5 +1,7 @@
 # Sourced by the tests: runs from the chart directory and renders the chart. Needs helm and yq (v4).
 set -euo pipefail
+# A failing command inside $(...) fails the substitution too, so assigning its result stops the test
+shopt -s inherit_errexit
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 DEPLOYMENT_CONFIG=infra-alloy       # the Deployment's: receives OTLP and the pod logs, processes, exports
