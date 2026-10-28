@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Asserts on the rendered workloads: a Deployment that receives OTLP, and a StatefulSet that
-# collects pod logs, splits the pods between its replicas and keeps its state on a per-replica PVC
-# (of the default or a chosen StorageClass) that's deleted when the replica is scaled away.
+# Asserts on the rendered workloads: a Deployment that receives OTLP and the pod logs, processes and
+# exports them, and a StatefulSet that tails pod logs (one replica, or several that split the pods)
+# and forwards them, keeping its state on a per-replica PVC (of the default or a chosen
+# StorageClass) that's deleted when the replica is scaled away.
 source "$(dirname "$0")/lib.sh"
 
 out=$(render)
@@ -53,7 +54,6 @@ claim=$(yq '.spec.volumeClaimTemplates[0].metadata.name' <<<"$sts")
   || fail "PVC $claim must be mounted at the storage path $storage"
 [[ $(yq '.spec.persistentVolumeClaimRetentionPolicy | .whenScaled + " " + .whenDeleted' <<<"$sts") == "Delete Delete" ]] \
   || fail "PVCs must be deleted when scaled away and on uninstall"
-[[ $(yq '.spec.replicas' <<<"$sts") -ge 2 ]] || fail "StatefulSet should run more than one replica"
 yq 'select(.kind == "HorizontalPodAutoscaler")' <<<"$out" | grep -q . && fail "nothing is autoscaled by default"
 
 # 6. the cluster's default StorageClass unless one is set
@@ -78,5 +78,25 @@ expect_url() {
 }
 expect_url
 expect_url --set alloy.fullnameOverride=otel-in
+
+# 8. one replica, with fail-safes for the time it's down
+[[ $(yq '.spec.replicas' <<<"$sts") == 1 ]] || fail "StatefulSet must run one replica"
+for key in node.kubernetes.io/unreachable node.kubernetes.io/not-ready; do
+  [[ $(K=$key yq '.spec.template.spec.tolerations[] | select(.key == env(K) and .effect == "NoExecute") | .tolerationSeconds' <<<"$sts") == 30 ]] \
+    || fail "StatefulSet must leave a $key node after 30s"
+done
+[[ $(yq '.spec.template.spec.containers[] | select(.name == "alloy") | .livenessProbe.httpGet.path' <<<"$sts") == /-/ready ]] \
+  || fail "StatefulSet must have a liveness probe on /-/ready"
+yq 'select(.kind == "PodDisruptionBudget")' <<<"$out" | grep -q alloy-logs \
+  && fail "a PDB on a single replica would block node drains"
+yq 'select(.kind == "ConfigMap" and .metadata.name == "alloy-alerts") | .data["alloy_pod_logs.yaml"]' <<<"$out" \
+  | yq '.groups[].rules[].title' | grep -qx AlloyPodLogsDown || fail "the AlloyPodLogsDown alert must be provisioned"
+
+# 9. a small send queue, so a crash loses little of what was read but not yet sent; changing
+# queue_config needs the experimental stability level
+write_block=$(block 'loki.write "deployment"' "$statefulset")
+grep -q 'batch_size = "256KiB"' <<<"$write_block" || fail "loki.write must send 256KiB batches"
+grep -q 'capacity = "256KiB"' <<<"$write_block" || fail "loki.write must queue at most 256KiB"
+args "$sts" | grep -qx -- '--stability.level=experimental' || fail "StatefulSet must run at the experimental stability level"
 
 echo "OK"

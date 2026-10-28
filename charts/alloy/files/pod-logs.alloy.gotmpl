@@ -80,5 +80,13 @@ loki.source.kubernetes "pod_logs" {
 loki.write "deployment" {
     endpoint {
         url = {{ include "alloy-wrapper.podLogsUrl" . | quote }}
+
+        // A line's position is saved once it's queued here, before it's delivered, so a crash loses
+        // what's queued. Keep that small: when the queue is full (the Deployment down or slow),
+        // tailing waits instead of reading ahead. 256KiB is ~1s of prod's pod logs.
+        batch_size = "256KiB"
+        queue_config {
+            capacity = "256KiB"
+        }
     }
 }

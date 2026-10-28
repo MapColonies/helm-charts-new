@@ -2,7 +2,8 @@
 
 Usage: fake-kube-api.py <port> <lines> <record>
 - Serves the logs of every container: <lines> is a number of lines ("line N", one per second,
-  ending now), or a file of "<age in seconds> <line>" rows.
+  ending now), or a file of "<age in seconds> <line>" rows; a negative age is a line written that
+  many seconds after the start.
 - Records every log request in <record> as "<namespace>/<pod> <sinceTime or none>".
 - Lists one running pod, ns/pod (container app, owned by ReplicaSet app-5d9f8), for discovery, with
   a watch that never reports a change. Anything else is a 404.
@@ -96,11 +97,12 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", "text/plain")
         self.end_headers()
-        for ts, line in LOG:
+        for ts, line in LOG:  # follow=true: past lines now, future ones (negative age) when they're due
             if start is None or ts >= start:
+                time.sleep(max(0, (ts - datetime.now(timezone.utc)).total_seconds()))
                 self.wfile.write(f"{ts.strftime('%Y-%m-%dT%H:%M:%S.%fZ')} {line}\n".encode())
-        self.wfile.flush()
-        time.sleep(3600)  # follow=true: keep the stream open
+                self.wfile.flush()
+        time.sleep(3600)  # keep the stream open
 
 
 ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()

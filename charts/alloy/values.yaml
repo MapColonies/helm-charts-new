@@ -53,12 +53,13 @@ alloy:
 
 # Tails the logs of pods labeled mapcolonies.io/alloy-api-logs=true through the Kubernetes API and
 # forwards them as they are to the alloy Deployment, which does all the processing and exporting.
-# The replicas split the pods between them (clustering), so each line is forwarded once, and each
-# keeps its read positions on its own PVC. A replica restart (rollout, eviction) still re-sends
-# lines: its peers take over its pods without its positions and read them from the start (back to
-# maxLogAge); once it's back, it resumes from its own positions, re-sending what the peers shipped
-# meanwhile; and the peers keep tailing its pods until they drop its old membership (seen 2-45s).
-# tests/clustering-e2e.sh checks this.
+# One replica, keeping its read positions on a PVC: a restart or rollout resumes where it stopped
+# (re-sending a line or two, losing none while the Deployment is up; tests/forwarding-e2e.sh).
+# While it's down nothing is tailed, and lines older than maxLogAge by the time it's back are
+# dropped. A failed node keeps it down until the pod is evicted and its disk released, which needs
+# the node fenced (OpenShift MachineHealthCheck) or the pod force-deleted; AlloyPodLogsDown alerts.
+# It can scale out (clustering is on): the replicas then split the pods, but a replica restart
+# makes its peers re-read its pods and re-sends lines (tests/clustering-e2e.sh).
 alloy-logs:
   image:
     repository: infra/grafana/alloy
@@ -77,7 +78,18 @@ alloy-logs:
 
   controller:
     type: 'statefulset'
-    replicas: 3
+    replicas: 1
+    # Evicted from an unreachable or not-ready node after 30s instead of 5m, so it's replaced sooner
+    # once the node is fenced (a StatefulSet never runs two pods with the same name)
+    tolerations:
+      - key: node.kubernetes.io/unreachable
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
+      - key: node.kubernetes.io/not-ready
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
     # Delete a replica's PVC when it's scaled away (and on uninstall), so a later scale-up starts
     # that replica clean instead of resuming from positions that are stale by then
     enableStatefulSetAutoDeletePVC: true
@@ -117,6 +129,16 @@ alloy-logs:
     configMap:
       create: false
       name: infra-alloy-logs
+    # Restarts Alloy in place (same node, same disk) if it stops serving for ~90s. /-/ready, not
+    # /-/healthy, which also fails on transient component errors (e.g. the Kubernetes API unreachable).
+    livenessProbe:
+      httpGet:
+        path: /-/ready
+        port: 12345
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
     # Only tails and forwards; the parsing and export queue are in the Deployment
     resources:
       requests:
