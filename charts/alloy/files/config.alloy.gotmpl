@@ -180,6 +180,9 @@ otelcol.processor.batch "default" {
 otelcol.exporter.otlphttp "default" {
     client {
         endpoint = {{ .Values.exporter.endpoint | default "http://infra-loki-gateway/otlp" | quote }}
+        // How long one export attempt may take; the last retry can start just before
+        // retry_on_failure.max_elapsed_time ends and still run this long
+        timeout  = {{ .Values.exporter.timeout | default "30s" | quote }}
     }
     sending_queue {
         enabled      = true
