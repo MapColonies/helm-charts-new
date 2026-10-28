@@ -42,12 +42,18 @@ alloy:
         port: 4318
         targetPort: 4318
         protocol: TCP
+      # The pod logs the alloy-logs StatefulSet forwards (Loki push API)
+      - name: loki-push
+        port: 3100
+        targetPort: 3100
+        protocol: TCP
     configMap:
       create: false
       name: infra-alloy
 
-# Collects the logs of pods labeled mapcolonies.io/alloy-api-logs=true through the Kubernetes API.
-# The replicas split the pods between them (clustering), so each line is shipped once, and each
+# Tails the logs of pods labeled mapcolonies.io/alloy-api-logs=true through the Kubernetes API and
+# forwards them as they are to the alloy Deployment, which does all the processing and exporting.
+# The replicas split the pods between them (clustering), so each line is forwarded once, and each
 # keeps its read positions on its own PVC. A replica restart (rollout, eviction) still re-sends
 # lines: its peers take over its pods without its positions and read them from the start (back to
 # maxLogAge); once it's back, it resumes from its own positions, re-sending what the peers shipped
@@ -111,19 +117,20 @@ alloy-logs:
     configMap:
       create: false
       name: infra-alloy-logs
+    # Only tails and forwards; the parsing and export queue are in the Deployment
     resources:
       requests:
-        cpu: 250m
-        memory: 512Mi
+        cpu: 100m
+        memory: 256Mi
       limits:
-        cpu: "1"
-        memory: 1Gi
+        cpu: 500m
+        memory: 512Mi
 
-# Pod log lines older than this are dropped instead of sent. Loki rejects lines more than
-# max_chunk_age/2 (7m30s for charts/loki's 15m) behind the newest line of their stream ("entry too
-# far behind"), and a line ages further on its way there: up to the batch timeout plus the
-# exporter's retry max_elapsed_time (5s + 60s by default). Keep it under the window minus that;
-# tests/loki-window.sh checks it.
+# Pod log lines older than this are dropped by the alloy Deployment instead of exported. Loki
+# rejects lines more than max_chunk_age/2 (7m30s for charts/loki's 15m) behind the newest line of
+# their stream ("entry too far behind"), and a line ages further on its way there: up to the batch
+# timeout plus the exporter's retry max_elapsed_time (5s + 60s by default). Keep it under the
+# window minus that; tests/loki-window.sh checks it.
 maxLogAge: 6m
 
 batching: {}

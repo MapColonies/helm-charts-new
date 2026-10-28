@@ -13,7 +13,7 @@ work=$(mktemp -d)
 pids=()
 trap 'kill "${pids[@]}" 2>/dev/null || true; wait; rm -rf "$work"' EXIT
 
-source_block=$(block 'loki.source.kubernetes "pod_logs"' "$(config "$LOGS_CONFIG")")
+source_block=$(block 'loki.source.kubernetes "pod_logs"' "$(config "$STATEFULSET_CONFIG")")
 [[ -n $source_block ]] || fail "loki.source.kubernetes \"pod_logs\" not rendered"
 target='{"__meta_kubernetes_namespace"="ns","__meta_kubernetes_pod_name"="pod","__meta_kubernetes_pod_container_name"="app","__meta_kubernetes_pod_uid"="uid-1"}'
 sed -e "s|^\( *targets *=\).*|\1 [$target]\n    client { api_server = \"http://127.0.0.1:$API_PORT\" }|" \

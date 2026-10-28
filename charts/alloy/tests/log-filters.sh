@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Asserts on the rendered pod logs config: logFilters is off by default and, when
+# Asserts on the Deployment's rendered pod logs pipeline: logFilters is off by default and, when
 # set, keeps/drops lines per namespace before the OTel conversion.
 source "$(dirname "$0")/lib.sh"
 
-render_logs() { config "$LOGS_CONFIG" "$@"; }
+render_logs() { config "$DEPLOYMENT_CONFIG" "$@"; }
 
 # 1. off by default: nothing but the age filter in loki.process
 out=$(render_logs)

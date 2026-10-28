@@ -19,7 +19,7 @@ pid=() # by replica
 trap 'kill "${pids[@]}" 2>/dev/null || true; wait; rm -rf "$work"' EXIT
 
 # The rendered component block, with fake pods as targets, the fake API as client and loki.echo as output
-source_block=$(block 'loki.source.kubernetes "pod_logs"' "$(config "$LOGS_CONFIG")")
+source_block=$(block 'loki.source.kubernetes "pod_logs"' "$(config "$STATEFULSET_CONFIG")")
 grep -q 'clustering {' <<<"$source_block" || fail "rendered block has no clustering"
 targets=$(for i in $(seq "$PODS"); do
   printf '{"__meta_kubernetes_namespace"="ns","__meta_kubernetes_pod_name"="pod-%s","__meta_kubernetes_pod_container_name"="app","__meta_kubernetes_pod_uid"="uid-%s"},' "$i" "$i"

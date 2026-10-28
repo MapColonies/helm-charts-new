@@ -16,19 +16,49 @@ Batches the exporter may queue in one pod: exporter.sending_queue.memory_share o
 limit, over the size of a full batch (batching.send_batch_max_size records of
 exporter.sending_queue.bytes_per_record each). A full queue drops new data instead of growing
 until the pod is OOM-killed. exporter.sending_queue.queue_size, when set, is used as is; without
-a memory limit there is nothing to size it by, so it stays at 2000.
-Takes (dict "root" $ "values" <the workload's subchart `alloy` values>).
+a memory limit there is nothing to size it by, so it stays at 2000. The pod is the alloy Deployment's.
 */}}
 {{- define "alloy-wrapper.queueSize" -}}
-{{- $queue := .root.Values.exporter.sending_queue }}
-{{- $limit := dig "resources" "limits" "memory" "" .values }}
+{{- $queue := .Values.exporter.sending_queue }}
+{{- $limit := dig "resources" "limits" "memory" "" .Values.alloy.alloy }}
 {{- if $queue.queue_size }}
 {{- $queue.queue_size }}
 {{- else if $limit }}
 {{- $budget := mulf (include "alloy-wrapper.bytes" $limit) $queue.memory_share }}
-{{- $batch := mulf (.root.Values.batching.send_batch_max_size | default 4096) $queue.bytes_per_record }}
+{{- $batch := mulf (.Values.batching.send_batch_max_size | default 4096) $queue.bytes_per_record }}
 {{- max 1 (divf $budget $batch | floor | int64) }}
 {{- else }}
 {{- 2000 }}
 {{- end }}
+{{- end }}
+
+{{/*
+The alloy Deployment's `loki-push` port (alloy.alloy.extraPorts), where it receives the pod logs.
+Returns the port entry as YAML.
+*/}}
+{{- define "alloy-wrapper.podLogsPortEntry" -}}
+{{- $entry := dict }}
+{{- range .Values.alloy.alloy.extraPorts }}
+{{- if eq .name "loki-push" }}{{ $entry = . }}{{ end }}
+{{- end }}
+{{- if not $entry }}
+{{- fail "alloy.alloy.extraPorts must have a `loki-push` port, where the alloy Deployment receives the pod logs" }}
+{{- end }}
+{{- toYaml $entry }}
+{{- end }}
+
+{{/*
+The port the alloy Deployment listens on for the pod logs.
+*/}}
+{{- define "alloy-wrapper.podLogsPort" -}}
+{{- (include "alloy-wrapper.podLogsPortEntry" . | fromYaml).targetPort -}}
+{{- end }}
+
+{{/*
+Where the alloy-logs StatefulSet sends the pod logs: the alloy Deployment's Service, named by the alloy chart's
+own helper so it follows the release name and fullnameOverride.
+*/}}
+{{- define "alloy-wrapper.podLogsUrl" -}}
+{{- $service := include "alloy.fullname" (dict "Values" .Values.alloy "Chart" (dict "Name" "alloy") "Release" .Release) }}
+{{- printf "http://%s:%v/loki/api/v1/push" $service (include "alloy-wrapper.podLogsPortEntry" . | fromYaml).port -}}
 {{- end }}

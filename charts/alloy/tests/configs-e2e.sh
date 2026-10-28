@@ -11,27 +11,17 @@ work=$(mktemp -d)
 pids=()
 trap 'kill "${pids[@]}" 2>/dev/null || true; wait; rm -rf "$work"' EXIT
 
-cat >"$work/kubeconfig" <<EOF
-apiVersion: v1
-kind: Config
-clusters: [{name: fake, cluster: {server: "http://127.0.0.1:$API_PORT"}}]
-users: [{name: fake, user: {}}]
-contexts: [{name: fake, context: {cluster: fake, user: fake}}]
-current-context: fake
-EOF
+kubeconfig "$work/kubeconfig" "$API_PORT"
 python3 tests/fake-kube-api.py "$API_PORT" 3 "$work/since" 2>/dev/null &
 pids+=($!)
 
-for name in "$OTLP_CONFIG" "$LOGS_CONFIG"; do
+for name in "$DEPLOYMENT_CONFIG" "$STATEFULSET_CONFIG"; do
   config "$name" "$@" >"$work/$name.alloy"
   "$ALLOY" validate --stability.level=experimental "$work/$name.alloy" >"$work/$name.validate" 2>&1 \
     || { cat "$work/$name.validate" >&2; fail "$name: alloy validate failed"; }
 
   # Out of a cluster, point the Kubernetes clients at the fake API instead of the in-cluster one
-  sed -e "s|^discovery.kubernetes \"pod\" {|&\n    kubeconfig_file = \"$work/kubeconfig\"|" \
-      -e "s|^loki.source.kubernetes \"pod_logs\" {|&\n    client { kubeconfig_file = \"$work/kubeconfig\" }|" \
-      -e 's|^otelcol.processor.k8sattributes "\(.*\)" {|&\n    auth_type = "kubeConfig"|' \
-      "$work/$name.alloy" >"$work/$name.run.alloy"
+  fake_api_clients "$work/kubeconfig" <"$work/$name.alloy" >"$work/$name.run.alloy"
   KUBECONFIG=$work/kubeconfig "$ALLOY" run "$work/$name.run.alloy" --storage.path="$work/data-$name" \
     --server.http.listen-addr="127.0.0.1:$HTTP_PORT" --stability.level=experimental >"$work/$name.log" 2>&1 &
   pid=$!

@@ -12,25 +12,32 @@ args() { yq '.spec.template.spec.containers[] | select(.name == "alloy") | .args
 # 1. one workload of each kind, each running its own config
 [[ $(yq -N 'select(.kind == "Deployment" or .kind == "StatefulSet") | .kind' <<<"$out" | sort | xargs) == "Deployment StatefulSet" ]] \
   || fail "expected exactly one Deployment and one StatefulSet"
-[[ $(yq '.spec.template.spec.volumes[] | select(.name == "config") | .configMap.name' <<<"$deploy") == "$OTLP_CONFIG" ]] \
-  || fail "Deployment must run $OTLP_CONFIG"
-[[ $(yq '.spec.template.spec.volumes[] | select(.name == "config") | .configMap.name' <<<"$sts") == "$LOGS_CONFIG" ]] \
-  || fail "StatefulSet must run $LOGS_CONFIG"
+[[ $(yq '.spec.template.spec.volumes[] | select(.name == "config") | .configMap.name' <<<"$deploy") == "$DEPLOYMENT_CONFIG" ]] \
+  || fail "Deployment must run $DEPLOYMENT_CONFIG"
+[[ $(yq '.spec.template.spec.volumes[] | select(.name == "config") | .configMap.name' <<<"$sts") == "$STATEFULSET_CONFIG" ]] \
+  || fail "StatefulSet must run $STATEFULSET_CONFIG"
 
-# 2. only the Deployment receives OTLP; it collects no pod logs
-yq '.spec.template.spec.containers[0].ports[].name' <<<"$deploy" | grep -qx 'otlp-grpc' || fail "Deployment must expose OTLP gRPC"
-yq '.spec.template.spec.containers[0].ports[].name' <<<"$sts" | grep -q 'otlp' && fail "StatefulSet must not expose OTLP ports"
-otlp=$(config "$OTLP_CONFIG")
-grep -q '^otelcol.receiver.otlp "default" {' <<<"$otlp" || fail "OTLP config must receive OTLP"
-grep -qE '^(discovery\.kubernetes|discovery\.relabel|loki\.source\.kubernetes|loki\.process|otelcol\.receiver\.loki|otelcol\.processor\.transform) ' <<<"$otlp" \
-  && fail "OTLP config must not contain the pod logs pipeline"
+# 2. the Deployment receives OTLP and the forwarded pod logs, and does all the processing and export
+ports=$(yq '.spec.template.spec.containers[0].ports[].name' <<<"$deploy")
+for port in otlp-grpc otlp-http loki-push; do grep -qx "$port" <<<"$ports" || fail "Deployment must expose $port"; done
+deployment=$(config "$DEPLOYMENT_CONFIG")
+for component in 'otelcol.receiver.otlp "default"' 'loki.source.api "pod_logs"' 'loki.process "limit_time"' \
+  'otelcol.receiver.loki "default"' 'otelcol.processor.transform "default"' 'otelcol.exporter.otlphttp "default"'; do
+  grep -qF "$component {" <<<"$deployment" || fail "Deployment config must contain $component"
+done
+grep -qE '^ +use_incoming_timestamp += true$' <<<"$(block 'loki.source.api "pod_logs"' "$deployment")" \
+  || fail "loki.source.api must keep the lines' own timestamps"
+grep -qE '^(discovery\.kubernetes|loki\.source\.kubernetes) ' <<<"$deployment" && fail "Deployment must not tail pod logs"
 
-# 3. only the StatefulSet collects pod logs, and its replicas split the pods
-logs=$(config "$LOGS_CONFIG")
-grep -q '^otelcol.receiver.otlp ' <<<"$logs" && fail "pod logs config must not receive OTLP"
-source_block=$(block 'loki.source.kubernetes "pod_logs"' "$logs")
-[[ -n $source_block ]] || fail "pod logs config must contain loki.source.kubernetes \"pod_logs\""
+# 3. the StatefulSet only tails pod logs, split between its replicas, and forwards them to the Deployment
+yq '.spec.template.spec.containers[0].ports[].name' <<<"$sts" | grep -qE 'otlp|loki-push' && fail "StatefulSet must receive nothing"
+statefulset=$(config "$STATEFULSET_CONFIG")
+[[ $(grep -oE '^[a-z][a-z0-9_.]* "[^"]*"' <<<"$statefulset" | xargs) == 'discovery.kubernetes pod discovery.relabel pod_logs loki.source.kubernetes pod_logs loki.write deployment' ]] \
+  || fail "StatefulSet config must only discover, tail and forward, got: $(grep -oE '^[a-z][a-z0-9_.]* "[^"]*"' <<<"$statefulset" | xargs)"
+grep -q '^tracing ' <<<"$statefulset" && fail "StatefulSet must not export its own traces"
+source_block=$(block 'loki.source.kubernetes "pod_logs"' "$statefulset")
 grep -A1 'clustering {' <<<"$source_block" | grep -q 'enabled = true' || fail "pod_logs must enable clustering"
+grep -q 'forward_to = \[loki.write.deployment.receiver\]' <<<"$source_block" || fail "pod_logs must forward to loki.write"
 
 # 4. its own cluster, so its clustering metrics and alerts don't mix with the Deployment's
 args "$sts" | grep -qx -- '--cluster.name=alloy-logs' || fail "StatefulSet must set its own cluster name"
@@ -55,5 +62,21 @@ yq 'select(.kind == "HorizontalPodAutoscaler")' <<<"$out" | grep -q . && fail "n
 custom=$(render -f tests/values-storage-class.yaml | yq 'select(.kind == "StatefulSet") | .spec.volumeClaimTemplates[0].spec')
 [[ $(yq '.storageClassName' <<<"$custom") == fast-ssd ]] || fail "PVC must use the StorageClass set in values"
 [[ $(yq '.resources.requests.storage' <<<"$custom") == 2Gi ]] || fail "PVC must use the size set in values"
+
+# 7. the StatefulSet forwards to the Deployment's Service, on the port the Deployment listens on
+# expect_url <helm template args...>: loki.write's URL is the rendered Deployment Service's loki-push port
+expect_url() {
+  local out service port listen
+  out=$(render "$@")
+  service=$(yq -N 'select(.kind == "Service" and .spec.clusterIP != "None" and (.spec.ports[].name == "loki-push")) | .metadata.name' <<<"$out" | sort -u)
+  port=$(N=$service yq -N 'select(.kind == "Service" and .metadata.name == env(N)) | .spec.ports[] | select(.name == "loki-push") | .port' <<<"$out")
+  listen=$(config "$DEPLOYMENT_CONFIG" "$@" | sed -n 's/^ *listen_port *= *//p')
+  [[ $(config "$STATEFULSET_CONFIG" "$@" | sed -n 's/^ *url *= *"\(.*\)"$/\1/p') == "http://$service:$port/loki/api/v1/push" ]] \
+    || fail "${*:-defaults}: loki.write must send to http://$service:$port/loki/api/v1/push"
+  [[ $listen == "$(N=$service yq -N 'select(.kind == "Service" and .metadata.name == env(N)) | .spec.ports[] | select(.name == "loki-push") | .targetPort' <<<"$out")" ]] \
+    || fail "${*:-defaults}: loki.source.api must listen on the loki-push targetPort"
+}
+expect_url
+expect_url --set alloy.fullnameOverride=otel-in
 
 echo "OK"

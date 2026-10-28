@@ -15,8 +15,8 @@ seconds() {
   [[ $1 =~ ([0-9]+)s ]] && total=$((total + BASH_REMATCH[1]))
   echo "$total"
 }
-# setting <attribute> [helm template args...]: a quoted attribute's value in the pod logs config
-setting() { config "$LOGS_CONFIG" "${@:2}" | sed -n "s/^ *$1 *= *\"\(.*\)\"$/\1/p" | head -1; }
+# setting <attribute> [helm template args...]: a quoted attribute's value in the Deployment config
+setting() { config "$DEPLOYMENT_CONFIG" "${@:2}" | sed -n "s/^ *$1 *= *\"\(.*\)\"$/\1/p" | head -1; }
 
 # 1. older_than is maxLogAge as is
 [[ $(setting older_than --set maxLogAge=5m) == 5m ]] || fail "older_than must be maxLogAge"
