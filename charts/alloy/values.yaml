@@ -160,6 +160,11 @@ alloy-logs:
 # their stream ("entry too far behind"), and a line ages further on its way there: up to the batch
 # timeout, plus the exporter's retry max_elapsed_time, plus one last attempt's client timeout
 # (5s + 60s + 30s by default). Keep it under the window minus that; tests/loki-window.sh checks it.
+# The trade-off: the drop is for re-read lines (the StatefulSet starting on a new PVC, or a peer
+# taking over pods when scaled out), which Loki rejects because their stream already has newer
+# lines. A collection outage (the StatefulSet down: node failure, upgrade) leaves a backlog that
+# arrives in order, which Loki would accept, but the drop applies to it too: an outage longer than
+# maxLogAge loses its oldest lines, all of them older than maxLogAge when they're read.
 maxLogAge: 5m30s
 
 batching: {}
