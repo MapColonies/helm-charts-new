@@ -3,7 +3,9 @@
 {{- $scopeRegex := include "gatekeeper-constraints.deployAlertScopeRegex" . }}
 {{- $defaultTeam := include "gatekeeper-constraints.deployAlertDefaultTeam" . }}
 {{- $entries := include "gatekeeper-constraints.deployAlertEntries" . | fromYamlArray }}
-{{- $base := .Files.Get "files/alerts/gatekeeper-deploy.yaml" | replace "__NAMESPACE_REGEX__" $scopeRegex }}
+{{- $dashboardLine := "" }}
+{{- with .Values.dailyReport.dashboardUrl }}{{ $dashboardLine = printf "\\nDashboard: %s" (toJson . | trimPrefix "\"" | trimSuffix "\"") }}{{ end }}
+{{- $base := .Files.Get "files/alerts/gatekeeper-deploy.yaml" | replace "__NAMESPACE_REGEX__" $scopeRegex | replace "__DASHBOARD_LINE__" $dashboardLine }}
 {{- $rules := list }}
 {{- $earlier := list }}{{- /* namespace regexes of the entries before this one */}}
 {{- range $i, $e := $entries }}
