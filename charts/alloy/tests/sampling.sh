@@ -68,4 +68,8 @@ accepts --set sampling.log.info=0.5
 accepts --set-json 'sampling.log={"info":"0.5"}'
 accepts --set-json 'sampling=null'
 
+# 8. only the Deployment samples; the StatefulSet just forwards pod logs to it
+helm template alloy . -f tests/values-sampling.yaml | yq 'select(.metadata.name == "infra-alloy-logs") | .data["config.alloy"]' \
+  | grep -qE 'sampling|severity_text' && fail "the pod logs StatefulSet config must not sample"
+
 [ "$errors" -eq 0 ] && echo "OK" || { echo "$errors check(s) failed"; exit 1; }

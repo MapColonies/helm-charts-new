@@ -4,9 +4,10 @@
 # JSON lines per severity and format, with no level label, and checks what survives
 # against the sampling.log rates in the chart values: rates 0 and 1 exactly,
 # others within 5 standard deviations. Fails on any leftover sampling.* attribute.
-# Usage: ALLOY=/path/to/alloy tests/sampling-e2e.sh [helm template args...]
+# Usage: ALLOY=/path/to/alloy tests/sampling-e2e.sh [helm template args...] (default: -f tests/values-sampling.yaml)
 set -euo pipefail
 cd "$(dirname "$0")/.."
+[ $# -gt 0 ] || set -- -f tests/values-sampling.yaml
 : "${ALLOY:?set ALLOY to the alloy binary path}"
 N=${N:-2000}
 PUSH_PORT=${PUSH_PORT:-3599}
