@@ -5,9 +5,9 @@ source "$(dirname "$0")/lib.sh"
 
 render_logs() { config "$DEPLOYMENT_CONFIG" "$@"; }
 
-# 1. off by default: nothing but the age filter in loki.process
+# 1. off by default: no logFilters stages in loki.process
 out=$(render_logs)
-grep -q 'stage.match' <<<"$out" && fail "default render must not contain stage.match"
+grep -q 'log_filter_' <<<"$out" && fail "default render must not contain logFilters stages"
 
 # 2. keep: one drop stage per regex, selecting the namespace's lines that do NOT match
 out=$(render_logs -f tests/values-log-filters.yaml)

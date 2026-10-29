@@ -168,6 +168,26 @@ alloy-logs:
 # AlloyPodLogsTooOld fires when it drops lines.
 maxLogAge: 5m30s
 
+sampling:
+  # Log sampling by severity. Off by default: set rates per environment.
+  # Each key is a severity, matched case-insensitively against the log record's severity_text
+  # after OTel parsing (e.g. `info` matches "INFO" and "Info"). severity_text comes from OTLP,
+  # from "SeverityText" in OTel-format JSON, or from "level" in pino JSON. Any severity string is accepted.
+  # Each value is the fraction of logs to keep: 0 drops all of them, 0.0001 to 1 keeps that fraction
+  # (0.1 keeps 10%), 1 keeps all. Severities that are not listed, and logs without a severity, are kept at 100%.
+  # Plain-text lines have no severity_text, so they are never sampled.
+  # Sampling happens inside Alloy, so it does not reduce the amount of data sent to Alloy.
+  # Removed logs are counted in two metrics, totals with no per-severity label:
+  #   rate 0: otelcol_processor_filter_logs_filtered_total{component_id="otelcol.processor.filter.log_sampling_drop"}
+  #   others: otelcol_processor_probabilistic_sampler_count_logs_sampled_total{policy="sampling_priority",sampled="false"}
+  # Example:
+  # log:
+  #   trace: 0
+  #   debug: 0
+  #   info: 0.2
+  #   warn: 0.5
+  log: {}
+
 batching: {}
 exporter:
   sending_queue:
