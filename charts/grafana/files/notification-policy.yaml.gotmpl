@@ -13,6 +13,16 @@ policies:
           - alert_team = {{ .team | quote }}
         receiver: {{ printf "%s-alerts" .team | quote }}
         routes:
+          # No-resolve alerts that carry an alert_group label (e.g. the Gatekeeper deploy
+          # alerts): one digest per team and group for a burst, instead of one per alert.
+          - matchers:
+              - notify_resolved = "false"
+              - alert_group =~ ".+"
+            receiver: {{ printf "%s-alerts-digest" .team | quote }}
+            group_by: [alert_team, alert_group]
+            group_wait: 1m
+            group_interval: 5m
+            repeat_interval: 12h
           # Alerts that must not send resolved messages: one notification per alert.
           - matchers:
               - notify_resolved = "false"

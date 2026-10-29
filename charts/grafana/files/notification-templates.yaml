@@ -6,7 +6,8 @@ templates:
     # notify_resolved="false"). Not run through Helm tpl: the braces below are Grafana's.
     # Title: the alert summary. Body, one block per alert: description, then every other
     # annotation as "Name: value" (deployed_by -> "Deployed By: ..."). No label dump and no
-    # metrics values, which Grafana's default message adds. A last "Silence:" line keeps the
+    # metrics values, which Grafana's default message adds. digest_* annotations are for
+    # digest_notification and are skipped. A last "Silence:" line keeps the
     # link the default message had. Labels are not shown, so a rule routed here needs a summary
     # that is unique per alert. Rule-specific wording belongs in the rule's annotations, not here.
     template: |
@@ -20,11 +21,39 @@ templates:
       {{ end -}}
       {{ $a.Annotations.description }}
       {{ range $a.Annotations.SortedPairs -}}
-      {{ if and (ne .Name "summary") (ne .Name "description") -}}
+      {{ if and (ne .Name "summary") (ne .Name "description") (not (match "^digest_" .Name)) -}}
       {{ .Name | reReplaceAll "_" " " | title }}: {{ .Value }}
       {{ end -}}
       {{ end -}}
       {{ with $a.SilenceURL }}Silence: {{ . }}
       {{ end -}}
       {{ end -}}
+      {{- end }}
+  - orgId: 1
+    name: digest_notification
+    # Message layout for the <team>-alerts-digest contact points (notify_resolved="false"
+    # alerts with an alert_group label, grouped by alert_team and alert_group): one message
+    # for a burst. Not run through Helm tpl: the braces below are Grafana's.
+    # Title: the first alert's digest_title annotation (else its alertname) and the count.
+    # Body: one line per firing alert from its digest_line annotation (else summary), at most
+    # 25, then the first alert's digest_footer once, then one Silence link prefilled with
+    # the group labels (narrow it before saving). Rule-specific wording belongs in the rule's
+    # annotations, not here.
+    template: |
+      {{ define "digest_notification.title" -}}
+      {{ $alerts := .Alerts.Firing }}{{ if not $alerts }}{{ $alerts = .Alerts }}{{ end -}}
+      {{ with index $alerts 0 }}{{ or .Annotations.digest_title .Labels.alertname }}{{ end }} ({{ len $alerts }})
+      {{- end }}
+
+      {{ define "digest_notification.message" -}}
+      {{ $alerts := .Alerts.Firing }}{{ if not $alerts }}{{ $alerts = .Alerts }}{{ end -}}
+      {{ range $i, $a := $alerts }}{{ if lt $i 25 -}}
+      - {{ or $a.Annotations.digest_line $a.Annotations.summary }}
+      {{ end }}{{ end -}}
+      {{ if gt (len $alerts) 25 }}(showing the first 25 of {{ len $alerts }})
+      {{ end -}}
+      {{ with index $alerts 0 }}{{ with .Annotations.digest_footer }}
+      {{ . }}
+      {{ end }}{{ end -}}
+      Silence: {{ reReplaceAll "/$" "" .ExternalURL }}/alerting/silence/new?alertmanager=grafana{{ range .GroupLabels.SortedPairs }}&matcher={{ .Name }}%3D{{ .Value | urlquery }}{{ end }}
       {{- end }}
