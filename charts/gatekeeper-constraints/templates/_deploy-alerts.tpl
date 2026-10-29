@@ -8,6 +8,7 @@ How the rules are built
     __NAMESPACE_REGEX__  namespaces the whole alert covers (workloadPolicies scope)
     __ENTRY_FILTERS__    extra LogQL label filters that pick one team's namespaces
     __UID__ __TITLE__ __TEAM__
+    __DASHBOARD_LINE__   "\nDashboard: <dailyReport.dashboardUrl>" in digest_footer, or "" when unset
   There is one rule per namespaceTeams entry with a team, plus one fallback rule for everything
   else. A namespace must reach exactly one team, so each rule excludes the namespaces of the
   entries before it. Entries are ordered exact names first, then globs, in listed order.

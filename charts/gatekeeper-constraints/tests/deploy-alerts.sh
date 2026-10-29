@@ -101,4 +101,36 @@ grep -q 'namespaceTeams\[0\].namespace' <<<"$err" || fail "bad namespace must fa
 err=$(render "${on[@]}" "${ns[@]}" --set 'namespaceTeams[0].namespace=x-dev' --set 'namespaceTeams[0].team=Bad Team' 2>&1 || true)
 grep -q 'namespaceTeams\[0\].team' <<<"$err" || fail "bad team must fail"
 
+# 11. digest: every deploy rule carries alert_group=gatekeeper-deploy (the grafana chart
+#     sends one digest per team and group) and the digest_* annotations; the per-alert
+#     annotations stay for a grafana chart without the digest route.
+out=$(render "${on[@]}" "${ns[@]}" "${map[@]}")
+n=$(grep -c 'alert_team:' <<<"$out")
+[ "$(grep -c '^ *alert_group: gatekeeper-deploy$' <<<"$out")" = "$n" ] || fail "every deploy rule needs alert_group: gatekeeper-deploy"
+for a in summary description deployed_by how_to_exempt; do
+  [ "$(grep -c "^ *$a: " <<<"$out")" = "$n" ] || fail "every deploy rule must keep the $a annotation"
+done
+[ "$(grep -c '^ *digest_title: "Workload policy violations at deploy"$' <<<"$out")" = "$n" ] || fail "every deploy rule needs digest_title"
+line=$(grep -m1 '^ *digest_line: ' <<<"$out")
+grep -qF '{{ $labels.resource_kind }} {{ $labels.resource_namespace }}/{{ $labels.resource_name }}: ' <<<"$line" || fail "digest_line must start with kind namespace/name"
+grep -qF 'reReplaceAll \"^((Gatekeeper )?denied admission: )?[^ ]+ [^ /]+/[^ :]+:? \" \"\"' <<<"$line" || fail "digest_line must cut the prefix and the message's own kind namespace/name"
+grep -qF 'reReplaceAll \"[.]? To exempt this workload.*$\" \"\"' <<<"$line" || fail "digest_line must cut the trailing exempt sentence and its full stop"
+grep -qF ', by {{ $labels.request_username }}"' <<<"$line" || fail "digest_line must name the deploying user"
+[ "$(grep -c '^ *digest_line: ' <<<"$out")" = "$n" ] || fail "every deploy rule needs digest_line"
+foot=$(grep '^ *digest_footer: ' <<<"$out" || true)
+[ "$(grep -c . <<<"$foot")" = "$n" ] || fail "every deploy rule needs digest_footer"
+grep -q 'workloadPolicies.exemptions' <<<"$foot" || fail "digest_footer must explain how to exempt"
+grep -q 'Dashboard\|__DASHBOARD_LINE__' <<<"$foot" && fail "digest_footer: no dashboard line without dailyReport.dashboardUrl"
+# with dailyReport.dashboardUrl the footer links the dashboard on its own line
+out=$(render "${on[@]}" "${ns[@]}" --set dailyReport.dashboardUrl=https://grafana.invalid/d/gk-workload-policy)
+grep -m1 '^ *digest_footer: ' <<<"$out" | grep -qF 'reason as its value.\nDashboard: https://grafana.invalid/d/gk-workload-policy"' \
+  || fail "digest_footer must link dailyReport.dashboardUrl"
+# the daily report rules keep today's per-alert notifications: no alert_group
+dr=(--set dailyReport.enabled=true --set dailyReport.namespace=infra-dev --set dailyReport.environment=dev
+    --set dailyReport.dashboardUrl=https://grafana.invalid/d/gk-workload-policy
+    --set dailyReport.loki.pushUrl=http://infra-loki-gateway.infra-dev/loki/api/v1/push)
+out=$(render "${on[@]}" "${ns[@]}" "${dr[@]}" -s templates/daily-report-alerts.yaml)
+grep -q 'uid: gk-daily-report-missing' <<<"$out" || fail "daily report rules not rendered"
+grep -q 'alert_group\|digest_' <<<"$out" && fail "daily report rules must not carry alert_group or digest_* annotations"
+
 echo "OK"
