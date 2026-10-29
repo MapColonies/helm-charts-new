@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/MapColonies/helm-charts-new/compare/gatekeeper-constraints-v1.4.0...gatekeeper-constraints-v1.5.0) (2026-10-29)
+
+
+### 🎉 Features
+
+* **grafana,gatekeeper-constraints:** one Slack digest per team for deploy alerts ([#190](https://github.com/MapColonies/helm-charts-new/issues/190)) ([661d2eb](https://github.com/MapColonies/helm-charts-new/commit/661d2eb566506f15ba1ba3e0fb31b45be5308c4d))
+
 ## [1.4.0](https://github.com/MapColonies/helm-charts-new/compare/gatekeeper-constraints-v1.3.0...gatekeeper-constraints-v1.4.0) (2026-10-28)
 
 
