@@ -33,7 +33,9 @@ grep -q 'otelcol.processor.filter "health_filter"' "$work/pipeline.alloy" || { e
 # Expected keep rates: sampling.log from the merged values, via a throwaway template in a copy of the chart
 cp -r . "$work/chart"
 echo '{{ (.Values.sampling | default dict).log | default dict | toJson }}' >"$work/chart/templates/zz-sampling-rates.yaml"
-helm template alloy "$work/chart" "$@" --show-only templates/zz-sampling-rates.yaml | tail -1 >"$work/rates.json"
+helm template alloy "$work/chart" "$@" --show-only templates/zz-sampling-rates.yaml >"$work/rates.out"
+# the one JSON line, wherever Helm puts it (Helm 4 ends the output with a blank line)
+grep -x '{.*}' "$work/rates.out" >"$work/rates.json" || { echo "no sampling rates in:" >&2; cat "$work/rates.out" >&2; exit 1; }
 
 cat >"$work/config.alloy" <<CFG
 loki.source.api "in" {
