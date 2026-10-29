@@ -7,6 +7,11 @@
 
 * **grafana,gatekeeper-constraints:** one Slack digest per team for deploy alerts ([#190](https://github.com/MapColonies/helm-charts-new/issues/190)) ([661d2eb](https://github.com/MapColonies/helm-charts-new/commit/661d2eb566506f15ba1ba3e0fb31b45be5308c4d))
 
+
+### 🔧 Miscellaneous Chores
+
+* **master:** release grafana 1.4.0 ([#191](https://github.com/MapColonies/helm-charts-new/issues/191)) ([5392881](https://github.com/MapColonies/helm-charts-new/commit/5392881caa58bf1ac19dd118e73f8aae9386a73f))
+
 ## [1.3.0](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.2.0...grafana-v1.3.0) (2026-10-25)
 
 
