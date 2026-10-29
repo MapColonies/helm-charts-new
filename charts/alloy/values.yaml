@@ -177,6 +177,9 @@ sampling:
   # (0.1 keeps 10%), 1 keeps all. Severities that are not listed, and logs without a severity, are kept at 100%.
   # Plain-text lines have no severity_text, so they are never sampled.
   # Sampling happens inside Alloy, so it does not reduce the amount of data sent to Alloy.
+  # Removed logs are counted in two metrics, totals with no per-severity label:
+  #   rate 0: otelcol_processor_filter_logs_filtered_total{component_id="otelcol.processor.filter.log_sampling_drop"}
+  #   others: otelcol_processor_probabilistic_sampler_count_logs_sampled_total{policy="sampling_priority",sampled="false"}
   # Example:
   # log:
   #   trace: 0

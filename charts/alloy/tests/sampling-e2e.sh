@@ -3,7 +3,8 @@
 # health filter and sampling), with the batcher swapped for loki.echo. Pushes N pod-style
 # JSON lines per severity and format, with no level label, and checks what survives
 # against the sampling.log rates in the chart values: rates 0 and 1 exactly,
-# others within 5 standard deviations. Fails on any leftover sampling.* attribute.
+# others within 5 standard deviations, and the drop and sampler metrics must count exactly what
+# went missing. Fails on any leftover sampling.* attribute.
 # Usage: ALLOY=/path/to/alloy tests/sampling-e2e.sh [helm template args...] (default: -f tests/values-sampling.yaml)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -101,13 +102,15 @@ for lvl in "${levels[@]}"; do
     counts+=("$lvl/$fmt=$( (grep -o "$lvl-$fmt-line-[0-9]*" "$work/alloy.log" || true) | sort -u | wc -l)")
   done
 done
+curl -s http://127.0.0.1:12399/metrics >"$work/metrics.txt"
 echo
-python3 -I - "$work/rates.json" "$N" "${counts[@]}" <<'PY' || failed=1
-import json, math, sys
+python3 -I - "$work/rates.json" "$N" "$work/metrics.txt" "${counts[@]}" <<'PY' || failed=1
+import json, math, re, sys
 rates = {k.lower(): float(v) for k, v in json.load(open(sys.argv[1])).items()}
 n, failed = int(sys.argv[2]), False
+dropped = sampled_out = 0
 print(f"{'level':6} {'format':6} {'sent':>6} {'kept':>6} {'ratio':>6} {'rate':>6} {'allowed':>11}")
-for arg in sys.argv[3:]:
+for arg in sys.argv[4:]:
     name, kept = arg.split("=")
     lvl, fmt = name.split("/")
     kept, p = int(kept), rates.get(lvl, 1.0)
@@ -117,6 +120,27 @@ for arg in sys.argv[3:]:
     ok = lo <= kept <= hi
     failed |= not ok
     print(f"{lvl:6} {fmt:6} {n:6} {kept:6} {kept / n:6.3f} {p:6g} {f'{lo}-{hi}':>11}  {'ok' if ok else 'FAIL'}")
+    if p == 0:
+        dropped += n - kept
+    elif p < 1:
+        sampled_out += n - kept
+
+# The metrics that count what sampling removed (there is no per-severity label) must match the output
+metrics = open(sys.argv[3]).read()
+def metric(name, *labels):
+    return sum(float(m.group(1)) for line in metrics.splitlines()
+               if line.startswith(name + "{") and all(l in line for l in labels)
+               for m in [re.search(r" ([0-9.e+]+)$", line)] if m)
+print()
+for desc, got, want in [
+    ("rate 0 (filter log_sampling_drop)", metric("otelcol_processor_filter_logs_filtered_total",
+        'component_id="otelcol.processor.filter.log_sampling_drop"'), dropped),
+    ("sampled out (probabilistic_sampler)", metric("otelcol_processor_probabilistic_sampler_count_logs_sampled_total",
+        'policy="sampling_priority"', 'sampled="false"'), sampled_out),
+]:
+    ok = got == want
+    failed |= not ok
+    print(f"metric {desc}: {got:g}, expected {want}  {'ok' if ok else 'FAIL'}")
 sys.exit(failed)
 PY
 
@@ -132,8 +156,6 @@ fi
 echo; echo "--- example output lines"
 grep 'loki.echo' "$work/alloy.log" | grep -m1 'error-otel-line-' || true
 grep 'loki.echo' "$work/alloy.log" | grep -m1 'error-pino-line-' || true
-echo; echo "--- sampler metrics"
-curl -s http://127.0.0.1:12399/metrics | grep -E '^otelcol_processor_probabilistic_sampler' || echo "(none)"
 echo; echo "--- alloy errors"
 grep -iE 'level=(error|warn)' "$work/alloy.log" | head -5 || echo "(none)"
 
