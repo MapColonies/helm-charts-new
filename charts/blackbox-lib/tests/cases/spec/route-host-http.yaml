@@ -1,0 +1,6 @@
+# external host with explicit http scheme
+blackbox:
+  enabled: true
+  target:
+    host: payment.apps.example.com
+    scheme: http

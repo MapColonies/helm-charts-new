@@ -1,0 +1,4 @@
+# expect-error: blackbox.module may only contain
+module: "my module"
+customExporter:
+  enabled: true

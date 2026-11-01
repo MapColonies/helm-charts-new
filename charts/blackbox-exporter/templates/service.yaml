@@ -1,0 +1,17 @@
+{{- if .Values.customExporter.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "blackbox-exporter.fullname" . }}
+  labels:
+    {{- include "blackbox-exporter.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: {{ .Values.customExporter.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "blackbox-exporter.selectorLabels" . | nindent 4 }}
+{{- end }}

@@ -1,0 +1,14 @@
+# Custom rules: status codes, body regex with quotes and backslashes, headers.
+global:
+  cloudProvider:
+    dockerRegistryUrl: acrarolibotnonprod.azurecr.io
+    imagePullSecretName: acr-registry
+module: payment_json_validation
+customExporter:
+  enabled: true
+  rules:
+    validStatusCodes: [200, 202]
+    bodyRegexMatch:
+      - '"status":\s*"HEALTHY"'
+    headers:
+      X-Probe-Client: blackbox

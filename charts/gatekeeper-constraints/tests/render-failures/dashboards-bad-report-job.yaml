@@ -1,0 +1,7 @@
+# expect-error: dailyReport\.loki\.job must only contain letters, digits, _, \. and -, got "bad\\"job"
+dashboards:
+  enabled: true
+  namespace: infra-dev
+dailyReport:
+  loki:
+    job: bad"job

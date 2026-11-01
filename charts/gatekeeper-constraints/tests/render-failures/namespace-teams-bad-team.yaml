@@ -1,0 +1,7 @@
+# expect-error: namespaceTeams\[0\]\.team must be a team name like "raster", got "Bad Team"
+deployAlerts:
+  enabled: true
+workloadPolicies:
+  warnNamespaces: [dev]
+namespaceTeams:
+  - { namespace: dev, team: Bad Team }

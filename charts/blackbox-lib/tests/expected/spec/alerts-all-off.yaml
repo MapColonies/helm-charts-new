@@ -1,0 +1,19 @@
+---
+# Source: spec/templates/monitoring.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: t-spec-blackbox-alerts
+  namespace: team-dev
+  labels:
+    mapcolonies.io/grafana-alerts: "true"
+data:
+  blackbox-team-dev-payment-api.yaml: |
+    apiVersion: 1
+    deleteRules:
+    - orgId: 1
+      uid: bb-215d6e36b84a86b4760fc12f31c15c269ede1
+    - orgId: 1
+      uid: bb-0274ca51680bfd6d40ce408125f0191f2e92e
+    - orgId: 1
+      uid: bb-68561f4b897fcfc71ccaf4466ba9a7361aedd

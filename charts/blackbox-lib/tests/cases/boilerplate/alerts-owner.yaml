@@ -1,0 +1,5 @@
+# no alerts.team: routed to the chart's mclabels.owner
+blackbox:
+  enabled: true
+  alerts:
+    enabled: true

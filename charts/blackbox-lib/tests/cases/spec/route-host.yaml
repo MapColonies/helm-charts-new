@@ -1,0 +1,6 @@
+# external Route host: no port added, scheme defaults to https
+blackbox:
+  enabled: true
+  target:
+    host: payment.apps.example.com
+    path: /api/v1/health

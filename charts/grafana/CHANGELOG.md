@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.4.0](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.3.0...grafana-v1.4.0) (2026-10-29)
+
+
+### 🎉 Features
+
+* **grafana,gatekeeper-constraints:** one Slack digest per team for deploy alerts ([#190](https://github.com/MapColonies/helm-charts-new/issues/190)) ([661d2eb](https://github.com/MapColonies/helm-charts-new/commit/661d2eb566506f15ba1ba3e0fb31b45be5308c4d))
+
+
+### 🔧 Miscellaneous Chores
+
+* **master:** release grafana 1.4.0 ([#191](https://github.com/MapColonies/helm-charts-new/issues/191)) ([5392881](https://github.com/MapColonies/helm-charts-new/commit/5392881caa58bf1ac19dd118e73f8aae9386a73f))
+
+## [1.3.0](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.2.0...grafana-v1.3.0) (2026-10-25)
+
+
+### 🎉 Features
+
+* **grafana,gatekeeper-constraints:** readable message for no-resolve notifications ([#175](https://github.com/MapColonies/helm-charts-new/issues/175)) ([7695d71](https://github.com/MapColonies/helm-charts-new/commit/7695d712765cc5bfe4e8253c6142f655ef9da43c))
+
+## [1.2.0](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.1.0...grafana-v1.2.0) (2026-10-21)
+
+
+### 🎉 Features
+
+* add criticality filed to values based releases ([#112](https://github.com/MapColonies/helm-charts-new/issues/112)) ([d100d1e](https://github.com/MapColonies/helm-charts-new/commit/d100d1e1cd98bf70ccf171c074f1a273b0de1412))
+* **alloy,grafana,gatekeeper-constraints:** deploy-time alerts for gatekeeper workload policy warnings ([#163](https://github.com/MapColonies/helm-charts-new/issues/163)) ([74247ba](https://github.com/MapColonies/helm-charts-new/commit/74247bac14c9066cbf913a51acf6d66d8c4d4ee7))
+
 ## [1.1.0](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.0.2...grafana-v1.1.0) (2026-07-19)
 
 

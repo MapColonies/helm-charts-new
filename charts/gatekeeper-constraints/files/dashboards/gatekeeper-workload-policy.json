@@ -1,0 +1,1893 @@
+{
+  "uid": "gk-workload-policy",
+  "title": "Gatekeeper workload policy",
+  "description": "CPU 1:4 ratio and mclabels violations per team and namespace, from the daily Gatekeeper workload report (MAPCO-11868).",
+  "tags": [
+    "gatekeeper",
+    "policy"
+  ],
+  "editable": false,
+  "graphTooltip": 1,
+  "fiscalYearStartMonth": 0,
+  "liveNow": false,
+  "refresh": "",
+  "schemaVersion": 41,
+  "version": 1,
+  "time": {
+    "from": "now-14d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "links": [],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "loki_datasource",
+        "label": "Loki",
+        "type": "datasource",
+        "query": "loki",
+        "refresh": 1,
+        "regex": "",
+        "hide": 0,
+        "current": {
+          "selected": true,
+          "text": "Loki",
+          "value": "loki"
+        },
+        "options": []
+      },
+      {
+        "name": "team",
+        "label": "Team",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "${loki_datasource}"
+        },
+        "query": "label_values({job=\"__REPORT_JOB__\"}, team)",
+        "refresh": 2,
+        "regex": "/^[^_]/",
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "namespace",
+        "label": "Namespace",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "${loki_datasource}"
+        },
+        "query": "label_values({job=\"__REPORT_JOB__\", team=~\"$team\"}, namespace)",
+        "refresh": 2,
+        "regex": "/^[^_]/",
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "run",
+        "label": "Run",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "${loki_datasource}"
+        },
+        "query": "label_values({job=\"__REPORT_JOB__\", namespace=\"_team\"}, run_id)",
+        "refresh": 2,
+        "regex": "",
+        "sort": 2,
+        "multi": false,
+        "includeAll": false,
+        "current": {},
+        "options": [],
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 2,
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "type": "stat",
+      "title": "CPU ratio: workloads",
+      "description": "Selected run, teams and namespaces, summed from the run's per-namespace summary lines. Shows 0 when the selected run has none in the filter, and \"no run\" when no run is selected.",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, workloads | type=\"summary\" | rule=\"cpuRatio\" | unwrap workloads | __error__=\"\" [$__range]))) or (0 * sum(count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", namespace=\"_team\"} [$__range])))",
+          "queryType": "instant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "noValue": "no run"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "value",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 3,
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "type": "stat",
+      "title": "CPU ratio: containers",
+      "description": "Selected run, teams and namespaces, summed from the run's per-namespace summary lines. Shows 0 when the selected run has none in the filter, and \"no run\" when no run is selected.",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, containers | type=\"summary\" | rule=\"cpuRatio\" | unwrap containers | __error__=\"\" [$__range]))) or (0 * sum(count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", namespace=\"_team\"} [$__range])))",
+          "queryType": "instant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "noValue": "no run"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "value",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 4,
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "type": "stat",
+      "title": "mclabels: workloads",
+      "description": "Selected run, teams and namespaces, summed from the run's per-namespace summary lines. Shows 0 when the selected run has none in the filter, and \"no run\" when no run is selected.",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, workloads | type=\"summary\" | rule=\"mclabels\" | unwrap workloads | __error__=\"\" [$__range]))) or (0 * sum(count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", namespace=\"_team\"} [$__range])))",
+          "queryType": "instant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "noValue": "no run"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "value",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 5,
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "type": "stat",
+      "title": "mclabels: missing",
+      "description": "Selected run, teams and namespaces, summed from the run's per-namespace summary lines. Workloads with at least one missing mclabel. Shows 0 when the selected run has none in the filter, and \"no run\" when no run is selected.",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, missing | type=\"summary\" | rule=\"mclabels\" | unwrap missing | __error__=\"\" [$__range]))) or (0 * sum(count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", namespace=\"_team\"} [$__range])))",
+          "queryType": "instant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "noValue": "no run"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "value",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 6,
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "type": "stat",
+      "title": "mclabels: invalid",
+      "description": "Selected run, teams and namespaces, summed from the run's per-namespace summary lines. Workloads with an empty value, a bad owner or environment=undefined. Shows 0 when the selected run has none in the filter, and \"no run\" when no run is selected.",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, invalid | type=\"summary\" | rule=\"mclabels\" | unwrap invalid | __error__=\"\" [$__range]))) or (0 * sum(count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", namespace=\"_team\"} [$__range])))",
+          "queryType": "instant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "noValue": "no run"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "value",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 7,
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "type": "stat",
+      "title": "Last run",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 0
+      },
+      "description": "Newest report run in the time range: status ok, partial (a team post or the audit cross-check failed; a run whose Loki push failed never reaches this dashboard: see the Pod log and the missing-run alert) or skipped (no report), how long ago it ran, and the teams whose Slack post failed. See Runs below.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "{job=\"__REPORT_JOB__\", team=\"_run\"} | json status, failed",
+          "queryType": "range",
+          "maxLines": 1
+        }
+      ],
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "source": "labels",
+            "format": "auto",
+            "replace": false,
+            "keepTime": false
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "renameByName": {},
+            "indexByName": {
+              "status": 0,
+              "Time": 1,
+              "failed": 2
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "no run"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "ok": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "ok"
+                      },
+                      "partial": {
+                        "color": "orange",
+                        "index": 1,
+                        "text": "partial"
+                      },
+                      "skipped": {
+                        "color": "red",
+                        "index": 2,
+                        "text": "skipped"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "age"
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "failed"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "failed teams"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "[]": {
+                        "index": 0,
+                        "text": "none"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^(status|age|failed teams)$/",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 12,
+          "valueSize": 16
+        }
+      }
+    },
+    {
+      "id": 8,
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "type": "table",
+      "title": "Per team",
+      "description": "Selected run. Every team gets a total line, including teams with no violations (0) and silenced. Not filtered by namespace.",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (team) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", namespace=\"_team\", team=~\"$team\"} | json type, rule, workloads | type=\"team_total\" | rule=\"cpuRatio\" | unwrap workloads | __error__=\"\" [$__range]))",
+          "queryType": "instant"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (team) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", namespace=\"_team\", team=~\"$team\"} | json type, rule, containers | type=\"team_total\" | rule=\"cpuRatio\" | unwrap containers | __error__=\"\" [$__range]))",
+          "queryType": "instant"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (team) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", namespace=\"_team\", team=~\"$team\"} | json type, rule, workloads | type=\"team_total\" | rule=\"mclabels\" | unwrap workloads | __error__=\"\" [$__range]))",
+          "queryType": "instant"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (team) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", namespace=\"_team\", team=~\"$team\"} | json type, rule, missing | type=\"team_total\" | rule=\"mclabels\" | unwrap missing | __error__=\"\" [$__range]))",
+          "queryType": "instant"
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (team) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", namespace=\"_team\", team=~\"$team\"} | json type, rule, invalid | type=\"team_total\" | rule=\"mclabels\" | unwrap invalid | __error__=\"\" [$__range]))",
+          "queryType": "instant"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "team": 0,
+              "Value #A": 10,
+              "Value #B": 11,
+              "Value #C": 12,
+              "Value #D": 13,
+              "Value #E": 14
+            },
+            "renameByName": {
+              "Value #A": "CPU workloads",
+              "Value #B": "CPU containers",
+              "Value #C": "mclabels workloads",
+              "Value #D": "mclabels missing",
+              "Value #E": "mclabels invalid"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ]
+        },
+        "sortBy": [
+          {
+            "displayName": "CPU workloads",
+            "desc": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "type": "table",
+      "title": "Per namespace",
+      "description": "Selected run, teams and namespaces. A rule with no violations in a namespace shows 0.",
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (team, namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, workloads | type=\"summary\" | rule=\"cpuRatio\" | unwrap workloads | __error__=\"\" [$__range])) or (0 * count by (team, namespace) (count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type | type=\"summary\" [$__range])))",
+          "queryType": "instant"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (team, namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, containers | type=\"summary\" | rule=\"cpuRatio\" | unwrap containers | __error__=\"\" [$__range])) or (0 * count by (team, namespace) (count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type | type=\"summary\" [$__range])))",
+          "queryType": "instant"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (team, namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, workloads | type=\"summary\" | rule=\"mclabels\" | unwrap workloads | __error__=\"\" [$__range])) or (0 * count by (team, namespace) (count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type | type=\"summary\" [$__range])))",
+          "queryType": "instant"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (team, namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, missing | type=\"summary\" | rule=\"mclabels\" | unwrap missing | __error__=\"\" [$__range])) or (0 * count by (team, namespace) (count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type | type=\"summary\" [$__range])))",
+          "queryType": "instant"
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (team, namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, invalid | type=\"summary\" | rule=\"mclabels\" | unwrap invalid | __error__=\"\" [$__range])) or (0 * count by (team, namespace) (count_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type | type=\"summary\" [$__range])))",
+          "queryType": "instant"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "team": 0,
+              "namespace": 1,
+              "Value #A": 10,
+              "Value #B": 11,
+              "Value #C": 12,
+              "Value #D": 13,
+              "Value #E": 14
+            },
+            "renameByName": {
+              "Value #A": "CPU workloads",
+              "Value #B": "CPU containers",
+              "Value #C": "mclabels workloads",
+              "Value #D": "mclabels missing",
+              "Value #E": "mclabels invalid"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ]
+        },
+        "sortBy": [
+          {
+            "displayName": "CPU workloads",
+            "desc": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "type": "barchart",
+      "title": "Workloads by namespace and rule",
+      "description": "Selected run. CPU ratio and mclabels violations, in workloads.",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, workloads | type=\"summary\" | rule=\"cpuRatio\" | unwrap workloads | __error__=\"\" [$__range]))",
+          "queryType": "instant"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (namespace) (max_over_time({job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, workloads | type=\"summary\" | rule=\"mclabels\" | unwrap workloads | __error__=\"\" [$__range]))",
+          "queryType": "instant"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "Value #A": "CPU ratio",
+              "Value #B": "mclabels"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "namespace"
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "min": 0,
+          "custom": {
+            "fillOpacity": 80,
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "xField": "namespace",
+        "orientation": "auto",
+        "groupWidth": 0.7,
+        "barWidth": 0.9,
+        "showValue": "auto",
+        "stacking": "none",
+        "xTickLabelRotation": 0,
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "type": "table",
+      "title": "Workloads",
+      "description": "Selected run: one row per workload and rule. containers: offending containers (CPU ratio). missing / invalid: mclabels problems. The full message is in the panel below.",
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "{job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, rule, kind, workload, containers, missing=\"problems.missing\", invalid=\"problems.invalid\" | type=\"violation\"",
+          "queryType": "range",
+          "maxLines": 5000
+        }
+      ],
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "source": "labels",
+            "format": "auto",
+            "replace": false,
+            "keepTime": false
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Line": true,
+              "tsNs": true,
+              "id": true,
+              "labels": true,
+              "labelTypes": true,
+              "job": true,
+              "type": true,
+              "detected_level": true,
+              "service_name": true,
+              "__error__": true,
+              "__error_details__": true,
+              "run_id": true,
+              "traceID": true
+            },
+            "indexByName": {
+              "team": 0,
+              "namespace": 1,
+              "rule": 2,
+              "kind": 3,
+              "workload": 4,
+              "containers": 5,
+              "missing": 6,
+              "invalid": 7
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "[]": {
+                  "index": 0,
+                  "text": "-"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ]
+        },
+        "sortBy": [
+          {
+            "displayName": "namespace",
+            "desc": false
+          }
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "type": "row",
+      "title": "Trend",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 43
+      },
+      "panels": []
+    },
+    {
+      "id": 13,
+      "type": "text",
+      "title": "",
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 44
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Last 14 days, one bar per UTC day with a report run, stacked per team. Each bar is the **last run of that day** per team: a same-day rerun replaces the earlier number, lower or higher, and is never added on top. A team with no violations shows 0 (no segment, hover for the value). Outlined bars: total of the selected teams. Days without a run (weekends, stack down, a skipped run) have no bar. A day's bar is drawn once the day is over (after 00:00 UTC); until then the **dots at the right edge** show the newest run per team, stacked like the bars (hover for the values). Filtered by team only.",
+        "code": {
+          "language": "markdown",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        }
+      },
+      "transparent": true
+    },
+    {
+      "id": 14,
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "type": "timeseries",
+      "title": "CPU ratio: workloads per team",
+      "description": "Last run of each UTC day per team, stacked: a same-day rerun replaces the earlier number. A team at 0 shows 0. Outlined bars: total of the selected teams. No bar on a day without a run. Dots at the right edge: the newest run per team, so today's run shows before its bar appears after 00:00 UTC.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 47
+      },
+      "interval": "1d",
+      "timeFrom": "14d",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "last_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, workloads | type=\"team_total\" | rule=\"cpuRatio\" | unwrap workloads | __error__=\"\" [1d]) by (team)",
+          "queryType": "range",
+          "legendFormat": "{{team}}",
+          "step": "1d"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(last_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, workloads | type=\"team_total\" | rule=\"cpuRatio\" | unwrap workloads | __error__=\"\" [1d]) by (team))",
+          "queryType": "range",
+          "legendFormat": "total workloads",
+          "step": "1d"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(last_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, containers | type=\"team_total\" | rule=\"cpuRatio\" | unwrap containers | __error__=\"\" [1d]) by (team))",
+          "queryType": "range",
+          "legendFormat": "total containers",
+          "step": "1d"
+        },
+        {
+          "refId": "L",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "last_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, workloads | type=\"team_total\" | rule=\"cpuRatio\" | unwrap workloads | __error__=\"\" [$__range]) by (team)",
+          "queryType": "instant",
+          "legendFormat": "{{team}} latest run"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "min": 0,
+          "custom": {
+            "drawStyle": "bars",
+            "barAlignment": -1,
+            "barWidthFactor": 0.9,
+            "fillOpacity": 80,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^total.*"
+            },
+            "properties": [
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Value #L.*"
+            },
+            "properties": [
+              {
+                "id": "custom.drawStyle",
+                "value": "points"
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 10
+              },
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "mode": "normal",
+                  "group": "latest"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              },
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": true,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "${__field.labels.team} latest run"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "filter": {
+            "id": "byRefId",
+            "options": "L"
+          },
+          "options": {
+            "fields": [
+              "team"
+            ],
+            "keepFields": false,
+            "naming": {
+              "asLabels": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "type": "timeseries",
+      "title": "mclabels: workloads per team",
+      "description": "Last run of each UTC day per team, stacked: a same-day rerun replaces the earlier number. A team at 0 shows 0. Outlined bars: total of the selected teams. No bar on a day without a run. Dots at the right edge: the newest run per team, so today's run shows before its bar appears after 00:00 UTC.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 47
+      },
+      "interval": "1d",
+      "timeFrom": "14d",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "last_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, workloads | type=\"team_total\" | rule=\"mclabels\" | unwrap workloads | __error__=\"\" [1d]) by (team)",
+          "queryType": "range",
+          "legendFormat": "{{team}}",
+          "step": "1d"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(last_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, workloads | type=\"team_total\" | rule=\"mclabels\" | unwrap workloads | __error__=\"\" [1d]) by (team))",
+          "queryType": "range",
+          "legendFormat": "total workloads",
+          "step": "1d"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(last_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, missing | type=\"team_total\" | rule=\"mclabels\" | unwrap missing | __error__=\"\" [1d]) by (team))",
+          "queryType": "range",
+          "legendFormat": "total missing",
+          "step": "1d"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(last_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, invalid | type=\"team_total\" | rule=\"mclabels\" | unwrap invalid | __error__=\"\" [1d]) by (team))",
+          "queryType": "range",
+          "legendFormat": "total invalid",
+          "step": "1d"
+        },
+        {
+          "refId": "L",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "last_over_time({job=\"__REPORT_JOB__\", namespace=\"_team\", team=~\"$team\"} | json type, rule, workloads | type=\"team_total\" | rule=\"mclabels\" | unwrap workloads | __error__=\"\" [$__range]) by (team)",
+          "queryType": "instant",
+          "legendFormat": "{{team}} latest run"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "min": 0,
+          "custom": {
+            "drawStyle": "bars",
+            "barAlignment": -1,
+            "barWidthFactor": 0.9,
+            "fillOpacity": 80,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^total.*"
+            },
+            "properties": [
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Value #L.*"
+            },
+            "properties": [
+              {
+                "id": "custom.drawStyle",
+                "value": "points"
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 10
+              },
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "mode": "normal",
+                  "group": "latest"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              },
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": true,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "${__field.labels.team} latest run"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "filter": {
+            "id": "byRefId",
+            "options": "L"
+          },
+          "options": {
+            "fields": [
+              "team"
+            ],
+            "keepFields": false,
+            "naming": {
+              "asLabels": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "type": "timeseries",
+      "title": "New at deploy: distinct workloads, previous 24 h",
+      "description": "Workloads that violated a workload rule when they were deployed (Gatekeeper admission log lines), counted once per workload and rule over the previous 24 hours, even when both the warn and the enforced constraint of a rule matched it. These are deploy-time warnings, not the backlog above. Filtered by namespace only: admission lines carry no team, and All namespaces includes namespaces no report run has seen. The hourly steps end at the last whole hour, so dots at the right edge show the same count for the 24 hours up to now: a deploy from the current hour shows there right away.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 56
+      },
+      "interval": "1h",
+      "timeFrom": "14d",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by (resource_namespace, constraint_kind) (count by (resource_namespace, resource_kind, resource_name, constraint_kind) (count_over_time({k8s_namespace_name=\"gatekeeper-system\"} | json process, event_type, constraint_kind, constraint_name, resource_namespace, resource_kind, resource_name | process=\"admission\" | event_type=\"violation\" | constraint_name=~\"workload-.*\" | resource_namespace=~\"$namespace\" [1d])))",
+          "queryType": "range",
+          "legendFormat": "{{resource_namespace}} {{constraint_kind}}",
+          "step": "1h"
+        },
+        {
+          "refId": "L",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count by (resource_namespace, constraint_kind) (count by (resource_namespace, resource_kind, resource_name, constraint_kind) (count_over_time({k8s_namespace_name=\"gatekeeper-system\"} | json process, event_type, constraint_kind, constraint_name, resource_namespace, resource_kind, resource_name | process=\"admission\" | event_type=\"violation\" | constraint_name=~\"workload-.*\" | resource_namespace=~\"$namespace\" [1d])))",
+          "queryType": "instant",
+          "legendFormat": "{{resource_namespace}} {{constraint_kind}} now"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter",
+            "fillOpacity": 60,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Value #L.*"
+            },
+            "properties": [
+              {
+                "id": "custom.drawStyle",
+                "value": "points"
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 10
+              },
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "mode": "normal",
+                  "group": "now"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              },
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": true,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "${__field.labels.resource_namespace} ${__field.labels.constraint_kind} now"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "filter": {
+            "id": "byRefId",
+            "options": "L"
+          },
+          "options": {
+            "fields": [
+              "resource_namespace",
+              "constraint_kind"
+            ],
+            "keepFields": false,
+            "naming": {
+              "asLabels": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "type": "table",
+      "title": "Runs",
+      "description": "Every report run in the time range, newest first. failed: teams whose Slack post failed. auditCheck: gator count vs Gatekeeper audit per rule, or skipped when the audit was stale.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 56
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "{job=\"__REPORT_JOB__\", team=\"_run\"} | json status, reason, posted, failed, dryRun, auditCheck, gator",
+          "queryType": "range",
+          "maxLines": 100
+        }
+      ],
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "source": "labels",
+            "format": "auto",
+            "replace": false,
+            "keepTime": false
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Line": true,
+              "tsNs": true,
+              "id": true,
+              "labels": true,
+              "labelTypes": true,
+              "job": true,
+              "type": true,
+              "detected_level": true,
+              "service_name": true,
+              "__error__": true,
+              "__error_details__": true,
+              "team": true,
+              "namespace": true,
+              "traceID": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "run_id": 1,
+              "status": 2,
+              "reason": 3,
+              "posted": 4,
+              "failed": 5,
+              "dryRun": 6,
+              "auditCheck": 7,
+              "gator": 8
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "[]": {
+                  "index": 0,
+                  "text": "-"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "ok": {
+                        "color": "green",
+                        "index": 0
+                      },
+                      "partial": {
+                        "color": "orange",
+                        "index": 1
+                      },
+                      "skipped": {
+                        "color": "red",
+                        "index": 2
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ]
+        },
+        "sortBy": [
+          {
+            "displayName": "Time",
+            "desc": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 18,
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "type": "logs",
+      "title": "Violation messages",
+      "description": "Selected run: Gatekeeper's full message per workload and rule.",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 65
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "{job=\"__REPORT_JOB__\", run_id=\"$run\", team=~\"$team\", namespace=~\"$namespace\"} | json type, msg | type=\"violation\" | line_format \"{{.msg}}\"",
+          "queryType": "range",
+          "maxLines": 5000
+        }
+      ],
+      "options": {
+        "showTime": false,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending",
+        "enableInfiniteScrolling": false
+      }
+    },
+    {
+      "id": 1,
+      "type": "text",
+      "title": "About",
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 75
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**What this shows.** The daily Gatekeeper workload report (chart `gatekeeper-constraints`, `dailyReport`) evaluates the live workload policies against every Deployment and StatefulSet and pushes each run to Loki (`job=\"__REPORT_JOB__\"`). Slack and this dashboard read the same numbers. Pick a **run** (the latest is the default), **teams** and **namespaces**.\n\n* **CPU ratio**: workloads with a container whose CPU limit is not exactly 4x its CPU request (or that has no request/limit). *Containers* counts the offending containers.\n* **mclabels**: workloads whose Pod template mclabels violate the policy. **missing**: a required mclabel is absent. **invalid**: an empty value, an owner outside the allowed list, or `environment=undefined`. A workload can be both, so missing + invalid can exceed workloads.\n* Teams come from `namespaceTeams` (e.g. dem-dev counts under 3d). **silenced** holds the namespaces with `silence: true`: they get no Slack message and are shown only here.\n* **Fix**: set the CPU limit to 4x the request, and put the mclabels on `spec.template.metadata.labels`. **Exempt**: see the [chart README](https://github.com/MapColonies/helm-charts-new/blob/master/charts/gatekeeper-constraints/README.md#exemptions).\n* Data exists only while the stack runs (Sun-Thu 04:00-16:00 UTC) and for the Loki retention (14 days). The trend shows the last run of each day, so a same-day rerun replaces the earlier number instead of adding to it.",
+        "code": {
+          "language": "markdown",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        }
+      }
+    }
+  ]
+}

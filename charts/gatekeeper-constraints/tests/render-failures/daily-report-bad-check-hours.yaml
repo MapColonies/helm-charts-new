@@ -1,0 +1,11 @@
+# expect-error: dailyReport\.alerts needs 0 <= checkFromHour < checkToHour <= 24
+dailyReport:
+  enabled: true
+  namespace: infra-dev
+  environment: dev
+  dashboardUrl: https://grafana.invalid/d/gk-workload-policy
+  loki:
+    pushUrl: http://loki.invalid/loki/api/v1/push
+  alerts:
+    checkFromHour: 16
+    checkToHour: 9

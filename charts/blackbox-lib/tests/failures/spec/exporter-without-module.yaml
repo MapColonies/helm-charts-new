@@ -1,0 +1,5 @@
+# expect-error: blackbox\.module is required when blackbox\.customExporter\.enabled is true
+blackbox:
+  enabled: true
+  customExporter:
+    enabled: true

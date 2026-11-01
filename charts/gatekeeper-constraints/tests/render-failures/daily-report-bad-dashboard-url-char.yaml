@@ -1,0 +1,8 @@
+# expect-error: dailyReport\.dashboardUrl must be an http\(s\) URL, got "https://grafana\.invalid/d/x\|y"
+dailyReport:
+  enabled: true
+  namespace: infra-dev
+  environment: dev
+  dashboardUrl: "https://grafana.invalid/d/x|y"
+  loki:
+    pushUrl: http://loki.invalid/loki/api/v1/push

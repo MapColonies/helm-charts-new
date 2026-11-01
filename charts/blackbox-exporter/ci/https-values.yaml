@@ -1,0 +1,11 @@
+# External https target with the company CA mounted.
+target:
+  host: grafana-dev.mapcolonies.net
+module: grafana_health
+customExporter:
+  enabled: true
+  rules:
+    bodyRegexMatch:
+      - '"database":\s*"ok"'
+  ca:
+    enabled: true

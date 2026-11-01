@@ -1,0 +1,5 @@
+# expect-error: blackbox.customExporter.timeout must be a duration like 5s or 500ms, got "abc"
+module: m
+customExporter:
+  enabled: true
+  timeout: abc

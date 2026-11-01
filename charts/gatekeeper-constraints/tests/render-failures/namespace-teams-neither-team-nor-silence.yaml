@@ -1,0 +1,7 @@
+# expect-error: namespaceTeams\[0\]: set either team or silence
+deployAlerts:
+  enabled: true
+workloadPolicies:
+  warnNamespaces: [dev]
+namespaceTeams:
+  - { namespace: dev }

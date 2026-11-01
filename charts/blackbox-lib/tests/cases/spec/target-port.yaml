@@ -1,0 +1,5 @@
+# target.port picks one port of a multi-port Service: probe-port
+blackbox:
+  enabled: true
+  target:
+    port: 9090

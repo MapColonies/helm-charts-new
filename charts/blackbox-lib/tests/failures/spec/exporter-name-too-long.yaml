@@ -1,0 +1,7 @@
+# expect-error: is longer than 63 characters; set blackbox\.customExporter\.fullnameOverride
+blackbox:
+  enabled: true
+  module: m
+  customExporter:
+    enabled: true
+    fullnameOverride: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa

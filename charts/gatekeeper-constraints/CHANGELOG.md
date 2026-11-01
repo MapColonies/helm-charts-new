@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.5.0](https://github.com/MapColonies/helm-charts-new/compare/gatekeeper-constraints-v1.4.0...gatekeeper-constraints-v1.5.0) (2026-10-29)
+
+
+### 🎉 Features
+
+* **grafana,gatekeeper-constraints:** one Slack digest per team for deploy alerts ([#190](https://github.com/MapColonies/helm-charts-new/issues/190)) ([661d2eb](https://github.com/MapColonies/helm-charts-new/commit/661d2eb566506f15ba1ba3e0fb31b45be5308c4d))
+
+## [1.4.0](https://github.com/MapColonies/helm-charts-new/compare/gatekeeper-constraints-v1.3.0...gatekeeper-constraints-v1.4.0) (2026-10-28)
+
+
+### 🎉 Features
+
+* **gatekeeper-constraints:** daily workload policy report (MAPCO-11867) ([#187](https://github.com/MapColonies/helm-charts-new/issues/187)) ([2eb63ee](https://github.com/MapColonies/helm-charts-new/commit/2eb63eeb20004ade456a12490b53dc415693e49c)), closes [#188](https://github.com/MapColonies/helm-charts-new/issues/188)
+
+## [1.3.0](https://github.com/MapColonies/helm-charts-new/compare/gatekeeper-constraints-v1.2.0...gatekeeper-constraints-v1.3.0) (2026-10-25)
+
+
+### 🎉 Features
+
+* **grafana,gatekeeper-constraints:** readable message for no-resolve notifications ([#175](https://github.com/MapColonies/helm-charts-new/issues/175)) ([7695d71](https://github.com/MapColonies/helm-charts-new/commit/7695d712765cc5bfe4e8253c6142f655ef9da43c))
+
+## [1.2.0](https://github.com/MapColonies/helm-charts-new/compare/gatekeeper-constraints-v1.1.0...gatekeeper-constraints-v1.2.0) (2026-10-21)
+
+
+### 🎉 Features
+
+* **alloy,grafana,gatekeeper-constraints:** deploy-time alerts for gatekeeper workload policy warnings ([#163](https://github.com/MapColonies/helm-charts-new/issues/163)) ([74247ba](https://github.com/MapColonies/helm-charts-new/commit/74247bac14c9066cbf913a51acf6d66d8c4d4ee7))
+
 ## [1.1.0](https://github.com/MapColonies/helm-charts-new/compare/gatekeeper-constraints-v1.0.0...gatekeeper-constraints-v1.1.0) (2026-10-14)
 
 

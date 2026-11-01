@@ -1,0 +1,80 @@
+{{- if .Values.customExporter.enabled }}
+{{- $ce := .Values.customExporter }}
+{{- $pullSecret := include "blackbox-exporter.imagePullSecretName" . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "blackbox-exporter.fullname" . }}
+  labels:
+    {{- include "blackbox-exporter.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      {{- include "blackbox-exporter.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "blackbox-exporter.podLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include "blackbox-exporter.config" . | sha256sum }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9115"
+        prometheus.io/path: /metrics
+    spec:
+      automountServiceAccountToken: false
+      {{- with $pullSecret }}
+      imagePullSecrets:
+        - name: {{ . | quote }}
+      {{- end }}
+      # No runAsUser: OpenShift's restricted SCC assigns a random UID.
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: blackbox-exporter
+          image: {{ include "blackbox-exporter.image" . | quote }}
+          imagePullPolicy: {{ $ce.image.pullPolicy }}
+          args:
+            - --config.file=/config/blackbox.yaml
+          ports:
+            - name: http
+              containerPort: 9115
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /-/healthy
+              port: http
+          resources:
+            {{- toYaml $ce.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            {{- if $ce.ca.enabled }}
+            # An extra file next to the system bundle: Go also loads every file in /etc/ssl/certs,
+            # so public CAs stay trusted.
+            - name: ca
+              mountPath: /etc/ssl/certs/blackbox-extra-ca.crt
+              subPath: {{ $ce.ca.key }}
+            {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "blackbox-exporter.fullname" . }}
+        {{- if $ce.ca.enabled }}
+        - name: ca
+          secret:
+            secretName: {{ $ce.ca.secretName }}
+        {{- end }}
+{{- end }}

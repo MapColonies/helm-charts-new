@@ -1,0 +1,6 @@
+# expect-error: 99 is not an HTTP status code
+module: m
+customExporter:
+  enabled: true
+  rules:
+    validStatusCodes: [200, 99]

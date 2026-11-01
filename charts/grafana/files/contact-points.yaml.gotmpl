@@ -8,7 +8,43 @@ contactPoints:
       - uid: {{ .team }}-receiver
         type: {{ $.Values.grafana.alertingReceiverType }}
         settings:
-          url: {{ printf "${%s_WEBHOOK}" (upper .team) | quote }}
+          url: {{ printf "${%s}" (include "grafana.webhookEnv" .team) | quote }}
         disableResolveMessage: false
+  # Same webhook, but never sends a "resolved" message. For alerts labelled
+  # notify_resolved="false", e.g. log-based alerts that resolve once their window passes.
+  - orgId: 1
+    name: {{ .team }}-alerts-no-resolve
+    receivers:
+      - uid: {{ .team }}-receiver-no-resolve
+        type: {{ $.Values.grafana.alertingReceiverType }}
+        settings:
+          url: {{ printf "${%s}" (include "grafana.webhookEnv" .team) | quote }}
+          {{- /* Readable layout from files/notification-templates.yaml. Setting names differ per type. */}}
+          {{- if eq $.Values.grafana.alertingReceiverType "slack" }}
+          title: {{ `{{ template "no_resolve_notification.title" . }}` | quote }}
+          text: {{ `{{ template "no_resolve_notification.message" . }}` | quote }}
+          {{- else if eq $.Values.grafana.alertingReceiverType "teams" }}
+          title: {{ `{{ template "no_resolve_notification.title" . }}` | quote }}
+          message: {{ `{{ template "no_resolve_notification.message" . }}` | quote }}
+          {{- end }}
+        disableResolveMessage: true
+  # Same webhook, no "resolved" message, one digest per burst: alerts labelled
+  # notify_resolved="false" that also carry an alert_group label.
+  - orgId: 1
+    name: {{ .team }}-alerts-digest
+    receivers:
+      - uid: {{ .team }}-receiver-digest
+        type: {{ $.Values.grafana.alertingReceiverType }}
+        settings:
+          url: {{ printf "${%s}" (include "grafana.webhookEnv" .team) | quote }}
+          {{- /* Digest layout from files/notification-templates.yaml. Setting names differ per type. */}}
+          {{- if eq $.Values.grafana.alertingReceiverType "slack" }}
+          title: {{ `{{ template "digest_notification.title" . }}` | quote }}
+          text: {{ `{{ template "digest_notification.message" . }}` | quote }}
+          {{- else if eq $.Values.grafana.alertingReceiverType "teams" }}
+          title: {{ `{{ template "digest_notification.title" . }}` | quote }}
+          message: {{ `{{ template "digest_notification.message" . }}` | quote }}
+          {{- end }}
+        disableResolveMessage: true
 {{- end }}
 {{- end }}

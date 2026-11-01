@@ -1,0 +1,4 @@
+# expect-error: dashboards\.namespace must be a namespace name, got "Infra Dev"
+dashboards:
+  enabled: true
+  namespace: Infra Dev

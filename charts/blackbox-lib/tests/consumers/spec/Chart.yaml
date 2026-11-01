@@ -1,0 +1,8 @@
+# Test consumer: a chart with .Values.service.name/.port, calling the helper with the root context.
+apiVersion: v2
+name: spec
+version: 1.0.0
+dependencies:
+  - name: blackbox-lib
+    version: "*"  # always the local library, whatever its version
+    repository: file://../../..

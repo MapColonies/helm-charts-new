@@ -1,0 +1,6 @@
+# expect-error: deployAlerts\.defaultTeam must be a team name like "infra", got "Bad Team"
+deployAlerts:
+  enabled: true
+  defaultTeam: Bad Team
+workloadPolicies:
+  warnNamespaces: [dev]

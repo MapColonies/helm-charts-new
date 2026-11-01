@@ -1,0 +1,6 @@
+# alerts.team overrides mclabels.owner
+blackbox:
+  enabled: true
+  alerts:
+    enabled: true
+    team: raster

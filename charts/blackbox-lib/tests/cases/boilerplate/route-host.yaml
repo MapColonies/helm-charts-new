@@ -1,0 +1,5 @@
+# external Route host
+blackbox:
+  enabled: true
+  target:
+    host: my-service.apps.example.com

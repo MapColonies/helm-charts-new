@@ -1,0 +1,7 @@
+# expect-error: error parsing regexp
+module: m
+customExporter:
+  enabled: true
+  rules:
+    bodyRegexMatch:
+      - '"status":(?=\s*"HEALTHY")'

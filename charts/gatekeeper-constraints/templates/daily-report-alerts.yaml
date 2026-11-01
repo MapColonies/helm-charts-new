@@ -1,0 +1,175 @@
+{{- /*
+Grafana rules for the daily report (MAPCO-11867), picked up by the alerts sidecar from the
+release namespace like templates/alerts.yaml. Both go to deployAlerts.defaultTeam.
+
+gk-daily-report-missing (dead-man): the stack (Grafana, Loki, Prometheus) runs only part of
+the day, so a plain "no run in the last N hours" window would fire every morning. The rule
+is a multi-datasource Grafana rule:
+  A  Loki: runs pushed in the last `lookback` (0 when none, via `or vector(0)`)
+  B  Prometheus: 1 inside the check window (checkDays, checkFromHour..checkToHour UTC), else 0
+  C  math: $A < 1 && $B > 0
+gk-daily-report-failed: a run line with status partial or skipped (covers a failed post to
+the infra channel itself).
+
+With alerts.enabled false the ConfigMap holds only deleteRules for both uids: Grafana keeps
+a provisioned rule that only disappears from the file (dev/prod store rules in Postgres), so
+turning the report off first needs a deploy that deletes them (see the README).
+*/}}
+{{- if .Values.dailyReport.enabled }}
+{{- include "gatekeeper-constraints.dailyReportValidate" . }}
+{{- if .Values.dailyReport.alerts.enabled }}
+{{- $r := .Values.dailyReport }}
+{{- $a := $r.alerts }}
+{{- $team := include "gatekeeper-constraints.deployAlertDefaultTeam" . }}
+{{- $runs := printf "{job=%q, team=\"_run\"}" $r.loki.job }}
+{{- $days := list }}
+{{- range $a.checkDays }}{{ $days = append $days (printf "(day_of_week() == bool %d)" (int .)) }}{{ end }}
+{{- $gate := printf "(hour() >= bool %d) * (hour() < bool %d) * (%s)" (int $a.checkFromHour) (int $a.checkToHour) (join " + " $days) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-daily-report-alerts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    mapcolonies.io/grafana-alerts: "true"
+data:
+  gatekeeper-daily-report.yaml: |
+    apiVersion: 1
+    groups:
+      - orgId: 1
+        name: gatekeeper_daily_report
+        folder: Gatekeeper
+        interval: 1m
+        rules:
+          - uid: gk-daily-report-missing
+            title: GatekeeperDailyReportMissing
+            condition: C
+            data:
+              - refId: A
+                queryType: instant
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: loki
+                model:
+                  datasource:
+                    type: loki
+                    uid: loki
+                  editorMode: code
+                  expr: {{ printf "sum(count_over_time(%s [%s])) or vector(0)" $runs $a.lookback | quote }}
+                  instant: true
+                  queryType: instant
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: A
+              - refId: B
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: prometheus
+                model:
+                  datasource:
+                    type: prometheus
+                    uid: prometheus
+                  editorMode: code
+                  expr: {{ $gate | quote }}
+                  instant: true
+                  range: false
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: B
+              - refId: C
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: __expr__
+                model:
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: "$A < 1 && $B > 0"
+                  type: math
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: C
+            # No data means no run: alert. A query error (Loki or Prometheus not ready yet when
+            # the stack starts at 04:00, or a transient error) keeps the last state: Error would
+            # raise a DatasourceError alert at once, past the B gate and `for`. A Loki that
+            # stays down at run time is reported by the run itself (a failed push is partial).
+            noDataState: Alerting
+            execErrState: KeepLast
+            for: 15m
+            labels:
+              severity: warning
+              alert_team: {{ $team }}
+              notify_resolved: "false"
+            annotations:
+              summary: {{ printf "No Gatekeeper daily report reached Loki in the last %s" $a.lookback | quote }}
+              description: {{ printf "The CronJob %s/%s-daily-report (schedule %s UTC) pushed no run to Loki (job=%s). Check its last Job and Pod logs in %s." $r.namespace .Release.Name $r.schedule $r.loki.job $r.namespace | quote }}
+          - uid: gk-daily-report-failed
+            title: GatekeeperDailyReportFailed
+            condition: C
+            data:
+              - refId: A
+                queryType: instant
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: loki
+                model:
+                  datasource:
+                    type: loki
+                    uid: loki
+                  editorMode: code
+                  expr: {{ printf "sum(count_over_time(%s | json | type=\"run\" | status!=\"ok\" [3h]))" $runs | quote }}
+                  instant: true
+                  queryType: instant
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: A
+              - refId: C
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: __expr__
+                model:
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
+                  type: threshold
+                  conditions:
+                    - evaluator:
+                        params: [0]
+                        type: gt
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: C
+            noDataState: OK
+            execErrState: OK
+            for: 0s
+            labels:
+              severity: warning
+              alert_team: {{ $team }}
+              notify_resolved: "false"
+            annotations:
+              summary: "A Gatekeeper daily report run was partial or skipped"
+              description: {{ printf "A run of %s/%s-daily-report in the last 3h ended with status partial or skipped. Its reason is in the run line: {job=%q, team=\"_run\"} in Loki, and in the Pod logs." $r.namespace .Release.Name $r.loki.job | quote }}
+{{- else }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-daily-report-alerts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    mapcolonies.io/grafana-alerts: "true"
+data:
+  gatekeeper-daily-report.yaml: |
+    apiVersion: 1
+    deleteRules:
+      - orgId: 1
+        uid: gk-daily-report-missing
+      - orgId: 1
+        uid: gk-daily-report-failed
+{{- end }}
+{{- end }}

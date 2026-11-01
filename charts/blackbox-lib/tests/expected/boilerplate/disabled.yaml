@@ -1,0 +1,32 @@
+---
+# Source: ts-server-boilerplate/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: t-ts-server-boilerplate
+  labels:
+    app: ts-server-boilerplate
+    component: ts-server-boilerplate
+    release: t
+    helm.sh/chart: ts-server-boilerplate-1.0.0
+    app.kubernetes.io/name: ts-server-boilerplate
+    app.kubernetes.io/instance: t
+    mapcolonies.io/selector: test
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+    mapcolonies.io/environment: test
+  annotations:
+    
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app: ts-server-boilerplate
+    release: t
+    run: t-ts-server-boilerplate
+    app.kubernetes.io/name: ts-server-boilerplate
+    app.kubernetes.io/instance: t
+    mapcolonies.io/selector: test

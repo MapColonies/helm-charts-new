@@ -1,0 +1,3 @@
+# defaults: internal address from the computed fullname and server.port
+blackbox:
+  enabled: true

@@ -1,0 +1,10 @@
+# expect-error: sslExpiry\.warningDays must be a number above 0, got -1
+blackbox:
+  enabled: true
+  alerts:
+    enabled: true
+    team: raster
+    rules:
+      sslExpiry:
+        enabled: true
+        warningDays: -1

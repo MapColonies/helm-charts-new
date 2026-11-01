@@ -1,0 +1,5 @@
+# expect-error: blackbox\.target\.port must be a port number, got "http"
+blackbox:
+  enabled: true
+  target:
+    port: http

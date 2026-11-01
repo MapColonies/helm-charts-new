@@ -1,0 +1,5 @@
+# expect-error: namespace "Dev NS" must only contain a-z, 0-9, -, \* and \?
+deployAlerts:
+  enabled: true
+workloadPolicies:
+  warnNamespaces: ["Dev NS"]

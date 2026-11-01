@@ -6,3 +6,4 @@
 Makefile
 .bin/
 tests/
+__pycache__/

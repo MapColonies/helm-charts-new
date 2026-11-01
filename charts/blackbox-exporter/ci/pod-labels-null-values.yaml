@@ -1,0 +1,5 @@
+# podLabels: null (e.g. from a values override) must not break the render.
+module: m
+customExporter:
+  enabled: true
+  podLabels: null

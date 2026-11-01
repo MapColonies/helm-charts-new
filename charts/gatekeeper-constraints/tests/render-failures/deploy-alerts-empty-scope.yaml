@@ -1,0 +1,6 @@
+# expect-error: deployAlerts needs at least one namespace
+deployAlerts:
+  enabled: true
+workloadPolicies:
+  warnNamespaces: []
+  enforcedNamespaces: [prod]

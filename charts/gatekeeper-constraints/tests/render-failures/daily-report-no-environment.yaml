@@ -1,0 +1,8 @@
+# expect-error: dailyReport\.enabled needs dailyReport\.environment
+dailyReport:
+  enabled: true
+  namespace: infra-dev
+  environment: ""
+  dashboardUrl: https://grafana.invalid/d/gk-workload-policy
+  loki:
+    pushUrl: http://loki.invalid/loki/api/v1/push

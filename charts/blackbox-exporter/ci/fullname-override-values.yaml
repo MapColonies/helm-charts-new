@@ -1,0 +1,5 @@
+# Explicit resource name.
+module: m
+customExporter:
+  enabled: true
+  fullnameOverride: payments-blackbox

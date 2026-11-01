@@ -1,0 +1,5 @@
+# expect-error: blackbox\.target\.scheme must be "http" or "https", got "ftp"
+blackbox:
+  enabled: true
+  target:
+    scheme: ftp

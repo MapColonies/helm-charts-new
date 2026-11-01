@@ -1,0 +1,70 @@
+---
+# Source: ts-server-boilerplate/templates/monitoring.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: t-ts-server-boilerplate-blackbox-alerts
+  namespace: team-dev
+  labels:
+    mapcolonies.io/grafana-alerts: "true"
+data:
+  blackbox-team-dev-t-ts-server-boilerplate.yaml: |
+    apiVersion: 1
+    deleteRules:
+    - orgId: 1
+      uid: bb-7642ed5c850ea066b80b7ed76f468c7f9246e
+    - orgId: 1
+      uid: bb-a84c00511dbf374d38bca063b59e1239e2779
+    groups:
+    - folder: raster
+      interval: 1m
+      name: blackbox-team-dev-t-ts-server-boilerplate
+      orgId: 1
+      rules:
+      - annotations:
+          description: The Blackbox probe of {{ $labels.instance }} (service t-ts-server-boilerplate
+            in namespace team-dev) is failing.
+          summary: t-ts-server-boilerplate is down
+        condition: C
+        data:
+        - datasourceUid: prometheus
+          model:
+            datasource:
+              type: prometheus
+              uid: prometheus
+            expr: probe_success{job="blackbox-services",namespace="team-dev",service="t-ts-server-boilerplate"}
+            instant: true
+            intervalMs: 1000
+            maxDataPoints: 43200
+            refId: A
+          refId: A
+          relativeTimeRange:
+            from: 600
+            to: 0
+        - datasourceUid: __expr__
+          model:
+            conditions:
+            - evaluator:
+                params:
+                - 1
+                type: lt
+            datasource:
+              type: __expr__
+              uid: __expr__
+            expression: A
+            refId: C
+            type: threshold
+          refId: C
+          relativeTimeRange:
+            from: 600
+            to: 0
+        execErrState: KeepLast
+        for: 1m
+        labels:
+          alert_team: raster
+          namespace: team-dev
+          service: t-ts-server-boilerplate
+          severity: critical
+        noDataState: OK
+        title: t-ts-server-boilerplate (team-dev) is down
+        uid: bb-6277d10daccc88193fdf147a004497c0727f3
