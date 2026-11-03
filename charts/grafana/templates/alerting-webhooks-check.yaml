@@ -1,0 +1,32 @@
+{{- /*
+Renders nothing; checks the team webhook env vars added by "grafana.webhookEnvValueFrom".
+This chart's templates render after the subchart's, so the entries already exist here.
+1. Every team has its env var. If not, the subchart no longer calls "grafana.serviceAccountName"
+   before its env block (an upstream chart change), and every contact point would get an empty URL.
+2. On install/upgrade against a cluster (lookup is empty in helm template and client dry-run): an
+   existing Secret, other than the chart's own grafana-webhooks, referenced by a team env var has
+   its key. A Secret that does not exist yet is left to secretKeyRef. Failing here stops the upgrade before any
+   object changes; otherwise the new pod would wait on the key, and the old pod would already
+   have reloaded contact points that use the missing variable.
+*/ -}}
+{{- $grafana := .Values.grafana }}
+{{- $envValueFrom := $grafana.envValueFrom | default dict }}
+{{- $env := $grafana.env | default dict }}
+{{- $missing := dict }}
+{{- range $grafana.alertingTeamsWebhooks }}
+{{- $name := include "grafana.webhookEnv" .team }}
+{{- if not (or (hasKey $envValueFrom $name) (hasKey $env $name)) }}
+{{- fail (printf "grafana.alertingTeamsWebhooks: env var %s for team %q was not rendered; the grafana subchart no longer calls \"grafana.serviceAccountName\" before its env block, update templates/_helpers.tpl" $name (toString .team)) }}
+{{- end }}
+{{- $ref := (get $envValueFrom $name | default dict).secretKeyRef }}
+{{- /* grafana-webhooks is rendered by this release, with the keys of this revision */}}
+{{- if and $ref (not $ref.optional) (ne $ref.name "grafana-webhooks") }}
+{{- $secret := lookup "v1" "Secret" $.Release.Namespace $ref.name }}
+{{- if and $secret (not (hasKey ($secret.data | default dict) $ref.key)) }}
+{{- $_ := set $missing $ref.name (append (get $missing $ref.name | default list) $ref.key) }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- range $secretName, $keys := $missing }}
+{{- fail (printf "grafana.alertingTeamsWebhooks: Secret %s/%s has no key %s; add it before deploying, e.g. kubectl -n %s patch secret %s --type merge -p '{\"stringData\":{\"%s\":\"<webhook url>\"}}'" $.Release.Namespace $secretName (join ", " $keys) $.Release.Namespace $secretName (first $keys)) }}
+{{- end }}
