@@ -1,24 +1,55 @@
-{{- range .Values.grafana.sidecar.alerts.searchNamespace }}
+{{- /*
+One Role and RoleBinding (ServiceAccount monitoring) per namespace in sidecar.alerts.searchNamespace.
+Each Role grants only what the enabled sidecars watching that namespace read, from their
+sidecar.<kind>.resource: configmaps for configmap or both, secrets for secret or both.
+A sidecar without searchNamespace watches the release namespace. A sidecar with ALL relies on
+cluster-wide RBAC from elsewhere, so it adds nothing here.
+*/ -}}
+{{- $sidecar := .Values.grafana.sidecar }}
+{{- /* tpl context like the subchart's, where .Values is this chart's .Values.grafana */}}
+{{- $sub := dict "Values" .Values.grafana "Release" .Release "Chart" .Chart "Capabilities" .Capabilities "Template" .Template "Files" .Files }}
+{{- $watch := list }}
+{{- range $kind := list "alerts" "dashboards" "datasources" "notifiers" "plugins" }}
+{{- $cfg := get $sidecar $kind | default dict }}
+{{- if $cfg.enabled }}
+{{- $resource := $cfg.resource | default "both" }}
+{{- if not (has $resource (list "configmap" "secret" "both")) }}
+{{- fail (printf "grafana.sidecar.%s.resource: must be configmap, secret or both, got %q" $kind (toString $resource)) }}
+{{- end }}
+{{- $ns := include "grafana.sidecarNamespaces" (dict "value" $cfg.searchNamespace "root" $sub) | fromJsonArray }}
+{{- $watch = append $watch (dict "resource" $resource "namespaces" ($ns | default (list $.Release.Namespace))) }}
+{{- end }}
+{{- end }}
+{{- range $ns := include "grafana.sidecarNamespaces" (dict "value" $sidecar.alerts.searchNamespace "root" $sub) | fromJsonArray }}
+{{- if ne $ns "ALL" }}
+{{- $resources := list }}
+{{- range $watch }}
+{{- if has $ns .namespaces }}
+{{- if has .resource (list "configmap" "both") }}{{ $resources = append $resources "configmaps" }}{{ end }}
+{{- if has .resource (list "secret" "both") }}{{ $resources = append $resources "secrets" }}{{ end }}
+{{- end }}
+{{- end }}
+{{- if $resources }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: grafana-reader
-  namespace: {{ . }}
+  namespace: {{ $ns }}
   labels:
     app.kubernetes.io/managed-by: {{ $.Release.Service }}
     helm.sh/chart: grafana
     app.kubernetes.io/instance: {{ $.Release.Name }}
 rules:
   - apiGroups: [""]
-    resources: ["configmaps", "secrets"]
+    resources: [{{ range $i, $r := $resources | uniq | sortAlpha }}{{ if $i }}, {{ end }}{{ $r | quote }}{{ end }}]
     verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: grafana-reader
-  namespace: {{ . }}
+  namespace: {{ $ns }}
   labels:
     app.kubernetes.io/managed-by: {{ $.Release.Service }}
     helm.sh/chart: grafana
@@ -31,4 +62,6 @@ subjects:
   - kind: ServiceAccount
     name: monitoring
     namespace: {{ $.Release.Namespace }}
+{{- end }}
+{{- end }}
 {{- end }}
