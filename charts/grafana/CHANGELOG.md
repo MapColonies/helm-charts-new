@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.4.0...grafana-v1.4.1) (2026-11-04)
+
+
+### 🔧 Miscellaneous Chores
+
+* **master:** release grafana 1.4.0 ([#193](https://github.com/MapColonies/helm-charts-new/issues/193)) ([8553516](https://github.com/MapColonies/helm-charts-new/commit/8553516e10039b3461ce8e643de7473721cf39c2))
+
 ## [1.4.0](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.3.0...grafana-v1.4.0) (2026-10-29)
 
 
