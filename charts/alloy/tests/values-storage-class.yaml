@@ -1,0 +1,12 @@
+alloy-logs:
+  controller:
+    volumeClaimTemplates:
+      - metadata:
+          name: storage
+        spec:
+          storageClassName: fast-ssd
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 2Gi

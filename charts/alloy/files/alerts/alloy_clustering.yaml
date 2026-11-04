@@ -73,7 +73,7 @@ groups:
                 type: prometheus
                 uid: prometheus
               editorMode: code
-              expr: "sum without (state) (cluster_node_peers) != on (cluster, namespace, job, cluster_name) group_left count by (cluster, namespace, job, cluster_name) (cluster_node_info)"
+              expr: "sum without (state) (cluster_node_peers) != on (cluster, namespace, job, cluster_name) group_left count by (cluster, namespace, job, cluster_name) (sum without (state) (cluster_node_peers))"
               instant: true
               intervalMs: 1000
               maxDataPoints: 43200
@@ -289,7 +289,7 @@ groups:
                 type: prometheus
                 uid: prometheus
               editorMode: code
-              expr: "count without (sha256) (max by (cluster, namespace, sha256, job, cluster_name) (alloy_config_hash{cluster_name!=\"\"} and on(cluster, namespace, job, cluster_name) cluster_node_info)) > 1"
+              expr: "count without (sha256) (max by (cluster, namespace, sha256, job, cluster_name) (alloy_config_hash and on (cluster, namespace, job, instance) cluster_node_info)) > 1"
               instant: true
               intervalMs: 1000
               maxDataPoints: 43200

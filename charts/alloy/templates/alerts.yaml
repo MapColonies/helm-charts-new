@@ -6,4 +6,9 @@ metadata:
   labels:
     mapcolonies.io/grafana-alerts: "true"
 data:
-{{ (.Files.Glob "files/alerts/*.yaml").AsConfig | indent 2 }}
+{{- /* Not run through tpl: the rules hold Grafana's own {{ $labels }} templates. The pod logs
+       StatefulSet's name is filled in where a rule has the placeholder. */}}
+{{- range $path, $_ := .Files.Glob "files/alerts/*.yaml" }}
+  {{ base $path }}: |-
+{{ $.Files.Get $path | replace "__ALLOY_LOGS_STATEFULSET__" (include "alloy-wrapper.podLogsStatefulSet" $) | indent 4 }}
+{{- end }}
