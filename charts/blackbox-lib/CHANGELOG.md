@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/MapColonies/helm-charts-new/compare/blackbox-lib-v0.1.0...blackbox-lib-v0.1.1) (2026-11-04)
+
+
+### 🔧 Miscellaneous Chores
+
+* **master:** release blackbox-lib 0.1.0 ([#179](https://github.com/MapColonies/helm-charts-new/issues/179)) ([c40041e](https://github.com/MapColonies/helm-charts-new/commit/c40041e090f75043eb5b7c459c1f87a4af30a635))
+
 ## [0.1.0](https://github.com/MapColonies/helm-charts-new/compare/blackbox-lib-v0.0.1...blackbox-lib-v0.1.0) (2026-10-22)
 
 
