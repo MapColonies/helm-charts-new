@@ -11,7 +11,7 @@ grafana:
     prometheus.io/port: "3000"
 
   image:
-    tag: 1.1.1
+    tag: "2.0.0"
 
   rbac:
     create: false
@@ -87,6 +87,8 @@ grafana:
       optional: true
 
   grafana.ini:
+    plugins:
+      allow_loading_unsigned_plugins: mapcolonies-maplibre-panel
     unified_alerting:
       enabled: true
     metrics:
