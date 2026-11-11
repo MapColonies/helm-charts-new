@@ -42,13 +42,143 @@ alloy:
         port: 4318
         targetPort: 4318
         protocol: TCP
+      # The pod logs the alloy-logs StatefulSet forwards (Loki push API)
+      - name: loki-push
+        port: 3100
+        targetPort: 3100
+        protocol: TCP
     configMap:
       create: false
       name: infra-alloy
 
+# Tails the logs of pods labeled mapcolonies.io/alloy-api-logs=true through the Kubernetes API and
+# forwards them as they are to the alloy Deployment, which does all the processing and exporting.
+# One replica, keeping its read positions on a PVC: a restart or rollout resumes where it stopped
+# (re-sending a line or two, losing none while the Deployment is up; tests/forwarding-e2e.sh).
+# While it's down nothing is tailed, and lines older than maxLogAge by the time it's back are
+# dropped. A failed node keeps it down until the pod is evicted and its disk released, which needs
+# the node fenced (OpenShift MachineHealthCheck) or the pod force-deleted; AlloyPodLogsDown alerts.
+# It can scale out (clustering is on): the replicas then split the pods, but a replica restart
+# makes its peers re-read its pods and re-sends lines (tests/clustering-e2e.sh).
+alloy-logs:
+  # It doesn't inherit alloy.* values: set the image registry and pull secrets under the top-level
+  # global.image, which both workloads use. The render fails if their registries differ.
+  image:
+    repository: infra/grafana/alloy
+  serviceAccount:
+    create: false
+    name: alloy-kube-api
+  rbac:
+    create: false
+  configReloader:
+    image:
+      repository: infra/grafana/prometheus-operator/prometheus-config-reloader
+      tag: v0.91.0
+
+  crds:
+    create: false
+
+  controller:
+    type: 'statefulset'
+    replicas: 1
+    # Evicted from an unreachable or not-ready node after 30s instead of 5m, so it's replaced sooner
+    # once the node is fenced (a StatefulSet never runs two pods with the same name)
+    tolerations:
+      - key: node.kubernetes.io/unreachable
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
+      - key: node.kubernetes.io/not-ready
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
+    # Delete a replica's PVC when it's scaled away and on uninstall, so a later scale-up or install
+    # starts clean instead of resuming from stale positions. Needs Kubernetes 1.27+ (or the
+    # StatefulSetAutoDeletePVC feature gate): older API servers silently drop it and keep the PVCs.
+    # There, a scale-up or reinstall resumes from the old positions: lines older than maxLogAge are
+    # dropped (too_old), and newer ones another replica already shipped are sent again. For a clean
+    # start, delete the PVCs first:
+    #   oc delete pvc -n <namespace> -l app.kubernetes.io/name=alloy-logs,app.kubernetes.io/instance=<release>
+    enableStatefulSetAutoDeletePVC: true
+    # Uses the cluster's default StorageClass; to choose one, set spec.storageClassName here.
+    # Overriding this list replaces it, so give the whole claim template (not --set on one field).
+    volumeClaimTemplates:
+      - metadata:
+          name: storage
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+    podLabels:
+      mapcolonies.io/component: "infrastructure"
+      mapcolonies.io/part-of: "monitoring"
+      mapcolonies.io/owner: "infra"
+      mapcolonies.io/criticality: "internal"
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "12345"
+
+  alloy:
+    enableReporting: false
+    stabilityLevel: "experimental"
+    clustering:
+      enabled: true
+      # Keeps its cluster metrics (and the clustering alerts) apart from the OTLP Deployment's
+      name: alloy-logs
+    # Alloy's state, including the log read positions, lives on the PVC
+    storagePath: /var/lib/alloy
+    mounts:
+      extra:
+        - name: storage
+          mountPath: /var/lib/alloy
+    configMap:
+      create: false
+      name: infra-alloy-logs
+    # Restarts Alloy in place (same node, same disk) if it stops serving for ~90s. /-/ready, not
+    # /-/healthy, which also fails on transient component errors (e.g. the Kubernetes API unreachable).
+    livenessProbe:
+      httpGet:
+        path: /-/ready
+        port: 12345
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+    # Only tails and forwards; the parsing and export queue are in the Deployment
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+# Pod log lines older than this are dropped by the alloy Deployment instead of exported. Loki
+# rejects lines more than max_chunk_age/2 (7m30s for charts/loki's 15m) behind the newest line of
+# their stream ("entry too far behind"), and a line ages further on its way there: up to the batch
+# timeout, plus the exporter's retry max_elapsed_time, plus one last attempt's client timeout
+# (5s + 60s + 30s by default). Keep it under the window minus that; tests/loki-window.sh checks it.
+# The trade-off: the drop is for re-read lines (the StatefulSet starting on a new PVC, or a peer
+# taking over pods when scaled out), which Loki rejects because their stream already has newer
+# lines. A collection outage (the StatefulSet down: node failure, upgrade) leaves a backlog that
+# arrives in order, which Loki would accept, but the drop applies to it too: an outage longer than
+# maxLogAge loses its oldest lines, all of them older than maxLogAge when they're read.
+# AlloyPodLogsTooOld fires when it drops lines.
+maxLogAge: 5m30s
+
 batching: {}
 exporter:
-  sending_queue: {}
+  sending_queue:
+    # queue_size: batches the exporter may queue. Unset, it's sized to each pod's memory limit
+    # (2000 when there's no limit), so a backlog drops data instead of OOM-killing the pod:
+    #   memory limit * memory_share / (batching.send_batch_max_size * bytes_per_record)
+    # memory_share leaves the rest of the limit to the rest of the pipeline and the Go runtime.
+    memory_share: 0.5
+    # In-memory size of one log record, an estimate: prod held ~1000 queued batches when it hit
+    # its 1Gi limit, which is ~512 B per record if they were full (2048+ records), as in a backlog.
+    bytes_per_record: 1024
   retry_on_failure: {}
 
 # Keep or drop log lines by content, before they are exported. Off by default.
