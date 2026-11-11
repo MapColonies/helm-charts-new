@@ -11,7 +11,7 @@ grafana:
     prometheus.io/port: "3000"
 
   image:
-    tag: 1.1.1
+    tag: 2.0.0
 
   rbac:
     create: false
@@ -81,7 +81,7 @@ grafana:
   alertingReceiverType: ""
 
   envFromSecrets:
-    - name: grafana-webhooks          # created by the chart, only when a team sets `url`
+    - name: grafana-webhooks # created by the chart, only when a team sets `url`
       optional: true
     - name: grafana-webhooks-external # created by you (see above)
       optional: true
