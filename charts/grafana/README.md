@@ -5,7 +5,7 @@ Wraps the community Grafana chart and provisions alerting for the teams in
 
 ## Grafana 13 and MapLibre
 
-The shared Grafana image `2.0.0` contains Grafana `13.2.5` and the
+The shared Grafana image (`image.tag` in `values.yaml`) contains Grafana `13.2.5` and the
 `mapcolonies-maplibre-panel` plugin. The chart permits this unsigned plugin by ID
 through `grafana.grafana.ini.plugins.allow_loading_unsigned_plugins`. Consumers
 overriding that setting must preserve this ID to load MapLibre.
@@ -18,11 +18,12 @@ exact database, together with the previous image, chart values, provisioning and
 secrets (including the Grafana encryption key). Grafana 13 applies database and
 stored-dashboard migrations; starting the old image is not a database rollback.
 
-Avoid running Grafana 12 and 13 against the same database during the upgrade. Set
-`grafana.deploymentStrategy.type: Recreate` in the environment values and disable
-automatic Helm rollback for the migration window. If validation fails, stop the
-upgraded replicas, restore a verified pre-upgrade database backup, and only then
-start the previous image with its previous configuration and secrets.
+The chart defaults to `grafana.deploymentStrategy.type: Recreate` to stop the old
+pod before starting the new version against the same database. Preserve this
+strategy in environment overrides and disable automatic Helm rollback for the
+migration window. If validation fails, stop the upgraded replicas, restore a
+verified pre-upgrade database backup, and only then start the previous image with
+its previous configuration and secrets.
 
 Validate login, existing dashboards, data-source queries, MapLibre, provisioning
 and alerting after deployment. Newer community chart dependencies require
