@@ -11,7 +11,12 @@ grafana:
     prometheus.io/port: "3000"
 
   image:
-    tag: 1.1.1
+    tag: "2.0.0"
+
+  # Grafana runs database migrations on start. Stop the old pod before starting
+  # the new one so two versions never run against the same database at once.
+  deploymentStrategy:
+    type: Recreate
 
   rbac:
     create: false
@@ -87,6 +92,11 @@ grafana:
       optional: true
 
   grafana.ini:
+    analytics:
+      check_for_updates: false
+      check_for_plugin_updates: false
+    plugins:
+      allow_loading_unsigned_plugins: mapcolonies-maplibre-panel
     unified_alerting:
       enabled: true
     metrics:
