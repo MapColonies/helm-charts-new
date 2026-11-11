@@ -3,33 +3,6 @@
 Wraps the community Grafana chart and provisions alerting for the teams in
 `grafana.alertingTeamsWebhooks` (webhook setup: see the comments in `values.yaml`).
 
-## Grafana 13 and MapLibre
-
-The shared Grafana image (`image.tag` in `values.yaml`) contains Grafana `13.2.5` and the
-`mapcolonies-maplibre-panel` plugin. The chart permits this unsigned plugin by ID
-through `grafana.grafana.ini.plugins.allow_loading_unsigned_plugins`. Consumers
-overriding that setting must preserve this ID to load MapLibre.
-
-### Upgrade and rollback
-
-Before upgrading each environment, verify the database host and database name
-from the running Grafana instance. Stop all Grafana replicas and back up that
-exact database, together with the previous image, chart values, provisioning and
-secrets (including the Grafana encryption key). Grafana 13 applies database and
-stored-dashboard migrations; starting the old image is not a database rollback.
-
-The chart defaults to `grafana.deploymentStrategy.type: Recreate` to stop the old
-pod before starting the new version against the same database. Preserve this
-strategy in environment overrides and disable automatic Helm rollback for the
-migration window. If validation fails, stop the upgraded replicas, restore a
-verified pre-upgrade database backup, and only then start the previous image with
-its previous configuration and secrets.
-
-Validate login, existing dashboards, data-source queries, MapLibre, provisioning
-and alerting after deployment. Newer community chart dependencies require
-Kubernetes 1.25 or later; this change retains Grafana chart `10.7.0` and
-`openshift-routes` `1.0.2` for existing cluster compatibility.
-
 ## Alert notifications
 
 Per team, three contact points on the same webhook (`${<TEAM>_WEBHOOK}`), and a route under
