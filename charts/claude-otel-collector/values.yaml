@@ -51,6 +51,23 @@ otel:
                 - "http://*"
                 - "https://*"
             endpoint: ${env:MY_POD_IP}:4318
+    processors:
+      # One computer label (host.name -> Prometheus host_name) across every
+      # Claude client. The CLI and VS Code extension send host.name = the
+      # upper-cased OS user (stamped by LLM-configuration apply-settings-*);
+      # the desktop app ignores that setting and sends only process.owner (its
+      # OS user), so derive the same label from it. Upper-casing everything also
+      # folds older lowercase labels into the same series.
+      transform/computer-label:
+        error_mode: ignore
+        metric_statements:
+          - context: resource
+            statements: &computer-label
+              - set(attributes["host.name"], attributes["process.owner"]) where attributes["host.name"] == nil and attributes["process.owner"] != nil
+              - set(attributes["host.name"], ConvertCase(attributes["host.name"], "upper")) where attributes["host.name"] != nil
+        log_statements:
+          - context: resource
+            statements: *computer-label
     exporters:
       debug: null
       # Claude Code events (tool runs, edit decisions, api errors) go straight
@@ -71,6 +88,7 @@ otel:
             - otlp
           processors:
             - memory_limiter
+            - transform/computer-label
             - batch
           exporters:
             - otlphttp
@@ -79,6 +97,7 @@ otel:
             - otlp
           processors:
             - memory_limiter
+            - transform/computer-label
             - batch
           exporters:
             - prometheus
