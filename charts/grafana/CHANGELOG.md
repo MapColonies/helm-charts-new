@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.4.0...grafana-v2.0.0) (2026-11-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* **grafana:** upgrade to Grafana 13.2.5 with MapLibre (MAPCO-12583) ([#199](https://github.com/MapColonies/helm-charts-new/issues/199))
+
+### 🎉 Features
+
+* **grafana:** upgrade to Grafana 13.2.5 with MapLibre (MAPCO-12583) ([#199](https://github.com/MapColonies/helm-charts-new/issues/199)) ([e73f103](https://github.com/MapColonies/helm-charts-new/commit/e73f1031c08ab3d1fc0ddb037274dd789b67354d))
+
+
+### 🔧 Miscellaneous Chores
+
+* **master:** release grafana 1.4.0 ([#193](https://github.com/MapColonies/helm-charts-new/issues/193)) ([8553516](https://github.com/MapColonies/helm-charts-new/commit/8553516e10039b3461ce8e643de7473721cf39c2))
+
 ## [1.4.0](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.3.0...grafana-v1.4.0) (2026-10-29)
 
 
