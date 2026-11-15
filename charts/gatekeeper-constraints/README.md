@@ -2,8 +2,10 @@
 
 Helm chart for the Gatekeeper rules of the cluster. It wraps upstream Gatekeeper and adds:
 
-- **Pod rules**: Pods need the right **labels** and **annotations**. These rules only warn.
-- **Workload rules**: Deployments and StatefulSets must set CPU requests and limits at a 4x ratio and carry valid **mclabels** on their Pod template. Each namespace is either warned, enforced or left alone.
+- **Pod rules**: Pods need the right **labels** and **annotations**.
+- **Workload rules**: Deployments and StatefulSets must set CPU requests and limits at a 4x ratio and carry valid **mclabels** on their Pod template.
+
+Both share one namespace scope: each namespace is either warned, enforced or left alone.
 
 ## 📖 Glossary
 
@@ -11,13 +13,15 @@ Helm chart for the Gatekeeper rules of the cluster. It wraps upstream Gatekeeper
 - **mclabels**: the four MapColonies labels a workload's Pod template must carry: `mapcolonies.io/environment`, `mapcolonies.io/part-of`, `mapcolonies.io/owner` and `mapcolonies.io/component`.
 - **Warn namespace**: a namespace in `workloadPolicies.warnNamespaces`. A violation is applied anyway, and the client sees a warning.
 - **Enforced namespace**: a namespace in `workloadPolicies.enforcedNamespaces`. A violation rejects the request, unless that rule's `enforcementAction` is set to `warn` or `dryrun`.
-- **Unlisted namespace**: a namespace in neither list. The workload rules don't apply there.
+- **Unlisted namespace**: a namespace in neither list. No rule applies there.
 - **Violation trigger**: the requests the workload rules check at admission. These are a CREATE, or an UPDATE that changes the Pod template, i.e. a new revision (`helm upgrade` with changed Pod values, `kubectl rollout restart`, a new image). An UPDATE that only scales the workload or changes its own metadata is never checked, so existing non-compliant workloads keep running, scaling and being patched. Gatekeeper audit always checks every workload.
 - **Exemption**: excludes one workload from one rule, in both warn and enforced namespaces. It comes from either the exemption list or the workload annotation (see below).
 
 ## 🛠️ Pod rules
 
-Pods in `namespaces` (all namespaces when empty) are checked in **warn** mode. A violation is reported but doesn't block deploys. Everything is configurable under `constraints` in `values.yaml`.
+Pods in warn namespaces get a warning; in enforced namespaces a violation rejects the Pod, unless that rule's `enforcementAction` is set to `warn` or `dryrun`. Each rule renders a `<name>-warn` and a `<name>-enforced` Constraint. Everything is configurable under `constraints` in `values.yaml`.
+
+Unlike the workload rules, the Pod rules check **every Pod creation**: a new revision, but also a restart, an eviction, a node drain or a scale-up. A non-compliant Pod in an enforced namespace can't be recreated. They have no exemptions and are not in the deploy alerts or the daily report.
 
 **Required labels**
 - `app.kubernetes.io/name`
@@ -70,7 +74,7 @@ A workload is exempt from a rule if either of these applies:
 
 ```yaml
 workloadPolicies:
-  # Gatekeeper namespace globs work, e.g. "*-dev".
+  # Scope the Pod rules too. Gatekeeper namespace globs work, e.g. "*-dev".
   warnNamespaces: []      # <rule>-warn Constraints, always enforcementAction: warn
   enforcedNamespaces: []  # <rule>-enforced Constraints, with <rule>.enforcementAction
   exemptions:
@@ -85,12 +89,26 @@ workloadPolicies:
   mclabels:
     enabled: true
     enforcementAction: deny
+
+constraints:                      # Pod rules
+  k8sRequiredLabels:
+    enabled: true
+    enforcementAction: deny       # in enforced namespaces: deny, warn or dryrun
+    labels: [...]
+  k8sRequiredAnnotations:
+    enabled: true
+    enforcementAction: deny
+    annotations: [...]
+  k8sDisallowedLabelValues:
+    enabled: true
+    enforcementAction: deny
+    labels: [...]
 ```
 
-- **An empty namespace list means its Constraints are not rendered.** This differs from Gatekeeper, where an empty list matches every namespace. The defaults are empty lists, so the chart renders no workload Constraints until they are set.
+- **An empty namespace list means its Constraints are not rendered.** This differs from Gatekeeper, where an empty list matches every namespace. The defaults are empty lists, so the chart renders no workload or Pod Constraints until they are set.
 - `<rule>.enforcementAction` lets site-values downgrade one rule in enforced namespaces, e.g. to `warn`, without moving namespaces between the lists.
 - **Rendering fails** on an exemption entry without a `namespace`, `kind`, `name` or `reason`, on an unknown kind or rule, or on an `enforcementAction` other than `deny`, `warn` or `dryrun`.
-- `<rule>.enabled: false` removes that rule's ConstraintTemplate and Constraints.
+- `<rule>.enabled: false` removes that rule's ConstraintTemplate and Constraints. This applies to the Pod rules under `constraints` too.
 
 ### Deploy alerts
 
@@ -223,9 +241,9 @@ The line format (stream labels and the JSON of each `type`) is the daily report'
 - Or with the CLI:
   ```bash
   kubectl get constraints
-  kubectl get K8sRequiredLabels.require-pod-labels -o yaml
-  kubectl get K8sRequiredAnnotations.require-pod-annotations -o yaml
-  kubectl get K8sDisallowedLabelValues.disallow-pod-label-values -o yaml
+  kubectl get K8sRequiredLabels -o yaml
+  kubectl get K8sRequiredAnnotations -o yaml
+  kubectl get K8sDisallowedLabelValues -o yaml
   kubectl get K8sWorkloadCpuRatio -o yaml
   kubectl get K8sWorkloadMcLabels -o yaml
   ```

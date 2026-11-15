@@ -1,0 +1,15 @@
+# All Pod rules set to warn: violations in prod warn, not deny.
+workloadPolicies:
+  enforcedNamespaces:
+    - prod
+  cpuRatio:
+    enabled: false
+  mclabels:
+    enabled: false
+constraints:
+  k8sRequiredLabels:
+    enforcementAction: warn
+  k8sRequiredAnnotations:
+    enforcementAction: warn
+  k8sDisallowedLabelValues:
+    enforcementAction: warn

@@ -34,14 +34,47 @@ Validates workloadPolicies.exemptions and returns <rule>'s entries as a YAML lis
 
 {{/*
 Returns <rule>'s enforcementAction for enforced namespaces: deny, warn or dryrun.
+<section> is workloadPolicies (default) or constraints.
   {{- $action := include "gatekeeper-constraints.enforcementAction" (dict "root" . "rule" "cpuRatio") }}
 */}}
 {{- define "gatekeeper-constraints.enforcementAction" -}}
-{{- $action := index .root.Values.workloadPolicies .rule "enforcementAction" -}}
+{{- $section := .section | default "workloadPolicies" -}}
+{{- $action := index .root.Values $section .rule "enforcementAction" -}}
 {{- if not (has $action (list "deny" "warn" "dryrun")) -}}
-{{- fail (printf "workloadPolicies.%s.enforcementAction must be deny, warn or dryrun, got %q" .rule $action) -}}
+{{- fail (printf "%s.%s.enforcementAction must be deny, warn or dryrun, got %q" $section .rule $action) -}}
 {{- end -}}
 {{- $action -}}
+{{- end -}}
+
+{{/*
+A Pod rule's Constraint for one namespace list (mode warn or enforced). <param> is the
+key under constraints.<rule> passed as the Constraint's parameter of the same name.
+  {{- include "gatekeeper-constraints.podConstraint" (dict "root" . "rule" "k8sRequiredLabels" "kind" "K8sRequiredLabels" "name" "require-pod-labels" "param" "labels" "mode" "warn") }}
+*/}}
+{{- define "gatekeeper-constraints.podConstraint" -}}
+{{- $rule := index .root.Values.constraints .rule -}}
+{{- if $rule.enabled -}}
+{{- $action := include "gatekeeper-constraints.enforcementAction" (dict "root" .root "section" "constraints" "rule" .rule) -}}
+{{- if eq .mode "warn" -}}{{- $action = "warn" -}}{{- end -}}
+{{- /* Skip when empty: Gatekeeper would match every namespace. */ -}}
+{{- with index .root.Values.workloadPolicies (printf "%sNamespaces" .mode) }}
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: {{ $.kind }}
+metadata:
+  name: {{ $.name }}-{{ $.mode }}
+spec:
+  enforcementAction: {{ $action | quote }}
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    namespaces:
+      {{- toYaml . | nindent 6 }}
+  parameters:
+    {{ $.param }}:
+      {{- toYaml (index $rule $.param) | nindent 6 }}
+{{- end }}
+{{- end -}}
 {{- end -}}
 
 {{/* Namespace glob (* and ?) as a Loki regex. */}}

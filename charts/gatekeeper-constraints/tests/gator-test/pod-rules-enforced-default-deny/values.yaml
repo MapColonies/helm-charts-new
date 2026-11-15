@@ -1,0 +1,8 @@
+# Default Pod rule enforcementAction: violations in prod are denied.
+workloadPolicies:
+  enforcedNamespaces:
+    - prod
+  cpuRatio:
+    enabled: false
+  mclabels:
+    enabled: false

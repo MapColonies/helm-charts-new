@@ -1,1 +1,1 @@
-# Chart defaults.
+# Chart defaults: no namespace lists, so no workload or Pod Constraint.

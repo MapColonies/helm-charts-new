@@ -3,9 +3,9 @@ kind: Suite
 metadata:
   name: pod-labels
 tests:
-  - name: required-pod-labels
+  - name: required-pod-labels-warn
     template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-k8srequiredlabels.yaml
-    constraint: ../rendered/gatekeeper-constraints/templates/constraint-k8srequiredlabels.yaml
+    constraint: ../rendered/gatekeeper-constraints/templates/constraint-k8srequiredlabels-warn.yaml
     cases:
       - name: all-labels-present
         object: ../objects/pod/labeled.yaml
@@ -16,3 +16,28 @@ tests:
         assertions:
           - violations: 1
             message: "Missing required label: mapcolonies.io/criticality"
+      - name: enforced-namespace-not-matched
+        object: ../objects/pod/missing-criticality-prod.yaml
+        assertions:
+          - violations: no
+      - name: unlisted-namespace
+        object: ../objects/pod/missing-criticality-sandbox.yaml
+        assertions:
+          - violations: no
+  - name: required-pod-labels-enforced
+    template: ../rendered/gatekeeper-constraints/templates/constrainttemplate-k8srequiredlabels.yaml
+    constraint: ../rendered/gatekeeper-constraints/templates/constraint-k8srequiredlabels-enforced.yaml
+    cases:
+      - name: missing-criticality
+        object: ../objects/pod/missing-criticality-prod.yaml
+        assertions:
+          - violations: 1
+            message: "Missing required label: mapcolonies.io/criticality"
+      - name: warn-namespace-not-matched
+        object: ../objects/pod/missing-criticality.yaml
+        assertions:
+          - violations: no
+      - name: unlisted-namespace
+        object: ../objects/pod/missing-criticality-sandbox.yaml
+        assertions:
+          - violations: no

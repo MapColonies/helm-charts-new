@@ -1,0 +1,1 @@
+{{- include "gatekeeper-constraints.podConstraint" (dict "root" . "rule" "k8sDisallowedLabelValues" "kind" "K8sDisallowedLabelValues" "name" "disallow-pod-label-values" "param" "labels" "mode" "enforced") }}

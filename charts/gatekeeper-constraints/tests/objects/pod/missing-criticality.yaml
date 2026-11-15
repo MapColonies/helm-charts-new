@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: missing-criticality
-  namespace: test
+  namespace: app-dev
   labels:
     app.kubernetes.io/name: web
     app.kubernetes.io/instance: web

@@ -1,0 +1,12 @@
+# Breaks all three Pod rules.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bare
+  namespace: prod
+  labels:
+    mapcolonies.io/environment: undefined
+spec:
+  containers:
+    - name: app
+      image: nginx

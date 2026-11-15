@@ -1,0 +1,8 @@
+# prod in the warn list: Pod rule violations warn.
+workloadPolicies:
+  warnNamespaces:
+    - prod
+  cpuRatio:
+    enabled: false
+  mclabels:
+    enabled: false

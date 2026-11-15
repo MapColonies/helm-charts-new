@@ -1,9 +1,10 @@
-namespaces: []
-
+# Pod rules. Like the workload rules, they render <name>-warn Constraints for
+# workloadPolicies.warnNamespaces and <name>-enforced ones for enforcedNamespaces.
 constraints:
   k8sRequiredLabels:
     enabled: true
-    enforcementAction: warn
+    # In enforced namespaces: deny, warn or dryrun.
+    enforcementAction: deny
     labels:
       - "app.kubernetes.io/name"
       - "app.kubernetes.io/instance"
@@ -17,7 +18,8 @@ constraints:
 
   k8sRequiredAnnotations:
     enabled: true
-    enforcementAction: warn
+    # In enforced namespaces: deny, warn or dryrun.
+    enforcementAction: deny
     annotations:
       - "prometheus.io/path"
       - "prometheus.io/port"
@@ -25,7 +27,8 @@ constraints:
 
   k8sDisallowedLabelValues:
     enabled: true
-    enforcementAction: warn
+    # In enforced namespaces: deny, warn or dryrun.
+    enforcementAction: deny
     labels:
       - key: "mapcolonies.io/environment"
         disallowedValues:
@@ -33,7 +36,7 @@ constraints:
 
 # Workload rules for Deployments and StatefulSets (see README).
 workloadPolicies:
-  # Globs like "*-dev" work. An empty list renders no Constraint (Gatekeeper
+  # Also scope the Pod rules. Globs like "*-dev" work. An empty list renders no Constraint (Gatekeeper
   # would match every namespace).
   warnNamespaces: []
   enforcedNamespaces: []

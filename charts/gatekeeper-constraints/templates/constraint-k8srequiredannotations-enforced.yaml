@@ -1,0 +1,1 @@
+{{- include "gatekeeper-constraints.podConstraint" (dict "root" . "rule" "k8sRequiredAnnotations" "kind" "K8sRequiredAnnotations" "name" "require-pod-annotations" "param" "annotations" "mode" "enforced") }}

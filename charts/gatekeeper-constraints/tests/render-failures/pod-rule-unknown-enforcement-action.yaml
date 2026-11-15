@@ -1,0 +1,4 @@
+# expect-error: constraints\.k8sRequiredLabels\.enforcementAction must be deny, warn or dryrun, got "block"
+constraints:
+  k8sRequiredLabels:
+    enforcementAction: block
