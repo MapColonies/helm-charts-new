@@ -72,7 +72,7 @@ ingestion-trigger:
 overseer:
   image:
     repository: raster/overseer
-    tag: v3.0.1
+    tag: v3.0.2
     pullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
