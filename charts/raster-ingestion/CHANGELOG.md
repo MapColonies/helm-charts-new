@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/MapColonies/helm-charts-new/compare/raster-ingestion-v1.3.1...raster-ingestion-v1.3.2) (2026-11-15)
+
+
+### 🐛 Bug Fixes
+
+* upgrade overseer to 3.0.2 (MAPCO-12035) ([#202](https://github.com/MapColonies/helm-charts-new/issues/202)) ([5956d3f](https://github.com/MapColonies/helm-charts-new/commit/5956d3f0f42e2be2c72c6192c79239f59a04730a))
+
 ## [1.3.1](https://github.com/MapColonies/helm-charts-new/compare/raster-ingestion-v1.3.0...raster-ingestion-v1.3.1) (2026-11-04)
 
 
