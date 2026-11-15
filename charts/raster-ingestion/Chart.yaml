@@ -27,7 +27,7 @@ dependencies:
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: overseer
-    version: 3.0.1
+    version: 3.0.2
     condition: overseer.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
