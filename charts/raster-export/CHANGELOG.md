@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/MapColonies/helm-charts-new/compare/raster-export-v1.2.1...raster-export-v1.2.2) (2026-11-16)
+
+
+### 🐛 Bug Fixes
+
+* upgrade exporter-overseer to 3.0.2 (MAPCO-12039) ([#205](https://github.com/MapColonies/helm-charts-new/issues/205)) ([b47f45b](https://github.com/MapColonies/helm-charts-new/commit/b47f45b632ae94707fbd725b32d47c960b962f06))
+
 ## [1.2.1](https://github.com/MapColonies/helm-charts-new/compare/raster-export-v1.2.0...raster-export-v1.2.1) (2026-11-04)
 
 
