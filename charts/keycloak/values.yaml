@@ -13,6 +13,18 @@ keycloak:
   serviceAccount:
     create: false
 
+  # Replaces the bitnami "small" preset; memory and ephemeral-storage are the preset's.
+  # Also sizes the prepare-write-dirs init container.
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+      ephemeral-storage: 50Mi
+    limits:
+      cpu: 800m
+      memory: 768Mi
+      ephemeral-storage: 2Gi
+
   metrics:
     enabled: true
 
