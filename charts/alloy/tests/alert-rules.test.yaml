@@ -1,0 +1,121 @@
+# promtool test rules, run by tests/alert-rules.sh. Series are shaped like prod's: one scrape job
+# for both workloads; the Deployment's Alloy cluster has no name (no cluster_name label), the
+# StatefulSet's is alloy-logs. cluster_node_info has no cluster_name label; cluster_node_peers and
+# alloy_config_hash do.
+rule_files:
+  - rules.yaml
+evaluation_interval: 1m
+
+tests:
+  # Both clusters healthy: a 2-pod Deployment and a 1-pod StatefulSet
+  - interval: 1m
+    input_series:
+      - series: 'cluster_node_info{job="k8s-scrape",namespace="infra-services",instance="deployment-0",state="participant"}'
+        values: '1x30'
+      - series: 'cluster_node_info{job="k8s-scrape",namespace="infra-services",instance="deployment-1",state="participant"}'
+        values: '1x30'
+      - series: 'cluster_node_info{job="k8s-scrape",namespace="infra-services",instance="statefulset-0",state="participant"}'
+        values: '1x30'
+      - series: 'cluster_node_peers{job="k8s-scrape",namespace="infra-services",instance="deployment-0",state="participant"}'
+        values: '2x30'
+      - series: 'cluster_node_peers{job="k8s-scrape",namespace="infra-services",instance="deployment-1",state="participant"}'
+        values: '2x30'
+      - series: 'cluster_node_peers{job="k8s-scrape",namespace="infra-services",instance="statefulset-0",cluster_name="alloy-logs",state="participant"}'
+        values: '1x30'
+      - series: 'alloy_config_hash{job="k8s-scrape",namespace="infra-services",instance="deployment-0",sha256="aaa"}'
+        values: '1x30'
+      - series: 'alloy_config_hash{job="k8s-scrape",namespace="infra-services",instance="deployment-1",sha256="aaa"}'
+        values: '1x30'
+      - series: 'alloy_config_hash{job="k8s-scrape",namespace="infra-services",instance="statefulset-0",cluster_name="alloy-logs",sha256="bbb"}'
+        values: '1x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: ClusterNodeCountMismatch
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: ClusterConfigurationDrift
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: ClusterNotConverging
+        exp_alerts: []
+
+  # Both clusters broken, each on its own: in each, one pod doesn't see the other and they run
+  # different configs
+  - interval: 1m
+    input_series:
+      - series: 'cluster_node_info{job="k8s-scrape",namespace="infra-services",instance="deployment-0",state="participant"}'
+        values: '1x30'
+      - series: 'cluster_node_info{job="k8s-scrape",namespace="infra-services",instance="deployment-1",state="participant"}'
+        values: '1x30'
+      - series: 'cluster_node_info{job="k8s-scrape",namespace="infra-services",instance="statefulset-0",state="participant"}'
+        values: '1x30'
+      - series: 'cluster_node_info{job="k8s-scrape",namespace="infra-services",instance="statefulset-1",state="participant"}'
+        values: '1x30'
+      - series: 'cluster_node_peers{job="k8s-scrape",namespace="infra-services",instance="deployment-0",state="participant"}'
+        values: '2x30'
+      - series: 'cluster_node_peers{job="k8s-scrape",namespace="infra-services",instance="deployment-1",state="participant"}'
+        values: '1x30'
+      - series: 'cluster_node_peers{job="k8s-scrape",namespace="infra-services",instance="statefulset-0",cluster_name="alloy-logs",state="participant"}'
+        values: '1x30'
+      - series: 'cluster_node_peers{job="k8s-scrape",namespace="infra-services",instance="statefulset-1",cluster_name="alloy-logs",state="participant"}'
+        values: '2x30'
+      - series: 'alloy_config_hash{job="k8s-scrape",namespace="infra-services",instance="deployment-0",sha256="aaa"}'
+        values: '1x30'
+      - series: 'alloy_config_hash{job="k8s-scrape",namespace="infra-services",instance="deployment-1",sha256="ccc"}'
+        values: '1x30'
+      - series: 'alloy_config_hash{job="k8s-scrape",namespace="infra-services",instance="statefulset-0",cluster_name="alloy-logs",sha256="bbb"}'
+        values: '1x30'
+      - series: 'alloy_config_hash{job="k8s-scrape",namespace="infra-services",instance="statefulset-1",cluster_name="alloy-logs",sha256="ddd"}'
+        values: '1x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: ClusterNodeCountMismatch
+        exp_alerts:
+          - exp_labels: {job: k8s-scrape, namespace: infra-services, instance: deployment-1}
+          - exp_labels: {job: k8s-scrape, namespace: infra-services, instance: statefulset-0, cluster_name: alloy-logs}
+      - eval_time: 20m
+        alertname: ClusterConfigurationDrift
+        exp_alerts:
+          - exp_labels: {job: k8s-scrape, namespace: infra-services}
+          - exp_labels: {job: k8s-scrape, namespace: infra-services, cluster_name: alloy-logs}
+
+  # Pod log lines dropped as too old (after an outage longer than maxLogAge): only the age filter's
+  # too_old drops count, and the alert clears 10m after the last one
+  - interval: 1m
+    input_series:
+      - series: 'loki_process_dropped_lines_total{job="k8s-scrape",namespace="infra-services",instance="deployment-0",component_id="loki.process.limit_time",component_path="/",reason="too_old"}'
+        values: '0x3 38753x30'
+      - series: 'loki_process_dropped_lines_total{job="k8s-scrape",namespace="infra-services",instance="deployment-0",component_id="loki.process.limit_time",component_path="/",reason="log_filter_drop"}'
+        values: '0+100x33'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: AlloyPodLogsTooOld
+        exp_alerts: []
+      - eval_time: 5m
+        alertname: AlloyPodLogsTooOld
+        exp_alerts:
+          - exp_labels: {job: k8s-scrape, namespace: infra-services}
+      - eval_time: 20m
+        alertname: AlloyPodLogsTooOld
+        exp_alerts: []
+
+  # The pod logs StatefulSet without a ready replica: fires 1m after it has fewer ready replicas
+  # than desired (a pod stuck on a failed node still counts as desired), before lines are lost
+  - interval: 1m
+    input_series:
+      - series: 'kube_statefulset_replicas{job="kube-state-metrics",namespace="infra-services",statefulset="alloy-alloy-logs"}'
+        values: '1x10'
+      - series: 'kube_statefulset_status_replicas_ready{job="kube-state-metrics",namespace="infra-services",statefulset="alloy-alloy-logs"}'
+        values: '1x3 0x7'
+      - series: 'kube_statefulset_replicas{job="kube-state-metrics",namespace="infra-services",statefulset="other"}'
+        values: '1x10'
+      - series: 'kube_statefulset_status_replicas_ready{job="kube-state-metrics",namespace="infra-services",statefulset="other"}'
+        values: '0x10'
+    alert_rule_test:
+      - eval_time: 4m # not ready since 4m: pending for its 1m
+        alertname: AlloyPodLogsDown
+        exp_alerts: []
+      - eval_time: 5m
+        alertname: AlloyPodLogsDown
+        exp_alerts:
+          - exp_labels: {namespace: infra-services, statefulset: alloy-alloy-logs}
