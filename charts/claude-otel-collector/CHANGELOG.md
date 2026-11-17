@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/MapColonies/helm-charts-new/compare/claude-otel-collector-v1.1.0...claude-otel-collector-v1.2.0) (2026-11-17)
+
+
+### 🎉 Features
+
+* **claude-otel-collector:** one computer label across all Claude clients ([#200](https://github.com/MapColonies/helm-charts-new/issues/200)) ([ab85419](https://github.com/MapColonies/helm-charts-new/commit/ab85419a783d73219ab7f0339924a76817459068))
+
 ## [1.1.0](https://github.com/MapColonies/helm-charts-new/compare/claude-otel-collector-v1.0.0...claude-otel-collector-v1.1.0) (2026-07-23)
 
 
