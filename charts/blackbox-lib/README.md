@@ -14,7 +14,7 @@ A library chart only provides named templates: it renders nothing by itself and 
 # Chart.yaml
 dependencies:
   - name: blackbox-lib
-    version: "0.1.0"
+    version: "0.1.1"
     repository: oci://acrarolibotnonprod.azurecr.io/helm/common
 ```
 <!-- x-release-please-end-version -->
