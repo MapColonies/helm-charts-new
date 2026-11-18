@@ -1,0 +1,923 @@
+{
+  "uid": "a6j7gg",
+  "title": "Team Status Page (beta)",
+  "description": "Dynamic team status page driven by mclabels (owner / partOf / component / criticality). Pick a team with ?var-owner=<team>. MAPCO-5786.",
+  "tags": [
+    "status-page",
+    "mclabels",
+    "beta"
+  ],
+  "timezone": "browser",
+  "editable": true,
+  "refresh": "1m",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "schemaVersion": 41,
+  "graphTooltip": 1,
+  "templating": {
+    "list": [
+      {
+        "name": "Site",
+        "label": "Site",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {
+          "text": "Prometheus",
+          "value": "prometheus"
+        },
+        "refresh": 1,
+        "regex": ""
+      },
+      {
+        "name": "owner",
+        "label": "Team",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${Site}"
+        },
+        "query": {
+          "query": "label_values(up, mapcolonies_io_owner)",
+          "refId": "owner-q",
+          "qryType": 1
+        },
+        "definition": "label_values(up, mapcolonies_io_owner)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": false,
+        "includeAll": false,
+        "current": {
+          "text": "infra",
+          "value": "infra"
+        },
+        "options": []
+      },
+      {
+        "name": "Namespace",
+        "label": "Namespace",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${Site}"
+        },
+        "query": {
+          "query": "label_values(up{mapcolonies_io_owner=\"$owner\"}, namespace)",
+          "refId": "Namespace-q",
+          "qryType": 1
+        },
+        "definition": "label_values(up{mapcolonies_io_owner=\"$owner\"}, namespace)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "allValue": ".*"
+      },
+      {
+        "name": "part_of",
+        "label": "Part of",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${Site}"
+        },
+        "query": {
+          "query": "label_values(up{mapcolonies_io_owner=\"$owner\", namespace=~\"$Namespace\"}, mapcolonies_io_part_of)",
+          "refId": "part_of-q",
+          "qryType": 1
+        },
+        "definition": "label_values(up{mapcolonies_io_owner=\"$owner\", namespace=~\"$Namespace\"}, mapcolonies_io_part_of)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "allValue": ".*"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Overview",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "panels": []
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "$owner Status",
+      "description": "Current state. Customer > Internal > Degraded > Operational.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${Site}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 7,
+        "x": 0,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${Site}"
+          },
+          "editorMode": "code",
+          "expr": "(vector(scalar(min(max by (app_kubernetes_io_name) (up{mapcolonies_io_owner=\"$owner\", namespace=~\"$Namespace\", mapcolonies_io_criticality=\"customer\"}) or probe_success{job=~\"blackbox-exporter-$owner(-.*)?\"}) or vector(1)) * (0.25 + 0.25 * scalar(min(max by (app_kubernetes_io_name) (up{mapcolonies_io_owner=\"$owner\", namespace=~\"$Namespace\", mapcolonies_io_criticality=\"internal\"})) or vector(1)) * (1 + 2 * scalar(min(up{mapcolonies_io_owner=\"$owner\", namespace=~\"$Namespace\"}) or vector(1))))) and on () (count(up{mapcolonies_io_owner=\"$owner\", namespace=~\"$Namespace\"}) > 0))",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "",
+          "decimals": null,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "Operational",
+                  "color": "green",
+                  "index": 0
+                },
+                "0.5": {
+                  "text": "Degraded",
+                  "color": "orange",
+                  "index": 1
+                },
+                "0.25": {
+                  "text": "Internal Outage",
+                  "color": "red",
+                  "index": 2
+                },
+                "0": {
+                  "text": "Customer Outage",
+                  "color": "dark-red",
+                  "index": 3
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.25
+              },
+              {
+                "color": "orange",
+                "value": 0.5
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "$owner Uptime",
+      "description": "Customer-facing and internal uptime % over the dashboard time range.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${Site}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 10,
+        "x": 7,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${Site}"
+          },
+          "editorMode": "code",
+          "expr": "avg by (mapcolonies_io_criticality) (avg_over_time((max by (mapcolonies_io_criticality, mapcolonies_io_part_of, mapcolonies_io_component, app_kubernetes_io_name) (label_replace(label_replace(up{mapcolonies_io_owner=\"$owner\", namespace=~\"$Namespace\"}, \"app_kubernetes_io_name\", \"unnamed\", \"app_kubernetes_io_name\", \"\"), \"mapcolonies_io_criticality\", \"unassigned\", \"mapcolonies_io_criticality\", \"\")) or on (mapcolonies_io_criticality, mapcolonies_io_part_of, mapcolonies_io_component, app_kubernetes_io_name) ((0 * group by (mapcolonies_io_criticality, mapcolonies_io_part_of, mapcolonies_io_component, app_kubernetes_io_name) (label_replace(label_replace(last_over_time(up{mapcolonies_io_owner=\"$owner\", namespace=~\"$Namespace\"}[10m]), \"app_kubernetes_io_name\", \"unnamed\", \"app_kubernetes_io_name\", \"\"), \"mapcolonies_io_criticality\", \"unassigned\", \"mapcolonies_io_criticality\", \"\"))) and on () (count(up) > 0)))[$__range:$__interval])) * 100",
+          "legendFormat": "{{mapcolonies_io_criticality}}",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 95
+              },
+              {
+                "color": "green",
+                "value": 99.5
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "interval": "1m",
+      "maxDataPoints": 1440
+    },
+    {
+      "id": 4,
+      "type": "text",
+      "title": "Status Legend",
+      "gridPos": {
+        "h": 7,
+        "w": 7,
+        "x": 17,
+        "y": 1
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "#### Status\n- \ud83d\udfe2 **Operational** \u2013 all services and replicas up\n- \ud83d\udfe0 **Degraded** \u2013 a replica, or a service without criticality, is down\n- \ud83d\udd34 **Internal Outage** \u2013 an `internal` service is down\n- \ud83d\udd34 **Customer Outage** \u2013 a `customer` service is down, or a blackbox endpoint probe fails\n\n#### Criticality (`mclabels.criticality`)\n- `customer` \u2013 external users notice within minutes if it is down\n- `internal` \u2013 blocks our teams/pipelines, customers not directly affected\n\n#### Uptime %\nPer service (any replica up = up), averaged over the selected time range, split by `criticality`.\n**unassigned** = services whose chart does not set `mclabels.criticality` yet.\nOnly services with `prometheus.enabled: true` appear."
+      }
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Customer endpoints (blackbox probes)",
+      "description": "URLs probed by blackbox-exporter-$owner. Any Down = Customer Outage.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${Site}"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${Site}"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(probe_success{job=~\"blackbox-exporter-$owner(-.*)?\"}, \"url\", \"$1\", \"instance\", \"https?://([^?]+).*\")",
+          "legendFormat": "{{url}}",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "",
+          "decimals": null,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "Up",
+                  "color": "green",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Down",
+                  "color": "red",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 26
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "table",
+      "title": "Failing probes",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${Site}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "interval": "1m",
+      "maxDataPoints": 1440,
+      "description": "Blackbox probes failing right now. Empty = all probes pass.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${Site}"
+          },
+          "editorMode": "code",
+          "expr": "max by (team, instance, job) (label_replace((probe_success{job=~\"blackbox-exporter-$owner(-.*)?\", job!=\"blackbox-exporter-tcp\"} == 0), \"team\", \"$1\", \"job\", \"blackbox-exporter-([a-z0-9]+).*\"))",
+          "refId": "A",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": ""
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${Site}"
+          },
+          "editorMode": "code",
+          "expr": "max by (team, instance, job) (label_replace((probe_http_status_code{job=~\"blackbox-exporter-$owner(-.*)?\", job!=\"blackbox-exporter-tcp\"}) and on (instance, job) (probe_success{job=~\"blackbox-exporter-$owner(-.*)?\", job!=\"blackbox-exporter-tcp\"} == 0), \"team\", \"$1\", \"job\", \"blackbox-exporter-([a-z0-9]+).*\"))",
+          "refId": "B",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": ""
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${Site}"
+          },
+          "editorMode": "code",
+          "expr": "max by (team, instance, job) (label_replace((probe_duration_seconds{job=~\"blackbox-exporter-$owner(-.*)?\", job!=\"blackbox-exporter-tcp\"}) and on (instance, job) (probe_success{job=~\"blackbox-exporter-$owner(-.*)?\", job!=\"blackbox-exporter-tcp\"} == 0), \"team\", \"$1\", \"job\", \"blackbox-exporter-([a-z0-9]+).*\"))",
+          "refId": "C",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": ""
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${Site}"
+          },
+          "editorMode": "code",
+          "expr": "max by (team, instance, job) (label_replace(((1 - avg_over_time(probe_success{job=~\"blackbox-exporter-$owner(-.*)?\", job!=\"blackbox-exporter-tcp\"}[$__range])) * 100) and on (instance, job) (probe_success{job=~\"blackbox-exporter-$owner(-.*)?\", job!=\"blackbox-exporter-tcp\"} == 0), \"team\", \"$1\", \"job\", \"blackbox-exporter-([a-z0-9]+).*\"))",
+          "refId": "D",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": ""
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${Site}"
+          },
+          "editorMode": "code",
+          "expr": "max by (team, instance, job) (label_replace((max_over_time(timestamp(probe_success{job=~\"blackbox-exporter-$owner(-.*)?\", job!=\"blackbox-exporter-tcp\"} == 1)[$__range:$__interval]) * 1000) and on (instance, job) (probe_success{job=~\"blackbox-exporter-$owner(-.*)?\", job!=\"blackbox-exporter-tcp\"} == 0), \"team\", \"$1\", \"job\", \"blackbox-exporter-([a-z0-9]+).*\"))",
+          "refId": "E",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": ""
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${Site}"
+          },
+          "editorMode": "code",
+          "expr": "max by (team, instance, job) (label_replace((probe_failed_due_to_regex{job=~\"blackbox-exporter-$owner(-.*)?\", job!=\"blackbox-exporter-tcp\"}) and on (instance, job) (probe_success{job=~\"blackbox-exporter-$owner(-.*)?\", job!=\"blackbox-exporter-tcp\"} == 0), \"team\", \"$1\", \"job\", \"blackbox-exporter-([a-z0-9]+).*\"))",
+          "refId": "F",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value #A": true
+            },
+            "indexByName": {
+              "team": 0,
+              "instance": 1,
+              "Value #B": 2,
+              "Value #E": 3,
+              "Value #D": 4,
+              "Value #C": 5,
+              "Value #F": 6,
+              "job": 7
+            },
+            "renameByName": {
+              "team": "Team",
+              "instance": "URL",
+              "job": "Probe job",
+              "Value #B": "HTTP status",
+              "Value #C": "Probe duration",
+              "Value #D": "Failed % (time range)",
+              "Value #E": "Last success",
+              "Value #F": "Body check failed"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "\u2705 No failing probes",
+          "custom": {
+            "align": "left",
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "HTTP status"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "No response (timeout / refused)",
+                        "index": 0
+                      },
+                      "401": {
+                        "text": "401 Unauthorized",
+                        "index": 1
+                      },
+                      "403": {
+                        "text": "403 Forbidden",
+                        "index": 2
+                      },
+                      "404": {
+                        "text": "404 Not Found",
+                        "index": 3
+                      },
+                      "500": {
+                        "text": "500 Server Error",
+                        "index": 4
+                      },
+                      "502": {
+                        "text": "502 Bad Gateway",
+                        "index": 5
+                      },
+                      "503": {
+                        "text": "503 Unavailable",
+                        "index": 6
+                      },
+                      "504": {
+                        "text": "504 Gateway Timeout",
+                        "index": 7
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Probe duration"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Failed % (time range)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last success"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              },
+              {
+                "id": "noValue",
+                "value": "not in time range"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Body check failed"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "no",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "yes",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "URL"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 330
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Team"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "HTTP status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 200
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Team",
+            "desc": false
+          }
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "type": "row",
+      "title": "$part_of",
+      "repeat": "part_of",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "panels": []
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Uptime by component",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${Site}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 20
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${Site}"
+          },
+          "editorMode": "code",
+          "expr": "avg by (mapcolonies_io_component, mapcolonies_io_criticality) (avg_over_time((max by (mapcolonies_io_criticality, mapcolonies_io_part_of, mapcolonies_io_component, app_kubernetes_io_name) (label_replace(label_replace(up{mapcolonies_io_owner=\"$owner\", namespace=~\"$Namespace\", mapcolonies_io_part_of=\"$part_of\"}, \"app_kubernetes_io_name\", \"unnamed\", \"app_kubernetes_io_name\", \"\"), \"mapcolonies_io_criticality\", \"unassigned\", \"mapcolonies_io_criticality\", \"\")) or on (mapcolonies_io_criticality, mapcolonies_io_part_of, mapcolonies_io_component, app_kubernetes_io_name) ((0 * group by (mapcolonies_io_criticality, mapcolonies_io_part_of, mapcolonies_io_component, app_kubernetes_io_name) (label_replace(label_replace(last_over_time(up{mapcolonies_io_owner=\"$owner\", namespace=~\"$Namespace\", mapcolonies_io_part_of=\"$part_of\"}[10m]), \"app_kubernetes_io_name\", \"unnamed\", \"app_kubernetes_io_name\", \"\"), \"mapcolonies_io_criticality\", \"unassigned\", \"mapcolonies_io_criticality\", \"\"))) and on () (count(up) > 0)))[$__range:$__interval])) * 100",
+          "legendFormat": "{{mapcolonies_io_component}} ({{mapcolonies_io_criticality}})",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 95
+              },
+              {
+                "color": "green",
+                "value": 99.5
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      },
+      "interval": "1m",
+      "maxDataPoints": 1440
+    },
+    {
+      "id": 7,
+      "type": "status-history",
+      "title": "Services",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${Site}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 8,
+        "y": 20
+      },
+      "interval": "1m",
+      "maxDataPoints": 120,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${Site}"
+          },
+          "editorMode": "code",
+          "expr": "avg by (app_kubernetes_io_name) (label_replace(label_replace(avg_over_time(up{mapcolonies_io_owner=\"$owner\", namespace=~\"$Namespace\", mapcolonies_io_part_of=\"$part_of\"}[$__interval]), \"app_kubernetes_io_name\", \"unnamed\", \"app_kubernetes_io_name\", \"\"), \"mapcolonies_io_criticality\", \"unassigned\", \"mapcolonies_io_criticality\", \"\"))",
+          "legendFormat": "{{app_kubernetes_io_name}}",
+          "refId": "A",
+          "instant": false,
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.01
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "custom": {
+            "fillOpacity": 80,
+            "lineWidth": 0
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showValue": "never",
+        "rowHeight": 0.9,
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "description": "Share of replicas up per service. Orange = some replicas down."
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "links": []
+}
