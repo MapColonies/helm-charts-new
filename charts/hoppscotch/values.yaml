@@ -19,6 +19,7 @@ hoppscotch:
       mapcolonies.io/alloy-api-logs: "true"
       mapcolonies.io/criticality: "internal"
 
+    # Replaces the "small" preset; memory and ephemeral-storage are the preset's.
     resources:
       requests:
         cpu: 125m
@@ -29,6 +30,7 @@ hoppscotch:
         memory: 512Mi
         ephemeral-storage: 2Gi
 
+  # CPU only: memory stays unset, as it was on upstream 0.3.3 (0.6.0 would apply presets).
   defaultInitContainers:
     waitForDatabase:
       resources:
