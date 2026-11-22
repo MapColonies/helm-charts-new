@@ -96,8 +96,9 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "subdir_size_bytes{namespace=~\"$namespace\", subdir=\"false\"}",
+          "expr": "subdir_size_bytes{app=\"node-exporter\", namespace=~\"$namespace\", subdir=\"false\"}",
           "format": "time_series",
+          "hide": true,
           "legendFormat": "{{directory}}",
           "range": true,
           "refId": "A"
@@ -108,7 +109,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "subdir_size_bytes{namespace=~\"$namespace\", subdir=\"true\"}",
+          "expr": "subdir_size_bytes{app=\"node-exporter\", namespace=~\"$namespace\", subdir=\"true\"}",
           "hide": false,
           "legendFormat": "{{directory}}",
           "range": true,
