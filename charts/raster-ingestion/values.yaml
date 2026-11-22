@@ -39,17 +39,6 @@ mapproxy-api:
     schema: "MapproxyConfig" # TODO: remove after set this as the default value within service
 
 # ====================================================================================================
-# Cache-Seeder
-# ====================================================================================================
-cache-seeder:
-  image:
-    repository: "raster/cache-seeder"
-    tag: "v2.3.2"
-    pullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
-  env:
-    seedConcurrency: 25
-
-# ====================================================================================================
 # Ingestion-Trigger
 # ====================================================================================================
 ingestion-trigger:
