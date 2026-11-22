@@ -13,8 +13,6 @@ keycloak:
   serviceAccount:
     create: false
 
-  # Replaces the bitnami "small" preset; memory and ephemeral-storage are the preset's.
-  # Also sizes the prepare-write-dirs init container.
   resources:
     requests:
       cpu: 200m
