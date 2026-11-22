@@ -57,3 +57,9 @@ sftpgo-node-exporter:
 
   extraArgs:
     - --collector.textfile.directory=/var/lib/node_exporter/textfile_collector
+
+# Grafana dashboards, loaded by the Grafana dashboards sidecar.
+# The ConfigMap is rendered in the release namespace, which must be the namespace Grafana watches.
+dashboards:
+  enabled: true
+  folder: SFTPGo

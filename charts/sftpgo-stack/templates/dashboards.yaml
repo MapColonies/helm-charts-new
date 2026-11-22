@@ -1,0 +1,13 @@
+{{- if .Values.dashboards.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-dashboards
+  namespace: {{ .Release.Namespace }}
+  labels:
+    mapcolonies.io/grafana-dashboards: "true"
+  annotations:
+    mapcolonies.io/grafana-dashboards-folder: {{ .Values.dashboards.folder | quote }}
+data:
+{{ (.Files.Glob "files/dashboards/*.json").AsConfig | indent 2 }}
+{{- end }}
