@@ -16,11 +16,6 @@ dependencies:
     condition: mapproxy-api.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
-  - name: cache-seeder
-    version: 2.3.2
-    condition: cache-seeder.enabled
-    repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
-
   - name: ingestion-trigger
     version: 4.5.1
     condition: ingestion-trigger.enabled
