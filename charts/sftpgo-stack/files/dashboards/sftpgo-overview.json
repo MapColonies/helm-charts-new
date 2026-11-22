@@ -179,7 +179,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "((node_filesystem_size_bytes{mountpoint=\"/mnt\", namespace=\"$namespace\"} - node_filesystem_avail_bytes{mountpoint=\"/mnt\", namespace=~\"$namespace\"}) / node_filesystem_size_bytes{mountpoint=\"/mnt\", namespace=~\"$namespace\"}) * 100",
+          "expr": "((node_filesystem_size_bytes{mountpoint=\"/mnt\", namespace=~\"$namespace\"} - node_filesystem_avail_bytes{mountpoint=\"/mnt\", namespace=~\"$namespace\"}) / node_filesystem_size_bytes{mountpoint=\"/mnt\", namespace=~\"$namespace\"}) * 100",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -803,7 +803,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(increase(sftpgo_uploads_total[$__range]))",
+          "expr": "sum(increase(sftpgo_uploads_total{namespace=~\"$namespace\"}[$__range]))",
           "hide": false,
           "legendFormat": "__auto",
           "range": true,
@@ -874,7 +874,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(increase(sftpgo_upload_size{namespace=\"group-map-colonies\"}[$__range]))",
+          "expr": "sum(increase(sftpgo_upload_size{namespace=~\"$namespace\"}[$__range]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -942,7 +942,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(increase(sftpgo_downloads_total[$__range]))",
+          "expr": "sum(increase(sftpgo_downloads_total{namespace=~\"$namespace\"}[$__range]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1011,7 +1011,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(increase(sftpgo_download_size[$__range]))",
+          "expr": "sum(increase(sftpgo_download_size{namespace=~\"$namespace\"}[$__range]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1031,27 +1031,6 @@
     "list": [
       {
         "current": {
-          "text": "group-map-colonies",
-          "value": "group-map-colonies"
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "prometheus"
-        },
-        "definition": "label_values(namespace)",
-        "includeAll": false,
-        "name": "namespace",
-        "options": [],
-        "query": {
-          "query": "label_values(namespace)",
-          "refId": "StandardVariableQuery"
-        },
-        "refresh": 1,
-        "regex": "",
-        "type": "query"
-      },
-      {
-        "current": {
           "text": "Prometheus",
           "value": "prometheus"
         },
@@ -1062,6 +1041,25 @@
         "refresh": 1,
         "regex": "",
         "type": "datasource"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${Datasource}"
+        },
+        "definition": "label_values(sftpgo_active_connections,namespace)",
+        "includeAll": false,
+        "name": "namespace",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(sftpgo_active_connections,namespace)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
       }
     ]
   },
