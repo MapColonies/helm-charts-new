@@ -21,7 +21,7 @@
       }
     ]
   },
-  "editable": true,
+  "editable": false,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": null,
@@ -43,7 +43,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Datasource}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -93,10 +93,10 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Datasource}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "subdir_size_bytes{app=\"node-exporter\", namespace=~\"$namespace\", subdir=\"false\"}",
+          "expr": "max by (directory) (subdir_size_bytes{namespace=~\"$namespace\", subdir=\"false\"})",
           "format": "time_series",
           "hide": true,
           "legendFormat": "{{directory}}",
@@ -106,10 +106,10 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Datasource}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "subdir_size_bytes{app=\"node-exporter\", namespace=~\"$namespace\", subdir=\"true\"}",
+          "expr": "max by (directory) (subdir_size_bytes{namespace=~\"$namespace\", subdir=\"true\"})",
           "hide": false,
           "legendFormat": "{{directory}}",
           "range": true,
@@ -122,7 +122,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Datasource}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -177,10 +177,10 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Datasource}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "((node_filesystem_size_bytes{mountpoint=\"/mnt\", namespace=~\"$namespace\"} - node_filesystem_avail_bytes{mountpoint=\"/mnt\", namespace=~\"$namespace\"}) / node_filesystem_size_bytes{mountpoint=\"/mnt\", namespace=~\"$namespace\"}) * 100",
+          "expr": "(max(node_filesystem_size_bytes{mountpoint=\"/mnt\", namespace=~\"$namespace\"}) - max(node_filesystem_avail_bytes{mountpoint=\"/mnt\", namespace=~\"$namespace\"})) / max(node_filesystem_size_bytes{mountpoint=\"/mnt\", namespace=~\"$namespace\"}) * 100",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -192,7 +192,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Datasource}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -243,10 +243,10 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Datasource}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "node_filesystem_size_bytes{mountpoint=\"/mnt\", namespace=~\"$namespace\"}",
+          "expr": "max(node_filesystem_size_bytes{mountpoint=\"/mnt\", namespace=~\"$namespace\"})",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -258,7 +258,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Datasource}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -309,10 +309,10 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Datasource}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "node_filesystem_avail_bytes{mountpoint=\"/mnt\", namespace=~\"$namespace\"}",
+          "expr": "max(node_filesystem_avail_bytes{mountpoint=\"/mnt\", namespace=~\"$namespace\"})",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -324,7 +324,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Datasource}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -375,7 +375,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Datasource}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "sum(sftpgo_active_connections{namespace=~\"$namespace\"})",
@@ -390,7 +390,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Datasource}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -457,7 +457,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Datasource}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "max(sftpgo_dataprovider_availability{namespace=~\"$namespace\"})",
@@ -472,7 +472,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Datasource}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -525,7 +525,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Datasource}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "sum(sftpgo_uploads_total{namespace=~\"$namespace\"})",
@@ -541,7 +541,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Datasource}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -595,7 +595,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Datasource}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -611,7 +611,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Datasource}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -664,7 +664,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Datasource}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "sum(sftpgo_downloads_total{namespace=~\"$namespace\"})",
@@ -679,7 +679,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Datasource}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -733,7 +733,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Datasource}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "sum(sftpgo_download_size{namespace=~\"$namespace\"})",
@@ -748,7 +748,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Datasource}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -801,7 +801,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Datasource}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "sum(increase(sftpgo_uploads_total{namespace=~\"$namespace\"}[$__range]))",
@@ -817,7 +817,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Datasource}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -871,7 +871,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Datasource}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -887,7 +887,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Datasource}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -940,7 +940,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Datasource}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "sum(increase(sftpgo_downloads_total{namespace=~\"$namespace\"}[$__range]))",
@@ -955,7 +955,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Datasource}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1009,7 +1009,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Datasource}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "sum(increase(sftpgo_download_size{namespace=~\"$namespace\"}[$__range]))",
@@ -1031,23 +1031,10 @@
   "templating": {
     "list": [
       {
-        "current": {
-          "text": "Prometheus",
-          "value": "prometheus"
-        },
-        "label": "Prometheus",
-        "name": "Datasource",
-        "options": [],
-        "query": "prometheus",
-        "refresh": 1,
-        "regex": "",
-        "type": "datasource"
-      },
-      {
         "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "${Datasource}"
+          "uid": "prometheus"
         },
         "definition": "label_values(sftpgo_active_connections,namespace)",
         "includeAll": false,
