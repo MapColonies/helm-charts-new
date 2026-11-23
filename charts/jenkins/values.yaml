@@ -46,3 +46,9 @@ jenkins:
 
   rbac:
     readSecrets: true
+
+# Grafana dashboards, loaded by the Grafana dashboards sidecar.
+# The ConfigMap is rendered in the release namespace, which must be the namespace Grafana watches.
+dashboards:
+  enabled: true
+  folder: Jenkins
