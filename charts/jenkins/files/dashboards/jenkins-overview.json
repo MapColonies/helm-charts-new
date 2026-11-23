@@ -167,7 +167,7 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "s"
         },
         "overrides": []
       },
@@ -203,11 +203,13 @@
           "format": "time_series",
           "intervalFactor": 1,
           "range": true,
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "p{{quantile}}"
         }
       ],
       "title": "Job queue duration",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Time builds wait in the queue, by quantile (Dropwizard timer, exported in seconds)."
     },
     {
       "datasource": {
@@ -1570,7 +1572,7 @@
           "expr": "default_jenkins_builds_last_build_duration_milliseconds{namespace=~\"$namespace\"}",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "",
+          "legendFormat": "{{jenkins_job}}",
           "refId": "A"
         }
       ],
