@@ -318,11 +318,11 @@
               },
               {
                 "color": "rgba(237, 129, 40, 0.89)",
-                "value": 30
+                "value": 10
               },
               {
                 "color": "rgba(50, 172, 45, 0.97)",
-                "value": 10
+                "value": 30
               }
             ]
           },
@@ -362,15 +362,16 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "(vm_memory_total_max{namespace=~\"$namespace\"} - vm_memory_total_used{namespace=~\"$namespace\"}) / vm_memory_total_max{namespace=~\"$namespace\"} * 100.0",
+          "expr": "(vm_memory_heap_max{namespace=~\"$namespace\"} - vm_memory_heap_used{namespace=~\"$namespace\"}) / vm_memory_heap_max{namespace=~\"$namespace\"} * 100",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A",
           "textEditor": false
         }
       ],
-      "title": "JVM free memory",
-      "type": "stat"
+      "title": "JVM free heap",
+      "type": "stat",
+      "description": "Free share of the JVM heap. vm_memory_total_max is -1 (unbounded), so the heap max is used."
     },
     {
       "datasource": {
@@ -604,7 +605,7 @@
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^__name__$/",
+          "fields": "",
           "values": false
         },
         "showPercentChange": false,
@@ -654,16 +655,12 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "rgba(245, 54, 54, 0.9)",
+                "color": "green",
                 "value": null
               },
               {
-                "color": "rgba(237, 129, 40, 0.89)",
-                "value": 0
-              },
-              {
-                "color": "rgba(50, 172, 45, 0.97)",
-                "value": 0
+                "color": "red",
+                "value": 1
               }
             ]
           },
@@ -854,7 +851,7 @@
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^__name__$/",
+          "fields": "",
           "values": false
         },
         "showPercentChange": false,
@@ -868,7 +865,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "jenkins_node_builds_count{namespace=~\"$namespace\"}",
+          "expr": "sum(jenkins_node_builds_count{namespace=~\"$namespace\"})",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 1,
@@ -1021,7 +1018,7 @@
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^__name__$/",
+          "fields": "",
           "values": false
         },
         "showPercentChange": false,
@@ -1105,7 +1102,7 @@
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^__name__$/",
+          "fields": "",
           "values": false
         },
         "showPercentChange": false,
@@ -1434,11 +1431,13 @@
               },
               {
                 "color": "red",
-                "value": 80
+                "value": 0.8
               }
             ]
           },
-          "unit": "short"
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
         },
         "overrides": []
       },
@@ -1469,14 +1468,16 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "avg(sum(jenkins_job_building_duration{namespace=~\"$namespace\"})/sum(jenkins_job_building_duration_count{namespace=~\"$namespace\"}))",
+          "expr": "sum(jenkins_executor_in_use_value{namespace=~\"$namespace\"}) / clamp_min(sum(jenkins_executor_count_value{namespace=~\"$namespace\"}), 1)",
           "format": "time_series",
           "intervalFactor": 1,
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "in use"
         }
       ],
-      "title": "Executors health",
-      "type": "timeseries"
+      "title": "Executor utilization",
+      "type": "timeseries",
+      "description": "Share of executors busy: in use / total executors. Shows 0 when the controller has no executors (builds on dynamic agents)."
     },
     {
       "datasource": {
