@@ -8,8 +8,8 @@ placeholders __ALERT_TEAM__ and __FOLDER__ are replaced with alerts.team and <al
 {{- fail (printf "alerts.team must be a team name like \"infra\" (a-z, 0-9, - and _), got %q" $team) }}
 {{- end }}
 {{- $component := toString .Values.alerts.component }}
-{{- if or (not $component) (contains "/" $component) }}
-{{- fail (printf "alerts.component must be a folder name without \"/\", got %q" $component) }}
+{{- if not (regexMatch "^[A-Za-z0-9][A-Za-z0-9 _-]*$" $component) }}
+{{- fail (printf "alerts.component must be a folder name like \"Alloy\" (letters, digits, space, - and _), got %q" $component) }}
 {{- end }}
 {{- $folder := printf "%s/%s" $team $component }}
 apiVersion: v1

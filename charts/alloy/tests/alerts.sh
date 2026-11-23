@@ -24,6 +24,8 @@ grep -q '__ALERT_TEAM__\|__FOLDER__' <<<"$out" && fail "a placeholder was not re
 out=$(render --set alerts.team=raster --set alerts.component=Collector)
 grep -q '^        folder: "raster/Collector"$' <<<"$out" || fail "folder must follow alerts.team and alerts.component"
 grep -q 'alert_team: "infra"' <<<"$out" && fail "alert_team must follow alerts.team"
+render --set 'alerts.component=OpenTelemetry Collector' | grep -q '^        folder: "infra/OpenTelemetry Collector"$' \
+  || fail "a component with a space must be allowed"
 
 # 4. a team starting with a digit stays a string
 render --set alerts.team=3d | grep -q '^              alert_team: "3d"$' || fail "alert_team 3d must be quoted"
@@ -32,6 +34,10 @@ render --set alerts.team=3d | grep -q '^              alert_team: "3d"$' || fail
 for args in "--set alerts.team=Infra" "--set alerts.team=" "--set alerts.component=" "--set alerts.component=a/b"; do
   # shellcheck disable=SC2086
   if render $args >/dev/null 2>&1; then fail "render must fail with $args"; fi
+done
+# the component is written inside a quoted YAML string, so a quote or other symbol must fail the render
+for component in 'My "Alloy"' 'a:b' ' Alloy'; do
+  if render --set "alerts.component=$component" >/dev/null 2>&1; then fail "render must fail with alerts.component=$component"; fi
 done
 
 echo "OK"

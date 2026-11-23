@@ -52,6 +52,7 @@ alerts:
   # the top-level Grafana folder.
   team: infra
   # Folder under the team folder. The rules land in <team>/<component>, e.g. infra/Alloy.
+  # Letters, digits, space, - and _ only: the value is written inside a quoted YAML string.
   component: Alloy
 
 batching: {}
