@@ -1,3 +1,17 @@
+{{- /*
+Grafana alert rules for Alloy, loaded by Grafana's alerts sidecar (label mapcolonies.io/grafana-alerts).
+The rule files use Grafana's own {{ }} templates, so they are not run through tpl. Instead the
+placeholders __ALERT_TEAM__ and __FOLDER__ are replaced with alerts.team and <alerts.team>/<alerts.component>.
+*/}}
+{{- $team := toString .Values.alerts.team }}
+{{- if not (regexMatch "^[a-z0-9_-]+$" $team) }}
+{{- fail (printf "alerts.team must be a team name like \"infra\" (a-z, 0-9, - and _), got %q" $team) }}
+{{- end }}
+{{- $component := toString .Values.alerts.component }}
+{{- if or (not $component) (contains "/" $component) }}
+{{- fail (printf "alerts.component must be a folder name without \"/\", got %q" $component) }}
+{{- end }}
+{{- $folder := printf "%s/%s" $team $component }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6,4 +20,7 @@ metadata:
   labels:
     mapcolonies.io/grafana-alerts: "true"
 data:
-{{ (.Files.Glob "files/alerts/*.yaml").AsConfig | indent 2 }}
+{{- range $path, $_ := .Files.Glob "files/alerts/*.yaml" }}
+  {{ base $path }}: |
+{{ $.Files.Get $path | replace "__ALERT_TEAM__" $team | replace "__FOLDER__" $folder | indent 4 }}
+{{- end }}

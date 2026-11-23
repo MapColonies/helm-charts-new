@@ -46,6 +46,14 @@ alloy:
       create: false
       name: infra-alloy
 
+# Grafana alert rules in files/alerts (templates/alerts.yaml).
+alerts:
+  # Team that owns the rules: their alert_team label (which Slack channel they reach) and
+  # the top-level Grafana folder.
+  team: infra
+  # Folder under the team folder. The rules land in <team>/<component>, e.g. infra/Alloy.
+  component: Alloy
+
 batching: {}
 exporter:
   sending_queue: {}
