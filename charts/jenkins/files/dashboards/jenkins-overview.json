@@ -103,7 +103,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "rate(jenkins_job_building_duration_count[1m])",
+          "expr": "rate(jenkins_job_building_duration_count{namespace=~\"$namespace\"}[1m])",
           "refId": "A"
         }
       ],
@@ -199,7 +199,7 @@
             "uid": "${Prometheus}"
           },
           "editorMode": "code",
-          "expr": "jenkins_job_queuing_duration",
+          "expr": "jenkins_job_queuing_duration{namespace=~\"$namespace\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "range": true,
@@ -280,7 +280,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "rate(jenkins_job_queuing_duration_count[1m])",
+          "expr": "rate(jenkins_job_queuing_duration_count{namespace=~\"$namespace\"}[1m])",
           "refId": "A"
         }
       ],
@@ -362,7 +362,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "(vm_memory_total_max - vm_memory_total_used) / vm_memory_total_max * 100.0",
+          "expr": "(vm_memory_total_max{namespace=~\"$namespace\"} - vm_memory_total_used{namespace=~\"$namespace\"}) / vm_memory_total_max{namespace=~\"$namespace\"} * 100.0",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A",
@@ -447,7 +447,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "vm_memory_total_used",
+          "expr": "vm_memory_total_used{namespace=~\"$namespace\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -533,7 +533,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "jenkins_health_check_score",
+          "expr": "jenkins_health_check_score{namespace=~\"$namespace\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A",
@@ -618,7 +618,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "vm_uptime_milliseconds",
+          "expr": "vm_uptime_milliseconds{namespace=~\"$namespace\"}",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 1,
@@ -703,7 +703,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "jenkins_node_offline_value",
+          "expr": "jenkins_node_offline_value{namespace=~\"$namespace\"}",
           "refId": "A",
           "textEditor": false
         }
@@ -785,7 +785,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "vm_cpu_load",
+          "expr": "vm_cpu_load{namespace=~\"$namespace\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -868,7 +868,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "jenkins_node_builds_count",
+          "expr": "jenkins_node_builds_count{namespace=~\"$namespace\"}",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 1,
@@ -952,7 +952,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "jenkins_runs_success_total",
+          "expr": "jenkins_runs_success_total{namespace=~\"$namespace\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A",
@@ -1035,7 +1035,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "jenkins_runs_aborted_total",
+          "expr": "jenkins_runs_aborted_total{namespace=~\"$namespace\"}",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 1,
@@ -1119,7 +1119,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "jenkins_runs_unstable_total",
+          "expr": "jenkins_runs_unstable_total{namespace=~\"$namespace\"}",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 1,
@@ -1203,7 +1203,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "jenkins_runs_failure_total",
+          "expr": "jenkins_runs_failure_total{namespace=~\"$namespace\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A",
@@ -1287,7 +1287,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "jenkins_queue_size_value",
+          "expr": "jenkins_queue_size_value{namespace=~\"$namespace\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A",
@@ -1371,7 +1371,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "jenkins_executor_free_value",
+          "expr": "jenkins_executor_free_value{namespace=~\"$namespace\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -1469,7 +1469,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "avg(sum(jenkins_job_building_duration)/sum(jenkins_job_building_duration_count))",
+          "expr": "avg(sum(jenkins_job_building_duration{namespace=~\"$namespace\"})/sum(jenkins_job_building_duration_count{namespace=~\"$namespace\"}))",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -1567,7 +1567,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "default_jenkins_builds_last_build_duration_milliseconds",
+          "expr": "default_jenkins_builds_last_build_duration_milliseconds{namespace=~\"$namespace\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -1648,7 +1648,7 @@
             "type": "prometheus",
             "uid": "${Prometheus}"
           },
-          "expr": "jenkins_executor_in_use_value",
+          "expr": "jenkins_executor_in_use_value{namespace=~\"$namespace\"}",
           "refId": "A"
         }
       ],
@@ -1677,6 +1677,28 @@
         "refresh": 1,
         "regex": "",
         "type": "datasource"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${Prometheus}"
+        },
+        "definition": "label_values(jenkins_health_check_score,namespace)",
+        "description": "Namespace of the Jenkins instance. Filters out the static infra-jenkins:8080 scrape, which duplicates the pod scrape.",
+        "includeAll": false,
+        "label": "Namespace",
+        "name": "namespace",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(jenkins_health_check_score,namespace)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
       }
     ]
   },
