@@ -22,7 +22,7 @@
     ]
   },
   "description": "Jobs queue speeds and rates, Executors availability, Nodes status, Jenkins and JVM resource usage, Jenkins Job Status, and lot more.",
-  "editable": true,
+  "editable": false,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": null,
@@ -31,7 +31,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -101,7 +101,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "rate(jenkins_job_building_duration_count{namespace=~\"$namespace\"}[1m])",
           "refId": "A"
@@ -113,7 +113,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -196,7 +196,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "jenkins_job_queuing_duration{namespace=~\"$namespace\"}",
@@ -212,7 +212,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -278,7 +278,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "rate(jenkins_job_queuing_duration_count{namespace=~\"$namespace\"}[1m])",
           "refId": "A"
@@ -290,7 +290,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -360,7 +360,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "(vm_memory_heap_max{namespace=~\"$namespace\"} - vm_memory_heap_used{namespace=~\"$namespace\"}) / vm_memory_heap_max{namespace=~\"$namespace\"} * 100",
           "format": "time_series",
@@ -376,7 +376,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -446,7 +446,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "vm_memory_total_used{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -460,7 +460,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -532,7 +532,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "jenkins_health_check_score{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -547,7 +547,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -617,7 +617,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "vm_uptime_milliseconds{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -633,7 +633,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -698,7 +698,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "jenkins_node_offline_value{namespace=~\"$namespace\"}",
           "refId": "A",
@@ -711,7 +711,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -780,7 +780,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "vm_cpu_load{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -794,7 +794,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -863,7 +863,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "sum(jenkins_node_builds_count{namespace=~\"$namespace\"})",
           "format": "time_series",
@@ -879,7 +879,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -947,7 +947,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "jenkins_runs_success_total{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -962,7 +962,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1030,7 +1030,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "jenkins_runs_aborted_total{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -1046,7 +1046,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1114,7 +1114,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "jenkins_runs_unstable_total{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -1130,7 +1130,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1198,7 +1198,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "jenkins_runs_failure_total{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -1213,7 +1213,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1282,7 +1282,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "jenkins_queue_size_value{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -1297,7 +1297,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1366,7 +1366,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "jenkins_executor_free_value{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -1380,7 +1380,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1465,7 +1465,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "sum(jenkins_executor_in_use_value{namespace=~\"$namespace\"}) / clamp_min(sum(jenkins_executor_count_value{namespace=~\"$namespace\"}), 1)",
           "format": "time_series",
@@ -1481,7 +1481,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1565,7 +1565,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "default_jenkins_builds_last_build_duration_milliseconds{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -1580,7 +1580,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${Prometheus}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1646,7 +1646,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${Prometheus}"
+            "uid": "prometheus"
           },
           "expr": "jenkins_executor_in_use_value{namespace=~\"$namespace\"}",
           "refId": "A"
@@ -1665,24 +1665,10 @@
   "templating": {
     "list": [
       {
-        "current": {
-          "text": "Prometheus",
-          "value": "prometheus"
-        },
-        "description": "",
-        "label": "Prometheus",
-        "name": "Prometheus",
-        "options": [],
-        "query": "prometheus",
-        "refresh": 1,
-        "regex": "",
-        "type": "datasource"
-      },
-      {
         "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "${Prometheus}"
+          "uid": "prometheus"
         },
         "definition": "label_values(jenkins_health_check_score,namespace)",
         "description": "Namespace of the Jenkins instance. Filters out the static infra-jenkins:8080 scrape, which duplicates the pod scrape.",
