@@ -25,7 +25,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
@@ -114,7 +114,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -135,7 +135,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
@@ -224,7 +224,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -245,7 +245,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
@@ -334,7 +334,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -355,7 +355,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
@@ -444,7 +444,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -465,7 +465,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
@@ -556,7 +556,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -585,7 +585,7 @@
         "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus"
+          "uid": "__DATASOURCE_UID__"
         },
         "definition": "label_values(sftpgo_active_connections,namespace)",
         "includeAll": false,
