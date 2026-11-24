@@ -1,23 +1,45 @@
 {{- /*
 Grafana dashboards for Alloy, loaded by Grafana's dashboards sidecar (label mapcolonies.io/grafana-dashboards).
 The folder defaults to the alert rules' folder, <alerts.team>/<alerts.component>, so dashboards and rules share one folder.
+The files are upstream mixins, kept as published. Their `datasource` (Prometheus) and `loki_datasource` (Loki)
+variables are pinned here to dashboards.prometheusDatasourceUid and dashboards.lokiDatasourceUid and hidden, so a
+Grafana with several Prometheus or Loki datasources can't show another environment's data.
 */}}
-{{- $folder := .Values.dashboards.folder | default (printf "%s/%s" (toString .Values.alerts.team) (toString .Values.alerts.component)) }}
+{{- /* A missing dashboards map or key uses the defaults below; a key set to empty is an error. */}}
+{{- $dashboards := .Values.dashboards | default dict }}
+{{- if ternary $dashboards.enabled true (hasKey $dashboards "enabled") }}
+{{- $folder := $dashboards.folder | default (printf "%s/%s" (toString .Values.alerts.team) (toString .Values.alerts.component)) }}
+{{- $pinned := dict
+  "datasource" (required "dashboards.prometheusDatasourceUid is required" (ternary $dashboards.prometheusDatasourceUid "prometheus" (hasKey $dashboards "prometheusDatasourceUid")))
+  "loki_datasource" (required "dashboards.lokiDatasourceUid is required" (ternary $dashboards.lokiDatasourceUid "loki" (hasKey $dashboards "lokiDatasourceUid"))) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-dashboards
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ $dashboards.namespace | default .Release.Namespace }}
   labels:
     mapcolonies.io/grafana-dashboards: "true"
   annotations:
     mapcolonies.io/grafana-dashboards-folder: {{ $folder | quote }}
 data:
 {{- range $path, $_ := .Files.Glob "files/dashboards/*.json" }}
-{{- $json := $.Files.Get $path }}
-{{- if hasKey (fromJson $json) "Error" }}
+{{- $dashboard := fromJson ($.Files.Get $path) }}
+{{- if hasKey $dashboard "Error" }}
 {{- fail (printf "%s: invalid JSON" $path) }}
 {{- end }}
+{{- $found := 0 }}
+{{- range $var := (($dashboard.templating | default dict).list | default list) }}
+{{- if and (eq (toString $var.type) "datasource") (hasKey $pinned (toString $var.name)) }}
+{{- $uid := get $pinned (toString $var.name) }}
+{{- $_ := set $var "current" (dict "selected" true "text" $uid "value" $uid) }}
+{{- $_ := set $var "hide" 2 }}
+{{- $found = add1 $found }}
+{{- end }}
+{{- end }}
+{{- if ne $found 2 }}
+{{- fail (printf "%s: expected the datasource variables \"datasource\" and \"loki_datasource\", found %d" $path $found) }}
+{{- end }}
   {{ base $path }}: |-
-{{ $json | indent 4 }}
+{{ toPrettyJson $dashboard | indent 4 }}
+{{- end }}
 {{- end }}
