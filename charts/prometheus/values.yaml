@@ -125,6 +125,7 @@ prometheus:
       evaluation_interval: 30s
     extraFlags:
       - web.enable-lifecycle
+      - web.enable-otlp-receiver
 
     persistentVolume:
       existingClaim: infra-prometheus-storage
