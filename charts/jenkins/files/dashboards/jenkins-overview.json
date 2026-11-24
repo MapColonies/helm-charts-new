@@ -31,13 +31,13 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "rgb(151, 31, 193)",
-            "mode": "fixed"
+            "mode": "fixed",
+            "fixedColor": "blue"
           },
           "mappings": [
             {
@@ -54,20 +54,12 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "rgba(50, 172, 45, 0.97)",
+                "color": "blue",
                 "value": null
-              },
-              {
-                "color": "rgba(237, 129, 40, 0.89)",
-                "value": 6
-              },
-              {
-                "color": "rgba(245, 54, 54, 0.9)",
-                "value": 10
               }
             ]
           },
-          "unit": "none"
+          "unit": "ops"
         },
         "overrides": []
       },
@@ -80,7 +72,7 @@
       "id": 12,
       "maxDataPoints": 100,
       "options": {
-        "colorMode": "none",
+        "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "horizontal",
@@ -101,9 +93,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
-          "expr": "rate(jenkins_job_building_duration_count{namespace=~\"$namespace\"}[1m])",
+          "expr": "sum(rate(jenkins_job_building_duration_count{namespace=~\"$namespace\"}[$__rate_interval]))",
           "refId": "A"
         }
       ],
@@ -113,7 +105,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
@@ -196,7 +188,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
           "editorMode": "code",
           "expr": "jenkins_job_queuing_duration{namespace=~\"$namespace\"}",
@@ -214,13 +206,13 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "rgb(31, 193, 185)",
-            "mode": "fixed"
+            "mode": "fixed",
+            "fixedColor": "blue"
           },
           "mappings": [
             {
@@ -237,16 +229,12 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "blue",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           },
-          "unit": "none"
+          "unit": "ops"
         },
         "overrides": []
       },
@@ -259,7 +247,7 @@
       "id": 13,
       "maxDataPoints": 100,
       "options": {
-        "colorMode": "none",
+        "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "horizontal",
@@ -280,9 +268,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
-          "expr": "rate(jenkins_job_queuing_duration_count{namespace=~\"$namespace\"}[1m])",
+          "expr": "sum(rate(jenkins_job_queuing_duration_count{namespace=~\"$namespace\"}[$__rate_interval]))",
           "refId": "A"
         }
       ],
@@ -292,7 +280,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
@@ -362,7 +350,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
           "expr": "(vm_memory_heap_max{namespace=~\"$namespace\"} - vm_memory_heap_used{namespace=~\"$namespace\"}) / vm_memory_heap_max{namespace=~\"$namespace\"} * 100",
           "format": "time_series",
@@ -378,12 +366,13 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed",
+            "fixedColor": "blue"
           },
           "decimals": 0,
           "mappings": [
@@ -401,16 +390,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "blue",
                 "value": null
-              },
-              {
-                "color": "rgba(237, 129, 40, 0.89)",
-                "value": 0
-              },
-              {
-                "color": "#1F60C4",
-                "value": 0
               }
             ]
           },
@@ -448,7 +429,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
           "expr": "vm_memory_total_used{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -462,7 +443,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
@@ -487,15 +468,11 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "rgba(245, 54, 54, 0.9)",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "rgba(237, 129, 40, 0.89)",
-                "value": 1
-              },
-              {
-                "color": "rgba(50, 172, 45, 0.97)",
+                "color": "green",
                 "value": 1
               }
             ]
@@ -534,7 +511,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
           "expr": "jenkins_health_check_score{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -549,12 +526,13 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed",
+            "fixedColor": "blue"
           },
           "decimals": 0,
           "mappings": [
@@ -572,16 +550,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#C4162A",
+                "color": "blue",
                 "value": null
-              },
-              {
-                "color": "#C4162A",
-                "value": 0
-              },
-              {
-                "color": "#37872D",
-                "value": 0
               }
             ]
           },
@@ -619,7 +589,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
           "expr": "vm_uptime_milliseconds{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -635,7 +605,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
@@ -700,7 +670,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
           "expr": "jenkins_node_offline_value{namespace=~\"$namespace\"}",
           "refId": "A",
@@ -713,12 +683,13 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed",
+            "fixedColor": "blue"
           },
           "mappings": [
             {
@@ -735,20 +706,13 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "blue",
                 "value": null
-              },
-              {
-                "color": "rgba(237, 129, 40, 0.89)",
-                "value": 50
-              },
-              {
-                "color": "#C4162A",
-                "value": 80
               }
             ]
           },
-          "unit": "percent"
+          "unit": "percentunit",
+          "decimals": 1
         },
         "overrides": []
       },
@@ -782,26 +746,28 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
-          "expr": "vm_cpu_load{namespace=~\"$namespace\"}",
+          "expr": "sum(rate(process_cpu_seconds_total{namespace=~\"$namespace\", app_kubernetes_io_name=\"jenkins\"}[$__rate_interval]))",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
         }
       ],
-      "title": "CPU Usage",
-      "type": "stat"
+      "title": "CPU usage",
+      "type": "stat",
+      "description": "Jenkins controller process CPU, as a share of one core (100% = 1 core)."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed",
+            "fixedColor": "blue"
           },
           "mappings": [
             {
@@ -818,20 +784,13 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#37872D",
+                "color": "blue",
                 "value": null
-              },
-              {
-                "color": "#F2CC0C",
-                "value": 1
-              },
-              {
-                "color": "#F2CC0C",
-                "value": 2
               }
             ]
           },
-          "unit": "none"
+          "unit": "none",
+          "decimals": 0
         },
         "overrides": []
       },
@@ -865,9 +824,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
-          "expr": "sum(jenkins_node_builds_count{namespace=~\"$namespace\"})",
+          "expr": "sum(increase(jenkins_node_builds_count{namespace=~\"$namespace\"}[$__range]))",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 1,
@@ -875,18 +834,19 @@
           "textEditor": false
         }
       ],
-      "title": "Total Jobs",
+      "title": "Total builds",
       "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed",
+            "fixedColor": "blue"
           },
           "mappings": [
             {
@@ -902,20 +862,13 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "rgba(245, 54, 54, 0.9)",
+                "color": "blue",
                 "value": null
-              },
-              {
-                "color": "rgba(237, 129, 40, 0.89)",
-                "value": 0
-              },
-              {
-                "color": "rgba(50, 172, 45, 0.97)",
-                "value": 0
               }
             ]
           },
-          "unit": "none"
+          "unit": "none",
+          "decimals": 0
         },
         "overrides": []
       },
@@ -949,27 +902,28 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
-          "expr": "jenkins_runs_success_total{namespace=~\"$namespace\"}",
+          "expr": "sum(increase(jenkins_runs_success_total{namespace=~\"$namespace\"}[$__range]))",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A",
           "textEditor": false
         }
       ],
-      "title": "Sucessful Jobs",
+      "title": "Successful jobs",
       "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed",
+            "fixedColor": "blue"
           },
           "mappings": [
             {
@@ -985,20 +939,13 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#37872D",
+                "color": "blue",
                 "value": null
-              },
-              {
-                "color": "#C4162A",
-                "value": 0
-              },
-              {
-                "color": "rgb(217, 213, 213)",
-                "value": 0
               }
             ]
           },
-          "unit": "none"
+          "unit": "none",
+          "decimals": 0
         },
         "overrides": []
       },
@@ -1032,9 +979,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
-          "expr": "jenkins_runs_aborted_total{namespace=~\"$namespace\"}",
+          "expr": "sum(increase(jenkins_runs_aborted_total{namespace=~\"$namespace\"}[$__range]))",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 1,
@@ -1042,18 +989,19 @@
           "textEditor": false
         }
       ],
-      "title": "Aborted Jobs",
+      "title": "Aborted jobs",
       "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed",
+            "fixedColor": "blue"
           },
           "mappings": [
             {
@@ -1069,20 +1017,13 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#37872D",
+                "color": "blue",
                 "value": null
-              },
-              {
-                "color": "#C4162A",
-                "value": 0
-              },
-              {
-                "color": "#FA6400",
-                "value": 0
               }
             ]
           },
-          "unit": "none"
+          "unit": "none",
+          "decimals": 0
         },
         "overrides": []
       },
@@ -1116,9 +1057,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
-          "expr": "jenkins_runs_unstable_total{namespace=~\"$namespace\"}",
+          "expr": "sum(increase(jenkins_runs_unstable_total{namespace=~\"$namespace\"}[$__range]))",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 1,
@@ -1126,13 +1067,13 @@
           "textEditor": false
         }
       ],
-      "title": "Unstable Jobs",
+      "title": "Unstable jobs",
       "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
@@ -1153,20 +1094,17 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "rgba(50, 172, 45, 0.97)",
+                "color": "blue",
                 "value": null
               },
               {
-                "color": "#37872D",
-                "value": 0
-              },
-              {
-                "color": "rgba(245, 54, 54, 0.9)",
+                "color": "red",
                 "value": 1
               }
             ]
           },
-          "unit": "none"
+          "unit": "none",
+          "decimals": 0
         },
         "overrides": []
       },
@@ -1200,22 +1138,22 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
-          "expr": "jenkins_runs_failure_total{namespace=~\"$namespace\"}",
+          "expr": "sum(increase(jenkins_runs_failure_total{namespace=~\"$namespace\"}[$__range]))",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A",
           "textEditor": false
         }
       ],
-      "title": "Failed Jobs",
+      "title": "Failed jobs",
       "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
@@ -1237,15 +1175,11 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "rgba(50, 172, 45, 0.97)",
+                "color": "green",
                 "value": null
               },
               {
-                "color": "#37872D",
-                "value": 0
-              },
-              {
-                "color": "#FA6400",
+                "color": "orange",
                 "value": 1
               }
             ]
@@ -1284,7 +1218,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
           "expr": "jenkins_queue_size_value{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -1299,12 +1233,13 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed",
+            "fixedColor": "blue"
           },
           "mappings": [
             {
@@ -1321,16 +1256,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "rgba(245, 54, 54, 0.9)",
+                "color": "blue",
                 "value": null
-              },
-              {
-                "color": "rgba(237, 129, 40, 0.89)",
-                "value": 1
-              },
-              {
-                "color": "rgba(50, 172, 45, 0.97)",
-                "value": 2
               }
             ]
           },
@@ -1368,7 +1295,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
           "expr": "jenkins_executor_free_value{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -1382,7 +1309,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
@@ -1467,7 +1394,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
           "expr": "sum(jenkins_executor_in_use_value{namespace=~\"$namespace\"}) / clamp_min(sum(jenkins_executor_count_value{namespace=~\"$namespace\"}), 1)",
           "format": "time_series",
@@ -1483,7 +1410,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
@@ -1567,7 +1494,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
           "expr": "default_jenkins_builds_last_build_duration_milliseconds{namespace=~\"$namespace\"}",
           "format": "time_series",
@@ -1582,13 +1509,13 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "__DATASOURCE_UID__"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "rgb(193, 185, 31)",
-            "mode": "fixed"
+            "mode": "fixed",
+            "fixedColor": "blue"
           },
           "mappings": [
             {
@@ -1605,12 +1532,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "blue",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           },
@@ -1627,7 +1550,7 @@
       "id": 3,
       "maxDataPoints": 100,
       "options": {
-        "colorMode": "none",
+        "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "horizontal",
@@ -1648,7 +1571,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "__DATASOURCE_UID__"
           },
           "expr": "jenkins_executor_in_use_value{namespace=~\"$namespace\"}",
           "refId": "A"
@@ -1670,7 +1593,7 @@
         "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus"
+          "uid": "__DATASOURCE_UID__"
         },
         "definition": "label_values(jenkins_health_check_score,namespace)",
         "description": "Namespace of the Jenkins instance. Filters out the static infra-jenkins:8080 scrape, which duplicates the pod scrape.",
