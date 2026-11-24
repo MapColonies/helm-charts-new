@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/MapColonies/helm-charts-new/compare/jenkins-v1.3.0...jenkins-v1.4.0) (2026-11-24)
+
+
+### 🎉 Features
+
+* **jenkins:** provision grafana dashboards (MAPCO-12786) ([#214](https://github.com/MapColonies/helm-charts-new/issues/214)) ([4d11209](https://github.com/MapColonies/helm-charts-new/commit/4d1120927e7f53c34ef3bbaf102a850b736378a0))
+
 ## [1.3.0](https://github.com/MapColonies/helm-charts-new/compare/jenkins-v1.2.0...jenkins-v1.3.0) (2026-10-25)
 
 
