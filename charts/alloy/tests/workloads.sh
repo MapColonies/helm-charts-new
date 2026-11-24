@@ -81,10 +81,6 @@ expect_url --set alloy.fullnameOverride=otel-in
 
 # 8. one replica, with fail-safes for the time it's down
 [[ $(yq '.spec.replicas' <<<"$sts") == 1 ]] || fail "StatefulSet must run one replica"
-for key in node.kubernetes.io/unreachable node.kubernetes.io/not-ready; do
-  [[ $(K=$key yq '.spec.template.spec.tolerations[] | select(.key == env(K) and .effect == "NoExecute") | .tolerationSeconds' <<<"$sts") == 30 ]] \
-    || fail "StatefulSet must leave a $key node after 30s"
-done
 [[ $(yq '.spec.template.spec.containers[] | select(.name == "alloy") | .livenessProbe.httpGet.path' <<<"$sts") == /-/ready ]] \
   || fail "StatefulSet must have a liveness probe on /-/ready"
 yq 'select(.kind == "PodDisruptionBudget")' <<<"$out" | grep -q alloy-logs \

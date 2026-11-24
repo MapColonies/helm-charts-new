@@ -78,17 +78,6 @@ alloy-logs:
   controller:
     type: 'statefulset'
     replicas: 1
-    # Evicted from an unreachable or not-ready node after 30s instead of 5m, so it's replaced sooner
-    # once the node is fenced (a StatefulSet never runs two pods with the same name)
-    tolerations:
-      - key: node.kubernetes.io/unreachable
-        operator: Exists
-        effect: NoExecute
-        tolerationSeconds: 30
-      - key: node.kubernetes.io/not-ready
-        operator: Exists
-        effect: NoExecute
-        tolerationSeconds: 30
     # Needs Kubernetes 1.27+; older API servers drop it and keep the PVCs. For a clean start there:
     #   oc delete pvc -n <namespace> -l app.kubernetes.io/name=alloy-logs,app.kubernetes.io/instance=<release>
     enableStatefulSetAutoDeletePVC: true
