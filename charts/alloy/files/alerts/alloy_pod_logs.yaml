@@ -74,7 +74,8 @@ groups:
                 type: prometheus
                 uid: prometheus
               editorMode: code
-              expr: 'sum by (cluster, namespace, job) (increase(loki_process_dropped_lines_total{component_id="loki.process.limit_time", reason="too_old"}[10m])) > 0'
+              # increase() misses the drop that creates the series, so a series new in the window counts too
+              expr: 'sum by (cluster, namespace, job) (increase(loki_process_dropped_lines_total{component_id="loki.process.limit_time", reason="too_old"}[10m])) > 0 or sum by (cluster, namespace, job) (loki_process_dropped_lines_total{component_id="loki.process.limit_time", reason="too_old"} unless loki_process_dropped_lines_total{component_id="loki.process.limit_time", reason="too_old"} offset 10m) > 0'
               instant: true
               intervalMs: 1000
               maxDataPoints: 43200

@@ -99,6 +99,23 @@ tests:
         alertname: AlloyPodLogsTooOld
         exp_alerts: []
 
+  # The same burst as a pod's first drops: Alloy creates the series with its first dropped line
+  - interval: 1m
+    input_series:
+      - series: 'loki_process_dropped_lines_total{job="k8s-scrape",namespace="infra-services",instance="deployment-0",component_id="loki.process.limit_time",component_path="/",reason="too_old"}'
+        values: '_x3 38753x30'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: AlloyPodLogsTooOld
+        exp_alerts: []
+      - eval_time: 5m
+        alertname: AlloyPodLogsTooOld
+        exp_alerts:
+          - exp_labels: {job: k8s-scrape, namespace: infra-services}
+      - eval_time: 20m
+        alertname: AlloyPodLogsTooOld
+        exp_alerts: []
+
   # The pod logs StatefulSet without a ready replica: fires 1m after it has fewer ready replicas
   # than desired (a pod stuck on a failed node still counts as desired), before lines are lost
   - interval: 1m
