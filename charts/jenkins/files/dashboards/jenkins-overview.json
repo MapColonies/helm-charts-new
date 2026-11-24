@@ -59,7 +59,8 @@
               }
             ]
           },
-          "unit": "ops"
+          "unit": "opm",
+          "decimals": 2
         },
         "overrides": []
       },
@@ -79,7 +80,7 @@
         "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "mean"
           ],
           "fields": "",
           "values": false
@@ -95,12 +96,13 @@
             "type": "prometheus",
             "uid": "__DATASOURCE_UID__"
           },
-          "expr": "sum(rate(jenkins_job_building_duration_count{namespace=~\"$namespace\"}[$__rate_interval]))",
+          "expr": "sum(rate(jenkins_job_building_duration_count{namespace=~\"$namespace\"}[$__rate_interval])) * 60",
           "refId": "A"
         }
       ],
       "title": "Processing speed",
-      "type": "stat"
+      "type": "stat",
+      "description": "Builds started per minute, averaged over the selected time range."
     },
     {
       "datasource": {
@@ -234,7 +236,8 @@
               }
             ]
           },
-          "unit": "ops"
+          "unit": "opm",
+          "decimals": 2
         },
         "overrides": []
       },
@@ -254,7 +257,7 @@
         "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "mean"
           ],
           "fields": "",
           "values": false
@@ -270,12 +273,13 @@
             "type": "prometheus",
             "uid": "__DATASOURCE_UID__"
           },
-          "expr": "sum(rate(jenkins_job_queuing_duration_count{namespace=~\"$namespace\"}[$__rate_interval]))",
+          "expr": "sum(rate(jenkins_job_queuing_duration_count{namespace=~\"$namespace\"}[$__rate_interval])) * 60",
           "refId": "A"
         }
       ],
       "title": "Queued rate",
-      "type": "stat"
+      "type": "stat",
+      "description": "Builds queued per minute, averaged over the selected time range."
     },
     {
       "datasource": {
