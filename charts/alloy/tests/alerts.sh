@@ -35,8 +35,9 @@ for args in "--set alerts.team=Infra" "--set alerts.team=" "--set alerts.compone
   # shellcheck disable=SC2086
   if render $args >/dev/null 2>&1; then fail "render must fail with $args"; fi
 done
-# the component is written inside a quoted YAML string, so a quote or other symbol must fail the render
-for component in 'My "Alloy"' 'a:b' ' Alloy'; do
+# the component is written inside a quoted YAML string, so a quote or other symbol must fail the render.
+# A leading or trailing space would make a second folder that looks like the first one.
+for component in 'My "Alloy"' 'a:b' ' Alloy' 'Alloy '; do
   if render --set "alerts.component=$component" >/dev/null 2>&1; then fail "render must fail with alerts.component=$component"; fi
 done
 
