@@ -2,7 +2,7 @@ apiVersion: 1
 groups:
   - orgId: 1
     name: alloy_pod_logs
-    folder: Alloy
+    folder: "__FOLDER__"
     interval: 1m
     rules:
       - uid: alloy-pod-logs-down
@@ -55,7 +55,7 @@ groups:
         for: 1m
         labels:
           severity: critical
-          alert_team: infra
+          alert_team: "__ALERT_TEAM__"
         annotations:
           summary: Pod logs are not being collected.
           description: "{{ $value }} replica(s) of StatefulSet {{ $labels.namespace }}/{{ $labels.statefulset }} not ready for 1m, so pod logs aren't tailed, and lines older than maxLogAge by the time it's back are lost. If its pod is stuck Terminating on a failed node, fence the node or force-delete the pod (oc delete pod --force --grace-period=0) so it's recreated elsewhere."
@@ -109,7 +109,7 @@ groups:
         for: 0s
         labels:
           severity: warning
-          alert_team: infra
+          alert_team: "__ALERT_TEAM__"
         annotations:
           summary: Pod log lines were dropped as older than maxLogAge.
           description: "Pod log lines older than maxLogAge were dropped in the last 10m under job {{ $labels.job }}. After an outage of the alloy-logs StatefulSet longer than maxLogAge, these are its oldest backlog lines, and they're lost. Otherwise they're re-read lines Loki would reject anyway (a new PVC, or a peer taking over pods when scaled out)."

@@ -168,6 +168,15 @@ alloy-logs:
 # AlloyPodLogsTooOld fires when it drops lines.
 maxLogAge: 5m30s
 
+# Grafana alert rules in files/alerts (templates/alerts.yaml).
+alerts:
+  # Team that owns the rules: their alert_team label (which Slack channel they reach) and
+  # the top-level Grafana folder.
+  team: infra
+  # Folder under the team folder. The rules land in <team>/<component>, e.g. infra/Alloy.
+  # Letters, digits, space, - and _ only: the value is written inside a quoted YAML string.
+  component: Alloy
+
 batching: {}
 exporter:
   sending_queue:

@@ -37,7 +37,7 @@ exporter-trigger:
 exporter-overseer:
   image:
     repository: raster/overseer
-    tag: v2.11.1
+    tag: v3.0.2
     pullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
@@ -51,7 +51,7 @@ exporter-overseer:
 exporter-polygon-parts-worker:
   image:
     repository: raster/polygon-parts-worker
-    tag: v3.0.0
+    tag: v3.0.1
   instanceType: export
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service

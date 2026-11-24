@@ -1,0 +1,82 @@
+{
+ "apiVersion": "constraints.gatekeeper.sh/v1beta1",
+ "items": [
+  {
+   "metadata": {
+    "generation": 1,
+    "name": "workload-cpu-ratio-warn"
+   },
+   "spec": {
+    "enforcementAction": "warn",
+    "match": {
+     "kinds": [
+      {
+       "apiGroups": [
+        "apps"
+       ],
+       "kinds": [
+        "Deployment",
+        "StatefulSet"
+       ]
+      }
+     ],
+     "namespaces": [
+      "*-dev"
+     ],
+     "scope": "Namespaced"
+    },
+    "parameters": {
+     "exemptions": [
+      {
+       "kind": "Deployment",
+       "name": "exempt-listed",
+       "namespace": "raster-dev",
+       "reason": "test"
+      }
+     ]
+    }
+   },
+   "status": {
+    "auditTimestamp": "2026-10-26T07:00:00Z",
+    "totalViolations": 8
+   }
+  },
+  {
+   "metadata": {
+    "generation": 1,
+    "name": "workload-cpu-ratio-enforced"
+   },
+   "spec": {
+    "enforcementAction": "deny",
+    "match": {
+     "kinds": [
+      {
+       "apiGroups": [
+        "apps"
+       ],
+       "kinds": [
+        "Deployment",
+        "StatefulSet"
+       ]
+      }
+     ],
+     "namespaces": [
+      "dem-dev"
+     ],
+     "scope": "Namespaced"
+    },
+    "parameters": {
+     "exemptions": []
+    }
+   },
+   "status": {
+    "auditTimestamp": "2026-10-26T07:00:00Z",
+    "totalViolations": 1
+   }
+  }
+ ],
+ "kind": "K8sWorkloadCpuRatioList",
+ "metadata": {
+  "resourceVersion": "1"
+ }
+}

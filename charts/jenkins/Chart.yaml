@@ -4,9 +4,12 @@ description: A Helm chart for Grafana
 annotations:
   domain: infra
 type: application
-version: 1.2.0
+version: 1.4.0
 appVersion: 2.580.1
 dependencies:
   - name: jenkins
     version: 5.9.69
     repository: https://charts.jenkins.io
+  - name: openshift-routes
+    version: 1.0.2
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/common

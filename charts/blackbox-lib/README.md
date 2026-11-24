@@ -143,7 +143,7 @@ blackbox:
 | --- | --- | --- |
 | `blackbox.alerts.enabled` | `false` | Render the alert rules. |
 | `blackbox.alerts.team` | `mclabels.owner` | Team the alerts go to (`alert_team` label). Defaults to the chart's `mclabels.owner`, then `global.mclabels.owner`; the render fails if none is set. |
-| `blackbox.alerts.folder` | the team | Grafana folder of the rules. |
+| `blackbox.alerts.folder` | `<team>/<service>` | Grafana folder of the rules: the team's folder, then one folder per Service (e.g. `raster/raster-catalog`). A `/` makes a nested folder. |
 | `blackbox.alerts.interval` | `1m` | Evaluation interval of the rule group. |
 | `blackbox.alerts.datasourceUid` | `prometheus` | Grafana data source UID of the Prometheus that scrapes the probes. |
 | `blackbox.alerts.extraLabels` | `{}` | Labels added to every rule. `service`, `namespace`, `alert_team` and `severity` are reserved. |

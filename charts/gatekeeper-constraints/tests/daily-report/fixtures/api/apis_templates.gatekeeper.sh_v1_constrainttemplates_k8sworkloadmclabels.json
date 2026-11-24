@@ -1,0 +1,55 @@
+{
+ "apiVersion": "templates.gatekeeper.sh/v1beta1",
+ "kind": "ConstraintTemplate",
+ "metadata": {
+  "annotations": {
+   "helm.sh/hook": "pre-install,pre-upgrade"
+  },
+  "name": "k8sworkloadmclabels"
+ },
+ "spec": {
+  "crd": {
+   "spec": {
+    "names": {
+     "kind": "K8sWorkloadMcLabels"
+    },
+    "validation": {
+     "openAPIV3Schema": {
+      "properties": {
+       "exemptions": {
+        "items": {
+         "properties": {
+          "kind": {
+           "type": "string"
+          },
+          "name": {
+           "type": "string"
+          },
+          "namespace": {
+           "type": "string"
+          },
+          "reason": {
+           "type": "string"
+          }
+         },
+         "type": "object"
+        },
+        "type": "array"
+       }
+      },
+      "type": "object"
+     }
+    }
+   }
+  },
+  "targets": [
+   {
+    "libs": [
+     "package lib.workload\n\n# Shared by the workload rules.\n\n# Evaluate CREATE and audit always, UPDATE only when the Pod template changed.\nevaluate {\n\tobject.get(input.review, \"operation\", \"\") != \"UPDATE\"\n}\n\nevaluate {\n\tpod_template_changed\n}\n\npod_template_changed {\n\tnot is_object(input.review.oldObject)\n}\n\npod_template_changed {\n\tobject.get(input.review.oldObject, [\"spec\", \"template\"], null) != object.get(input.review.object, [\"spec\", \"template\"], null)\n}\n\n# Exempt via the exemption list or a non-empty <annotation> on the workload's own metadata.\nexempt(annotation) {\n\tentry := input.parameters.exemptions[_]\n\tentry.namespace == namespace\n\tentry.kind == input.review.object.kind\n\tentry.name == input.review.object.metadata.name\n}\n\nexempt(annotation) {\n\ttrim_space(object.get(input.review.object.metadata, [\"annotations\", annotation], \"\")) != \"\"\n}\n\nnamespace = ns {\n\tns := input.review.object.metadata.namespace\n\tns != \"\"\n} else = ns {\n\tns := object.get(input.review, \"namespace\", \"\")\n}\n"
+    ],
+    "rego": "package k8sworkloadmclabels\n\nimport data.lib.workload\n\n# Reads Pod template labels only; workload metadata labels don't count.\n\nrequired_labels := [\"mapcolonies.io/owner\", \"mapcolonies.io/environment\", \"mapcolonies.io/part-of\", \"mapcolonies.io/component\"]\n\nowner_domains := {\"vector\", \"raster\", \"3d\", \"app\", \"dem\", \"infra\", \"common\", \"automation\"}\n\nviolation[{\"msg\": msg}] {\n\tworkload.evaluate\n\tnot workload.exempt(\"mapcolonies.io/exempt-mclabels\")\n\tcount(problems) > 0\n\tobj := input.review.object\n\tmsg := sprintf(\"%v %v/%v: Pod template mclabels are missing or invalid: %v. To exempt this workload, add it to the site-values exemption list or set the mapcolonies.io/exempt-mclabels annotation to a reason.\", [obj.kind, workload.namespace, obj.metadata.name, concat(\", \", sort(problems))])\n}\n\nlabels := object.get(input.review.object, [\"spec\", \"template\", \"metadata\", \"labels\"], {})\n\nhas_label(key) {\n\t_ = labels[key]\n}\n\nproblems[sprintf(\"%v (missing)\", [key])] {\n\tkey := required_labels[_]\n\tnot has_label(key)\n}\n\nproblems[sprintf(\"%v (empty)\", [key])] {\n\tkey := required_labels[_]\n\tlabels[key] == \"\"\n}\n\nproblems[sprintf(\"mapcolonies.io/owner (\\\"%v\\\" is not one of %v)\", [owner, concat(\", \", sort(owner_domains))])] {\n\towner := labels[\"mapcolonies.io/owner\"]\n\towner != \"\"\n\tnot owner_domains[owner]\n}\n\nproblems[\"mapcolonies.io/environment (\\\"undefined\\\" is not allowed)\"] {\n\tlabels[\"mapcolonies.io/environment\"] == \"undefined\"\n}\n",
+    "target": "admission.k8s.gatekeeper.sh"
+   }
+  ]
+ }
+}

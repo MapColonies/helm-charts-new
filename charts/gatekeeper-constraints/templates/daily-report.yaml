@@ -1,0 +1,169 @@
+{{- /* Daily workload report (MAPCO-11867). See README "Daily report" and files/daily-report/report.py. */}}
+{{- if .Values.dailyReport.enabled }}
+{{- include "gatekeeper-constraints.dailyReportValidate" . }}
+{{- $r := .Values.dailyReport }}
+{{- $name := printf "%s-daily-report" .Release.Name }}
+{{- $defaultTeam := include "gatekeeper-constraints.deployAlertDefaultTeam" . }}
+{{- /* teams.json: namespaceTeams in matching order (exact names first, then globs), with
+       each glob as a Python regex, so report.py never parses globs. team null = silenced. */}}
+{{- $entries := list }}
+{{- $teams := list }}
+{{- range (include "gatekeeper-constraints.deployAlertEntries" . | fromYamlArray) }}
+{{- $entries = append $entries (dict "namespace" .namespace "regex" (include "gatekeeper-constraints.nsRegex" .namespace) "team" (.team | default nil)) }}
+{{- if .team }}{{ $teams = append $teams .team }}{{ end }}
+{{- end }}
+{{- $teams = append $teams $defaultTeam | uniq }}
+{{- $webhookEnv := dict }}
+{{- range $teams }}{{ $_ := set $webhookEnv . (include "gatekeeper-constraints.webhookEnv" .) }}{{ end }}
+{{- $teamsJson := dict "entries" $entries "defaultTeam" $defaultTeam "teams" $teams "webhookEnv" $webhookEnv }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $name }}
+  namespace: {{ $r.namespace }}
+  labels:
+    {{- include "gatekeeper-constraints.dailyReportLabels" . | nindent 4 }}
+data:
+  report.py: |
+    {{- .Files.Get "files/daily-report/report.py" | required "chart file files/daily-report/report.py is missing or empty" | nindent 4 }}
+  teams.json: {{ toJson $teamsJson | quote }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $name }}
+  namespace: {{ $r.namespace }}
+  labels:
+    {{- include "gatekeeper-constraints.dailyReportLabels" . | nindent 4 }}
+---
+# Read-only: list on the workloads, namespaces and the report's Constraints (report.py reads
+# only collections), get on the report's ConstraintTemplates by name. No Secrets, no
+# pods/log, no write verbs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "gatekeeper-constraints.dailyReportLabels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: [namespaces]
+    verbs: [list]
+  - apiGroups: [apps]
+    resources: [deployments, statefulsets]
+    verbs: [list]
+  - apiGroups: [templates.gatekeeper.sh]
+    resources: [constrainttemplates]
+    resourceNames:
+      {{- range $r.constraintKinds }}
+      - {{ lower . }}
+      {{- end }}
+    verbs: [get]
+  - apiGroups: [constraints.gatekeeper.sh]
+    resources:
+      {{- range $r.constraintKinds }}
+      - {{ lower . }}
+      {{- end }}
+    verbs: [list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "gatekeeper-constraints.dailyReportLabels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ $name }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ $name }}
+    namespace: {{ $r.namespace }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ $name }}
+  namespace: {{ $r.namespace }}
+  labels:
+    {{- include "gatekeeper-constraints.dailyReportLabels" . | nindent 4 }}
+spec:
+  schedule: {{ $r.schedule | quote }}
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 900
+      template:
+        metadata:
+          labels:
+            {{- include "gatekeeper-constraints.dailyReportLabels" . | nindent 12 }}
+            mapcolonies.io/owner: infra
+            mapcolonies.io/environment: {{ $r.environment | quote }}
+            mapcolonies.io/part-of: {{ .Release.Name }}
+            mapcolonies.io/component: daily-report
+            mapcolonies.io/criticality: internal
+          annotations:
+            # Required Pod annotations. The job serves no metrics.
+            prometheus.io/scrape: "false"
+            prometheus.io/port: "0"
+            prometheus.io/path: /metrics
+        spec:
+          serviceAccountName: {{ $name }}
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: report
+              image: "{{ $r.image.registry }}/{{ $r.image.repository }}:{{ $r.image.tag }}"
+              command: [python3, -I, -B, /etc/daily-report/report.py, --from-cluster, --teams, /etc/daily-report/teams.json, --work, /work]
+              env:
+                - { name: HOME, value: /work }
+                - { name: TMPDIR, value: /work }
+                - { name: DRY_RUN, value: {{ $r.dryRun | toString | quote }} }
+                - { name: POST_WHEN_CLEAN, value: {{ $r.postWhenClean | toString | quote }} }
+                - { name: MAX_NAMES, value: {{ $r.maxNamesPerRule | int | toString | quote }} }
+                - { name: MAX_CHARS, value: {{ $r.maxMessageChars | int | toString | quote }} }
+                - { name: DASHBOARD_URL, value: {{ $r.dashboardUrl | quote }} }
+                - { name: README_URL, value: {{ $r.readmeUrl | quote }} }
+                - { name: SCHEDULE, value: {{ $r.schedule | quote }} }
+                - { name: CONSTRAINT_KINDS, value: {{ join "," $r.constraintKinds | quote }} }
+                - { name: GATOR_VERSION, value: {{ $r.gator.version | quote }} }
+                - { name: GATOR_URL, value: {{ $r.gator.url | quote }} }
+                - { name: GATOR_SHA256, value: {{ $r.gator.sha256 | quote }} }
+                - { name: LOKI_URL, value: {{ $r.loki.pushUrl | quote }} }
+                - { name: LOKI_JOB, value: {{ $r.loki.job | quote }} }
+                {{- /* One optional key per team: a missing key fails that team, not the Pod. */}}
+                {{- range $teams }}
+                - name: {{ include "gatekeeper-constraints.webhookEnv" . }}
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $r.webhooksSecret }}
+                      key: {{ include "gatekeeper-constraints.webhookEnv" . }}
+                      optional: true
+                {{- end }}
+              resources:
+                {{- toYaml $r.resources | nindent 16 }}
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                capabilities:
+                  drop: [ALL]
+              volumeMounts:
+                - { name: script, mountPath: /etc/daily-report, readOnly: true }
+                - { name: work, mountPath: /work }
+          volumes:
+            - name: script
+              configMap:
+                name: {{ $name }}
+            - name: work
+              emptyDir:
+                sizeLimit: 512Mi
+{{- end }}

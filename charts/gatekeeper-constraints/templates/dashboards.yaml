@@ -1,0 +1,35 @@
+{{- /* Grafana dashboards from files/dashboards/*.json, picked up by Grafana's dashboard
+       sidecar (same pattern as the alloy chart). __REPORT_JOB__ in the JSON becomes the
+       Loki job the daily report pushes to. */}}
+{{- if .Values.dashboards.enabled }}
+{{- $ns := .Values.dashboards.namespace | default "" | toString }}
+{{- if not $ns }}
+{{- fail "dashboards.namespace is required when dashboards.enabled: the namespace Grafana's dashboard sidecar watches (dev: infra-dev)" }}
+{{- end }}
+{{- if not (regexMatch "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" $ns) }}
+{{- fail (printf "dashboards.namespace must be a namespace name, got %q" $ns) }}
+{{- end }}
+{{- $folder := .Values.dashboards.folder | default "" | toString | trim }}
+{{- if not $folder }}
+{{- fail "dashboards.folder is required when dashboards.enabled (default: Gatekeeper)" }}
+{{- end }}
+{{- $job := "gatekeeper-workload-report" }}
+{{- with .Values.dailyReport }}{{ with .loki }}{{ with .job }}{{ $job = toString . }}{{ end }}{{ end }}{{ end }}
+{{- if not (regexMatch "^[A-Za-z0-9_.-]+$" $job) }}
+{{- fail (printf "dailyReport.loki.job must only contain letters, digits, _, . and -, got %q" $job) }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-dashboards
+  namespace: {{ $ns }}
+  labels:
+    mapcolonies.io/grafana-dashboards: "true"
+  annotations:
+    mapcolonies.io/grafana-dashboards-folder: {{ $folder | quote }}
+data:
+{{- range $path, $_ := .Files.Glob "files/dashboards/*.json" }}
+  {{ base $path }}: |-
+{{ $.Files.Get $path | replace "__REPORT_JOB__" $job | indent 4 }}
+{{- end }}
+{{- end }}

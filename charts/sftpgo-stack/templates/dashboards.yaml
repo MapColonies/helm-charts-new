@@ -1,0 +1,22 @@
+{{- if .Values.dashboards.enabled }}
+{{- $dsUid := required "dashboards.datasourceUid is required" .Values.dashboards.datasourceUid }}
+{{- $mountpoint := required "dashboards.mountpoint is required" .Values.dashboards.mountpoint }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-dashboards
+  namespace: {{ .Values.dashboards.namespace | default .Release.Namespace }}
+  labels:
+    mapcolonies.io/grafana-dashboards: "true"
+  annotations:
+    mapcolonies.io/grafana-dashboards-folder: {{ .Values.dashboards.folder | quote }}
+data:
+{{- range $path, $_ := .Files.Glob "files/dashboards/*.json" }}
+{{- $json := $.Files.Get $path | replace "__DATASOURCE_UID__" $dsUid | replace "__MOUNTPOINT__" $mountpoint }}
+{{- if regexMatch "__[A-Z][A-Z_]*__" $json }}
+{{- fail (printf "%s: placeholder %s left after rendering" $path (regexFind "__[A-Z][A-Z_]*__" $json)) }}
+{{- end }}
+  {{ base $path }}: |-
+{{ $json | indent 4 }}
+{{- end }}
+{{- end }}
