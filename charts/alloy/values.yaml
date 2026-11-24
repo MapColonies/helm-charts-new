@@ -55,6 +55,12 @@ alerts:
   # Letters, digits, space, - and _ only: the value is written inside a quoted YAML string.
   component: Alloy
 
+# Grafana dashboards in files/dashboards (templates/dashboards.yaml), loaded by the Grafana dashboards sidecar.
+dashboards:
+  # Grafana folder (sidecar folder annotation). "/" nests folders.
+  # Empty = the alert rules' folder, <alerts.team>/<alerts.component> (infra/Alloy).
+  folder: ""
+
 batching: {}
 exporter:
   sending_queue: {}

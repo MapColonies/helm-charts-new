@@ -1,3 +1,8 @@
+{{- /*
+Grafana dashboards for Alloy, loaded by Grafana's dashboards sidecar (label mapcolonies.io/grafana-dashboards).
+The folder defaults to the alert rules' folder, <alerts.team>/<alerts.component>, so dashboards and rules share one folder.
+*/}}
+{{- $folder := .Values.dashboards.folder | default (printf "%s/%s" (toString .Values.alerts.team) (toString .Values.alerts.component)) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6,6 +11,13 @@ metadata:
   labels:
     mapcolonies.io/grafana-dashboards: "true"
   annotations:
-    mapcolonies.io/grafana-dashboards-folder: Alloy
+    mapcolonies.io/grafana-dashboards-folder: {{ $folder | quote }}
 data:
-{{ (.Files.Glob "files/dashboards/*.json").AsConfig | indent 2 }}
+{{- range $path, $_ := .Files.Glob "files/dashboards/*.json" }}
+{{- $json := $.Files.Get $path }}
+{{- if hasKey (fromJson $json) "Error" }}
+{{- fail (printf "%s: invalid JSON" $path) }}
+{{- end }}
+  {{ base $path }}: |-
+{{ $json | indent 4 }}
+{{- end }}
