@@ -51,4 +51,5 @@ jenkins:
 # The ConfigMap is rendered in the release namespace, which must be the namespace Grafana watches.
 dashboards:
   enabled: true
-  folder: Jenkins
+  # Grafana folder (sidecar folder annotation). "/" nests folders: infra/Jenkins = Jenkins inside infra
+  folder: infra/Jenkins
