@@ -21,6 +21,9 @@ expected() {
       elif .type == "datasource" and .name == "loki_datasource" then .current = {selected: true, text: $loki, value: $loki} | .hide = 2
       else . end)' "$1"
 }
+# Canonical JSON for comparing: sorted keys, and every number re-encoded as a float. Helm writes
+# numbers as Go floats (0.10000000000000001 -> 0.1), and jq 1.7+ keeps an unmodified number as written.
+canon() { jq -S 'walk(if type == "number" then . + 0 else . end)'; }
 files=$(ls files/dashboards/*.json | wc -l | tr -d ' ')
 
 # 1. defaults: release namespace, the alert rules' folder, every file pinned to prometheus/loki and otherwise unchanged
@@ -29,8 +32,8 @@ out=$(render)
 [ "$(namespace "$out")" = "infra-x" ] || fail "default namespace must be the release namespace"
 [ "$(grep -c '^  [a-z0-9-]*\.json: |-$' <<<"$out")" = "$files" ] || fail "all $files dashboards must be rendered"
 for f in files/dashboards/*.json; do
-  got=$(dashboard "$out" "$(basename "$f")" | jq -S .) || fail "$(basename "$f") must render as valid JSON"
-  [ "$got" = "$(expected "$f" prometheus loki | jq -S .)" ] \
+  got=$(dashboard "$out" "$(basename "$f")" | canon) || fail "$(basename "$f") must render as valid JSON"
+  [ "$got" = "$(expected "$f" prometheus loki | canon)" ] \
     || fail "$(basename "$f") must equal the source with only datasource/loki_datasource pinned and hidden"
 done
 
@@ -56,7 +59,7 @@ if render --set dashboards.enabled=false >/dev/null 2>&1; then fail "dashboards.
 # 5. non-default datasource uids are pinned in every dashboard
 out=$(render --set dashboards.prometheusDatasourceUid=prom-x --set dashboards.lokiDatasourceUid=loki-x)
 for f in files/dashboards/*.json; do
-  [ "$(dashboard "$out" "$(basename "$f")" | jq -S .)" = "$(expected "$f" prom-x loki-x | jq -S .)" ] \
+  [ "$(dashboard "$out" "$(basename "$f")" | canon)" = "$(expected "$f" prom-x loki-x | canon)" ] \
     || fail "$(basename "$f") must pin prom-x/loki-x"
 done
 
