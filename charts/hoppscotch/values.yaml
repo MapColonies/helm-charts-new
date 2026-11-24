@@ -18,3 +18,27 @@ hoppscotch:
       mapcolonies.io/owner: "infra"
       mapcolonies.io/alloy-api-logs: "true"
       mapcolonies.io/criticality: "internal"
+
+    resources:
+      requests:
+        cpu: 125m
+        memory: 256Mi
+        ephemeral-storage: 50Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+        ephemeral-storage: 2Gi
+
+  defaultInitContainers:
+    waitForDatabase:
+      resources:
+        requests:
+          cpu: 25m
+        limits:
+          cpu: 100m
+    waitForMigrations:
+      resources:
+        requests:
+          cpu: 50m
+        limits:
+          cpu: 200m
