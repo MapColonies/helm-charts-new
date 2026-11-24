@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.2](https://github.com/MapColonies/helm-charts-new/compare/app-v2.3.1...app-v2.3.2) (2026-11-24)
+
+
+### Helm Chart Updates
+
+* **app:** support infra gatekeeper ([#225](https://github.com/MapColonies/helm-charts-new/issues/225)) ([9db5290](https://github.com/MapColonies/helm-charts-new/commit/9db5290c6bf8775892398d74f95fd04d9c9a0b3f))
+
 ## [2.3.1](https://github.com/MapColonies/helm-charts-new/compare/app-v2.3.0...app-v2.3.1) (2026-09-15)
 
 
