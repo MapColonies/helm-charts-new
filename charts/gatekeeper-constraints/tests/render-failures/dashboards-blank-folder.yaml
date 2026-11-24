@@ -1,0 +1,5 @@
+# expect-error: dashboards\.folder is required when dashboards\.enabled
+dashboards:
+  enabled: true
+  namespace: infra-dev
+  folder: "  "

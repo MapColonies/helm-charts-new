@@ -13,3 +13,7 @@ data:
 {{ tpl (.Files.Get "files/contact-points.yaml.gotmpl") . | indent 4 }}
   notification-policy.yaml: |
 {{ tpl (.Files.Get "files/notification-policy.yaml.gotmpl") . | indent 4 }}
+{{- if .Values.grafana.alertingTeamsWebhooks }}
+  notification-templates.yaml: |
+{{ .Files.Get "files/notification-templates.yaml" | indent 4 }}
+{{- end }}

@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.4.0](https://github.com/MapColonies/helm-charts-new/compare/raster-ingestion-v1.3.2...raster-ingestion-v1.4.0) (2026-11-22)
+
+
+### 🎉 Features
+
+* **raster-ingestion:** remove cache-seeder (MAPCO-11268) ([#210](https://github.com/MapColonies/helm-charts-new/issues/210)) ([bfc0770](https://github.com/MapColonies/helm-charts-new/commit/bfc07701e5b71e34209710ac82e4684e0fdb24e0))
+
+## [1.3.2](https://github.com/MapColonies/helm-charts-new/compare/raster-ingestion-v1.3.1...raster-ingestion-v1.3.2) (2026-11-15)
+
+
+### 🐛 Bug Fixes
+
+* upgrade overseer to 3.0.2 (MAPCO-12035) ([#202](https://github.com/MapColonies/helm-charts-new/issues/202)) ([5956d3f](https://github.com/MapColonies/helm-charts-new/commit/5956d3f0f42e2be2c72c6192c79239f59a04730a))
+
+## [1.3.1](https://github.com/MapColonies/helm-charts-new/compare/raster-ingestion-v1.3.0...raster-ingestion-v1.3.1) (2026-11-04)
+
+
+### 🐛 Bug Fixes
+
+* upgrade polygon-parts-worker to 3.0.1 (MAPCO-12032) ([#194](https://github.com/MapColonies/helm-charts-new/issues/194)) ([43ffc5b](https://github.com/MapColonies/helm-charts-new/commit/43ffc5b9f5f923e75abb2e426f84b0678bd4bfb7))
+
 ## [1.3.0](https://github.com/MapColonies/helm-charts-new/compare/raster-ingestion-v1.2.0...raster-ingestion-v1.3.0) (2026-10-12)
 
 

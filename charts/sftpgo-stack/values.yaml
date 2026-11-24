@@ -57,3 +57,15 @@ sftpgo-node-exporter:
 
   extraArgs:
     - --collector.textfile.directory=/var/lib/node_exporter/textfile_collector
+
+# Grafana dashboards, loaded by the Grafana dashboards sidecar.
+dashboards:
+  enabled: true
+  # Grafana folder (sidecar folder annotation). "/" nests folders: infra/SFTPGo = SFTPGo inside infra
+  folder: infra/SFTPGo
+  # Namespace for the ConfigMap. Must be one the Grafana sidecar watches. Empty = release namespace.
+  namespace: ""
+  # UID of the Grafana Prometheus datasource that scrapes sftpgo and its node-exporter
+  datasourceUid: prometheus
+  # Mount path of the shared volume in the node-exporter container (node_filesystem_* mountpoint label)
+  mountpoint: /mnt

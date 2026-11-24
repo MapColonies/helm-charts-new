@@ -33,7 +33,6 @@ setting() {
 batch='otelcol.processor.batch "default"'
 exporter='otelcol.exporter.otlphttp "default"'
 age_filter='loki.process "limit_time"'
-# Each value is assigned on its own, so a fail inside $(...) stops the test
 
 # 1. older_than is maxLogAge as is
 older_than=$(setting "$age_filter" older_than --set maxLogAge=5m)

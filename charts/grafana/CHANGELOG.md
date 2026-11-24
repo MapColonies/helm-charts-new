@@ -1,5 +1,40 @@
 # Changelog
 
+## [2.0.0](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.4.0...grafana-v2.0.0) (2026-11-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* **grafana:** upgrade to Grafana 13.2.5 with MapLibre (MAPCO-12583) ([#199](https://github.com/MapColonies/helm-charts-new/issues/199))
+
+### 🎉 Features
+
+* **grafana:** upgrade to Grafana 13.2.5 with MapLibre (MAPCO-12583) ([#199](https://github.com/MapColonies/helm-charts-new/issues/199)) ([e73f103](https://github.com/MapColonies/helm-charts-new/commit/e73f1031c08ab3d1fc0ddb037274dd789b67354d))
+
+
+### 🔧 Miscellaneous Chores
+
+* **master:** release grafana 1.4.0 ([#193](https://github.com/MapColonies/helm-charts-new/issues/193)) ([8553516](https://github.com/MapColonies/helm-charts-new/commit/8553516e10039b3461ce8e643de7473721cf39c2))
+
+## [1.4.0](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.3.0...grafana-v1.4.0) (2026-10-29)
+
+
+### 🎉 Features
+
+* **grafana,gatekeeper-constraints:** one Slack digest per team for deploy alerts ([#190](https://github.com/MapColonies/helm-charts-new/issues/190)) ([661d2eb](https://github.com/MapColonies/helm-charts-new/commit/661d2eb566506f15ba1ba3e0fb31b45be5308c4d))
+
+
+### 🔧 Miscellaneous Chores
+
+* **master:** release grafana 1.4.0 ([#191](https://github.com/MapColonies/helm-charts-new/issues/191)) ([5392881](https://github.com/MapColonies/helm-charts-new/commit/5392881caa58bf1ac19dd118e73f8aae9386a73f))
+
+## [1.3.0](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.2.0...grafana-v1.3.0) (2026-10-25)
+
+
+### 🎉 Features
+
+* **grafana,gatekeeper-constraints:** readable message for no-resolve notifications ([#175](https://github.com/MapColonies/helm-charts-new/issues/175)) ([7695d71](https://github.com/MapColonies/helm-charts-new/commit/7695d712765cc5bfe4e8253c6142f655ef9da43c))
+
 ## [1.2.0](https://github.com/MapColonies/helm-charts-new/compare/grafana-v1.1.0...grafana-v1.2.0) (2026-10-21)
 
 

@@ -12,6 +12,24 @@ loki:
     serviceAccount:
       create: false
       name: monitoring
+    metrics:
+      resources:
+        requests:
+          cpu: 25m
+        limits:
+          cpu: 100m
+  memcachedExporter:
+    resources:
+      requests:
+        cpu: 25m
+      limits:
+        cpu: 100m
+  sidecar:
+    resources:
+      requests:
+        cpu: 25m
+      limits:
+        cpu: 100m
   memcached:
     serviceAccount:
       create: false

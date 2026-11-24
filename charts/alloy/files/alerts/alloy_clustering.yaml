@@ -2,7 +2,7 @@ apiVersion: 1
 groups:
   - orgId: 1
     name: alloy_clustering
-    folder: Alloy
+    folder: "__FOLDER__"
     interval: 1m
     rules:
       - uid: mx-cl-conv
@@ -54,7 +54,7 @@ groups:
         for: 10m
         labels:
           severity: warning
-          alert_team: infra
+          alert_team: "__ALERT_TEAM__"
         annotations:
           summary: Cluster is not converging.
           description: "Cluster is not converging: nodes report different number of peers in the cluster. Job is {{ $labels.job }}"
@@ -108,7 +108,7 @@ groups:
         for: 15m
         labels:
           severity: warning
-          alert_team: infra
+          alert_team: "__ALERT_TEAM__"
         annotations:
           summary: Nodes report different number of peers vs. the count of observed Alloy metrics.
           description: "Nodes report different number of peers vs. the count of observed Alloy metrics. Some Alloy metrics may be missing or the cluster is in a split brain state. Job is {{ $labels.job }}"
@@ -162,7 +162,7 @@ groups:
         for: 10m
         labels:
           severity: warning
-          alert_team: infra
+          alert_team: "__ALERT_TEAM__"
         annotations:
           summary: Cluster unhealthy.
           description: "Cluster node is reporting a gossip protocol health score > 0. Job is {{ $labels.job }}"
@@ -216,7 +216,7 @@ groups:
         for: 10m
         labels:
           severity: warning
-          alert_team: infra
+          alert_team: "__ALERT_TEAM__"
         annotations:
           summary: Cluster Node Name Conflict.
           description: "A node tried to join the cluster with a name conflicting with an existing peer. Job is {{ $labels.job }}"
@@ -270,7 +270,7 @@ groups:
         for: 10m
         labels:
           severity: warning
-          alert_team: infra
+          alert_team: "__ALERT_TEAM__"
         annotations:
           summary: Cluster node stuck in Terminating state.
           description: "There is a node within the cluster that is stuck in Terminating state. Job is {{ $labels.job }}"
@@ -324,7 +324,7 @@ groups:
         for: 5m
         labels:
           severity: warning
-          alert_team: infra
+          alert_team: "__ALERT_TEAM__"
         annotations:
           summary: Cluster configuration drifting.
           description: "Cluster nodes are not using the same configuration file. Job is {{ $labels.job }}"

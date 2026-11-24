@@ -163,8 +163,8 @@ for line in open(sys.argv[1]):
 lost = [i for i in range(1, 81) if i not in got]
 if len(lost) > 40:
     sys.exit(f"FAIL: {len(lost)} of 80 lines lost; the send queue let the StatefulSet read too far ahead")
-if lost and set(range(max(lost) + 1, 81)) - got:
-    sys.exit(f"FAIL: lines after the read-ahead were lost too: {sorted(set(range(max(lost) + 1, 81)) - got)}")
+if lost and lost != list(range(min(lost), max(lost) + 1)):
+    sys.exit(f"FAIL: losses must be the one read-ahead block, got: {lost}")
 print(f"  killed while the Deployment was down: lost the {len(lost)} lines it had read ahead (of 80), the rest arrived")
 BOUND
 

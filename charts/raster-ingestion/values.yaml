@@ -39,17 +39,6 @@ mapproxy-api:
     schema: "MapproxyConfig" # TODO: remove after set this as the default value within service
 
 # ====================================================================================================
-# Cache-Seeder
-# ====================================================================================================
-cache-seeder:
-  image:
-    repository: "raster/cache-seeder"
-    tag: "v2.3.2"
-    pullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
-  env:
-    seedConcurrency: 25
-
-# ====================================================================================================
 # Ingestion-Trigger
 # ====================================================================================================
 ingestion-trigger:
@@ -72,7 +61,7 @@ ingestion-trigger:
 overseer:
   image:
     repository: raster/overseer
-    tag: v3.0.1
+    tag: v3.0.2
     pullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
@@ -98,7 +87,7 @@ geoserver-api:
 polygon-parts-worker:
   image:
     repository: raster/polygon-parts-worker
-    tag: v3.0.0
+    tag: v3.0.1
   instanceType: ingestion
   mclabels:
     partOf: ingestion # TODO: remove after set this as the default value within service

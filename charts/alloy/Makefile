@@ -1,5 +1,5 @@
-# make test: run the render tests (tests/*.sh), then the e2e tests (tests/*-e2e.sh), which run the
-# rendered configs in the real Alloy binary. It matches the chart's appVersion; set ALLOY to use your own.
+# make test: run tests/*.sh in name order. The *-e2e.sh ones run the rendered configs in the real
+# Alloy binary, matching the chart's appVersion; set ALLOY to use your own.
 # tests/alert-rules.sh evaluates the alert expressions with promtool; set PROMTOOL to use your own.
 
 ALLOY_VERSION ?= $(shell sed -n 's/^appVersion: //p' Chart.yaml)

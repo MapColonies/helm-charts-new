@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0](https://github.com/MapColonies/helm-charts-new/compare/jenkins-v1.3.0...jenkins-v1.4.0) (2026-11-24)
+
+
+### 🎉 Features
+
+* **jenkins:** provision grafana dashboards (MAPCO-12786) ([#214](https://github.com/MapColonies/helm-charts-new/issues/214)) ([4d11209](https://github.com/MapColonies/helm-charts-new/commit/4d1120927e7f53c34ef3bbaf102a850b736378a0))
+
+## [1.3.0](https://github.com/MapColonies/helm-charts-new/compare/jenkins-v1.2.0...jenkins-v1.3.0) (2026-10-25)
+
+
+### 🎉 Features
+
+* **jenkins:** add openshift-routes dependency for a TLS route (MAPCO-12000) ([#181](https://github.com/MapColonies/helm-charts-new/issues/181)) ([4bcb8aa](https://github.com/MapColonies/helm-charts-new/commit/4bcb8aafad5370b75991961471f924c2555a947f))
+
 ## [1.2.0](https://github.com/MapColonies/helm-charts-new/compare/jenkins-v1.1.0...jenkins-v1.2.0) (2026-10-20)
 
 

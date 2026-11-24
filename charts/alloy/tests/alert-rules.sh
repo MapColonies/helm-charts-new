@@ -15,6 +15,9 @@ alerts=$(render | yq 'select(.kind == "ConfigMap" and .metadata.name == "alloy-a
 {
   printf '%s\n' 'groups:' '  - name: alloy' '    rules:'
   for file in $(yq 'keys | .[]' <<<"$alerts"); do
+    # Only refId A becomes the Prometheus rule, so every rule's condition must be C: last(A) > 0
+    bad=$(F=$file yq '.[env(F)]' <<<"$alerts" | yq '.groups[].rules[] | select(.condition != "C" or ([.data[] | select(.refId == "C") | .model | select(.type == "classic_conditions" and (.conditions | length) == 1 and .conditions[0].evaluator.type == "gt" and (.conditions[0].evaluator.params | length) == 1 and .conditions[0].evaluator.params[0] == 0 and (.conditions[0].query.params | length) == 1 and .conditions[0].query.params[0] == "A" and .conditions[0].reducer.type == "last")] | length) != 1) | .title')
+    [[ -z $bad ]] || fail "rules whose condition isn't last(A) > 0, which promtool can't check: $bad"
     F=$file yq '.[env(F)]' <<<"$alerts" \
       | yq -N '.groups[].rules[] | [{"alert": .title, "expr": (.data[] | select(.refId == "A") | .model.expr), "for": .for}]'
   done | sed 's/^/      /'

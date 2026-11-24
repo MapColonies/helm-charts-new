@@ -138,7 +138,7 @@ Usage: include "blackbox-lib.positiveNumber" (dict "value" $v "key" "latency.max
     {{- if $grafanaRules -}}
       {{- $_ := set $file "groups" (list (dict "orgId" 1
             "name" (printf "blackbox-%s-%s" $ns $service)
-            "folder" ($alerts.folder | default $team)
+            "folder" ($alerts.folder | default (printf "%s/%s" $team $service))
             "interval" ($alerts.interval | default "1m")
             "rules" $grafanaRules)) -}}
     {{- end -}}

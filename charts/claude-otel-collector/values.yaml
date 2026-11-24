@@ -8,6 +8,12 @@ otel:
 
   mode: deployment
 
+  podLabels:
+    mapcolonies.io/component: "infrastructure"
+    mapcolonies.io/part-of: "monitoring"
+    mapcolonies.io/owner: "infra"
+    mapcolonies.io/criticality: "internal"
+
   # single replica by design: the prometheus exporter accumulates counters in
   # pod memory, and multiple replicas would split them across pods
   replicaCount: 1
@@ -51,6 +57,27 @@ otel:
                 - "http://*"
                 - "https://*"
             endpoint: ${env:MY_POD_IP}:4318
+    processors:
+      # One computer label (host.name -> Prometheus host_name) across every
+      # Claude client. The CLI and VS Code extension send host.name = the
+      # upper-cased OS user (stamped by LLM-configuration apply-settings-*);
+      # the desktop app ignores that setting and sends only process.owner (its
+      # OS user), so derive the same label from it. Normalization must stay
+      # identical to the scripts': drop a DOMAIN\ prefix, upper-case, replace
+      # whitespace , = % ; " with _. Applied to every label, so older lowercase
+      # labels fold into the same series.
+      transform/computer-label:
+        error_mode: ignore
+        metric_statements:
+          - context: resource
+            statements: &computer-label
+              - set(attributes["host.name"], attributes["process.owner"]) where attributes["host.name"] == nil and attributes["process.owner"] != nil
+              - replace_pattern(attributes["host.name"], "^.*\\\\", "") where attributes["host.name"] != nil
+              - set(attributes["host.name"], ConvertCase(attributes["host.name"], "upper")) where attributes["host.name"] != nil
+              - replace_pattern(attributes["host.name"], "[\\s,=%;\"]", "_") where attributes["host.name"] != nil
+        log_statements:
+          - context: resource
+            statements: *computer-label
     exporters:
       debug: null
       # Claude Code events (tool runs, edit decisions, api errors) go straight
@@ -71,6 +98,7 @@ otel:
             - otlp
           processors:
             - memory_limiter
+            - transform/computer-label
             - batch
           exporters:
             - otlphttp
@@ -79,6 +107,7 @@ otel:
             - otlp
           processors:
             - memory_limiter
+            - transform/computer-label
             - batch
           exporters:
             - prometheus

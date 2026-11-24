@@ -16,7 +16,7 @@ data:
     - orgId: 1
       uid: bb-68561f4b897fcfc71ccaf4466ba9a7361aedd
     groups:
-    - folder: raster
+    - folder: raster/payment-api
       interval: 1m
       name: blackbox-team-dev-payment-api
       orgId: 1
