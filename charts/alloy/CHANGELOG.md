@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.3.0...alloy-v1.4.0) (2026-11-24)
+
+
+### 🎉 Features
+
+* **alloy,blackbox-lib:** nested alert folders &lt;team&gt;/&lt;component&gt; (MAPCO-10859) ([#215](https://github.com/MapColonies/helm-charts-new/issues/215)) ([7108c3c](https://github.com/MapColonies/helm-charts-new/commit/7108c3cc2bb1dd475c249559a6a64a47036ef2af))
+
 ## [1.3.0](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.2.0...alloy-v1.3.0) (2026-10-21)
 
 
