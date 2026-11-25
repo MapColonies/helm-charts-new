@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.0](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.4.0...alloy-v1.5.0) (2026-11-25)
+
+
+### 🎉 Features
+
+* **alloy:** add support for log sampling (MAPCO-10920) ([#183](https://github.com/MapColonies/helm-charts-new/issues/183)) ([88cbda9](https://github.com/MapColonies/helm-charts-new/commit/88cbda97ffc19259269d1f4286a9c7bab05ee50d))
+* **alloy:** collect pod logs in a StatefulSet and stop re-sending old logs (MAPCO-11983) ([#186](https://github.com/MapColonies/helm-charts-new/issues/186)) ([ec12418](https://github.com/MapColonies/helm-charts-new/commit/ec1241882cb1eff74847697e3506313d97bf0254))
+* **alloy:** put the dashboards in the alert rules folder and pin their datasources (MAPCO-12776) ([#227](https://github.com/MapColonies/helm-charts-new/issues/227)) ([79fbf39](https://github.com/MapColonies/helm-charts-new/commit/79fbf39a25531146820633ae19c1ac3b95c1e31e))
+
 ## [1.4.0](https://github.com/MapColonies/helm-charts-new/compare/alloy-v1.3.0...alloy-v1.4.0) (2026-11-24)
 
 
