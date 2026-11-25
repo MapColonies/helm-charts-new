@@ -55,6 +55,8 @@ grafana:
       # init containers, so all three sidecars would use 8080: only the first one starts its health
       # server and the others log "OSError: [Errno 98] Address in use" (kiwigrid/k8s-sidecar#661).
       # Ports: dashboards 8080, alerts 8081, datasources 8082.
+      # Don't enable initDashboards, initAlerts or initDatasources without removing these: upstream
+      # also renders sidecar.<name>.env into the init containers, which would get HEALTH_PORT twice.
       env:
         HEALTH_PORT: "8081"
     datasources:
