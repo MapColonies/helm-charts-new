@@ -41,7 +41,7 @@ done
 # 2. a missing dashboards map uses the defaults
 out=$(render --set dashboards=null)
 [ "$(folder "$out")" = "infra/Alloy" ] || fail "dashboards=null must use the alert rules' folder"
-[ "$(dashboard "$out" alloy-logs.json | jq -r '.templating.list[] | select(.name=="datasource") | .current.value')" = "prometheus" ] \
+[ "$(dashboard "$out" alloy-resources.json | jq -r '.templating.list[] | select(.name=="datasource") | .current.value')" = "prometheus" ] \
   || fail "dashboards=null must pin the default Prometheus uid"
 
 # 3. the folder follows the alert rules' folder, and dashboards.folder wins over it
@@ -74,12 +74,12 @@ for args in "--set dashboards.prometheusDatasourceUid=" "--set dashboards.lokiDa
 done
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 mkdir "$tmp/alloy" && cp -r Chart.yaml values.yaml templates files charts "$tmp/alloy/"
-printf '{ "title": ' > "$tmp/alloy/files/dashboards/alloy-logs.json"
+printf '{ "title": ' > "$tmp/alloy/files/dashboards/alloy-resources.json"
 if helm template infra-alloy "$tmp/alloy" --show-only templates/dashboards.yaml >/dev/null 2>"$tmp/err"; then
   fail "an invalid dashboard JSON must fail the render"
 fi
-grep -q 'alloy-logs.json: invalid JSON' "$tmp/err" || fail "the error must name the invalid file"
-cp files/dashboards/alloy-logs.json "$tmp/alloy/files/dashboards/alloy-logs.json"
+grep -q 'alloy-resources.json: invalid JSON' "$tmp/err" || fail "the error must name the invalid file"
+cp files/dashboards/alloy-resources.json "$tmp/alloy/files/dashboards/alloy-resources.json"
 
 # 7. each dashboard must have exactly one datasource and one loki_datasource variable
 #    (a dashboard with two "datasource" and no "loki_datasource" must fail, not count as 2)

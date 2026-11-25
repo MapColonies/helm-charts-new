@@ -37,129 +37,6 @@
             "x": 0,
             "y": 0
          },
-         "title": "loki.source.file",
-         "type": "row"
-      },
-      {
-         "datasource": "${datasource}",
-         "description": "Active files being tailed.\n",
-         "fieldConfig": {
-            "defaults": {
-               "custom": {
-                  "fillOpacity": 20,
-                  "gradientMode": "hue",
-                  "stacking": {
-                     "mode": "normal"
-                  }
-               },
-               "unit": "files"
-            }
-         },
-         "gridPos": {
-            "h": 10,
-            "w": 12,
-            "x": 0,
-            "y": 1
-         },
-         "targets": [
-            {
-               "datasource": "${datasource}",
-               "expr": "sum by(${groupby}) (loki_source_file_files_active_total{cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\"})\n",
-               "instant": false,
-               "legendFormat": "__auto",
-               "range": true
-            }
-         ],
-         "title": "Active files count $cluster",
-         "type": "timeseries"
-      },
-      {
-         "datasource": "${datasource}",
-         "description": "Successful file reads.\n",
-         "fieldConfig": {
-            "defaults": {
-               "custom": {
-                  "fillOpacity": 20,
-                  "gradientMode": "hue",
-                  "stacking": {
-                     "mode": "normal"
-                  }
-               },
-               "unit": "cps"
-            }
-         },
-         "gridPos": {
-            "h": 10,
-            "w": 12,
-            "x": 12,
-            "y": 1
-         },
-         "targets": [
-            {
-               "datasource": "${datasource}",
-               "expr": "sum by (${groupby}) (rate(loki_source_file_read_lines_total{cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))\n",
-               "instant": false,
-               "legendFormat": "__auto",
-               "range": true
-            }
-         ],
-         "title": "Lines read in $cluster",
-         "type": "timeseries"
-      },
-      {
-         "collapsed": false,
-         "datasource": "${datasource}",
-         "gridPos": {
-            "h": 1,
-            "w": 24,
-            "x": 0,
-            "y": 11
-         },
-         "title": "loki.source.journal",
-         "type": "row"
-      },
-      {
-         "datasource": "${datasource}",
-         "description": "Successful journal reads.\t\n",
-         "fieldConfig": {
-            "defaults": {
-               "custom": {
-                  "fillOpacity": 20,
-                  "gradientMode": "hue",
-                  "stacking": {
-                     "mode": "normal"
-                  }
-               },
-               "unit": "cps"
-            }
-         },
-         "gridPos": {
-            "h": 10,
-            "w": 12,
-            "x": 0,
-            "y": 12
-         },
-         "targets": [
-            {
-               "datasource": "${datasource}",
-               "expr": "sum by (${groupby}) (rate(loki_source_journal_target_lines_total{cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))\n",
-               "instant": false,
-               "legendFormat": "__auto",
-               "range": true
-            }
-         ],
-         "title": "Journal lines read in $cluster",
-         "type": "timeseries"
-      },
-      {
-         "collapsed": false,
-         "datasource": "${datasource}",
-         "gridPos": {
-            "h": 1,
-            "w": 24,
-            "x": 0,
-            "y": 22
-         },
          "title": "loki.write",
          "type": "row"
       },
@@ -176,7 +53,7 @@
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 23
+            "y": 1
          },
          "targets": [
             {
@@ -202,7 +79,7 @@
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 23
+            "y": 1
          },
          "targets": [
             {
@@ -249,7 +126,7 @@
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 23
+            "y": 1
          },
          "targets": [
             {
@@ -282,7 +159,7 @@
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 23
+            "y": 1
          },
          "targets": [
             {
@@ -303,7 +180,7 @@
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 23
+            "y": 1
          },
          "maxDataPoints": 30,
          "options": {
@@ -316,7 +193,7 @@
                "color": "rgba(255,0,255,0.7)"
             },
             "filterValues": {
-               "le": 0.10000000000000001
+               "le": 0.1
             },
             "tooltip": {
                "show": true,
@@ -352,7 +229,7 @@
             "h": 10,
             "w": 12,
             "x": 12,
-            "y": 23
+            "y": 1
          },
          "targets": [
             {
