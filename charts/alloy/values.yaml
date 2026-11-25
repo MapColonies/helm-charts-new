@@ -65,3 +65,12 @@ exporter:
 #       - '"event_type":\s*"violation"'
 #       - '"constraint_name":\s*"workload-[^"]*"'
 logFilters: []
+
+# Always set service.port: without it the route goes to the Service's first port,
+# http-metrics (12345, the Alloy UI and debug API), not OTLP.
+# openshift-routes:
+#   routes:
+#     - name: alloy-otlp
+#       service:
+#         name: infra-alloy
+#         port: otlp-http
