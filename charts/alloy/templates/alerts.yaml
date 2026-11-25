@@ -1,7 +1,8 @@
 {{- /*
 Grafana alert rules for Alloy, loaded by Grafana's alerts sidecar (label mapcolonies.io/grafana-alerts).
 The rule files use Grafana's own {{ }} templates, so they are not run through tpl. Instead the
-placeholders __ALERT_TEAM__ and __FOLDER__ are replaced with alerts.team and <alerts.team>/<alerts.component>.
+placeholders __ALERT_TEAM__ and __FOLDER__ are replaced with alerts.team and <alerts.team>/<alerts.component>,
+and __ALLOY_LOGS_STATEFULSET__ with the pod logs StatefulSet's rendered name.
 */}}
 {{- $team := toString .Values.alerts.team }}
 {{- if not (regexMatch "^[a-z0-9_-]+$" $team) }}
@@ -22,5 +23,5 @@ metadata:
 data:
 {{- range $path, $_ := .Files.Glob "files/alerts/*.yaml" }}
   {{ base $path }}: |
-{{ $.Files.Get $path | replace "__ALERT_TEAM__" $team | replace "__FOLDER__" $folder | indent 4 }}
+{{ $.Files.Get $path | replace "__ALERT_TEAM__" $team | replace "__FOLDER__" $folder | replace "__ALLOY_LOGS_STATEFULSET__" (include "alloy-wrapper.podLogsStatefulSet" $) | indent 4 }}
 {{- end }}

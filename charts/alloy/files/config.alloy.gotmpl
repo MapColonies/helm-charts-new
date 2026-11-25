@@ -1,78 +1,19 @@
-// discovery.kubernetes allows you to find scrape targets from Kubernetes resources.
-// It watches cluster state and ensures targets are continually synced with what is currently running in your cluster.
-discovery.kubernetes "pod" {
-    role = "pod"
-    selectors {
-        role = "pod"
-        label = "mapcolonies.io/alloy-api-logs=true"
+// Receives the pod logs the alloy-logs StatefulSet tails, with their stream labels
+loki.source.api "pod_logs" {
+    http {
+        listen_address = "0.0.0.0"
+        listen_port    = {{ include "alloy-wrapper.podLogsPort" . }}
     }
-    namespaces {
-        names = {{ .Values.namespaces | toJson }}
-    }
+    // Keep each line's own timestamp, so the age filter measures how old the log is
+    use_incoming_timestamp = true
+    forward_to             = [loki.process.limit_time.receiver]
 }
 
-// discovery.relabel rewrites the label set of the input targets by applying one or more relabeling rules.
-// If no rules are defined, then the input targets are exported as-is.
-discovery.relabel "pod_logs" {
-    targets = discovery.kubernetes.pod.targets
-
-    // Label creation - "k8s_namespace_name" field from "__meta_kubernetes_namespace"
-    rule {
-        source_labels = ["__meta_kubernetes_namespace"]
-        action = "replace"
-        target_label = "k8s_namespace_name"
-    }
-
-    // Label creation - "k8s_pod_name" field from "__meta_kubernetes_pod_name"
-    rule {
-        source_labels = ["__meta_kubernetes_pod_name"]
-        action = "replace"
-        target_label = "k8s_pod_name"
-    }
-
-    // Label creation - "k8s_container_name" field from "__meta_kubernetes_pod_container_name"
-    rule {
-        source_labels = ["__meta_kubernetes_pod_container_name"]
-        action = "replace"
-        target_label = "k8s_container_name"
-    }
-
-    // Label creation -  "owner" field from "__meta_kubernetes_pod_label_mapcolonies_io_owner"
-    rule {
-        source_labels = ["__meta_kubernetes_pod_label_mapcolonies_io_owner"]
-        action = "replace"
-        target_label = "owner"
-    }
-
-    // Label creation - "k8s_statefulset_name" when pod is owned by a StatefulSet
-    rule {
-        source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
-        separator     = ";"
-        regex         = "StatefulSet;(.*)"
-        target_label  = "k8s_statefulset_name"
-        replacement   = "$1"
-    }
-
-    // Label creation - "k8s_deployment_name" when pod is owned by a ReplicaSet (strip the hash suffix)
-    rule {
-        source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
-        separator     = ";"
-        regex         = "ReplicaSet;(.*)-[^-]+"
-        target_label  = "k8s_deployment_name"
-        replacement   = "$1"
-    }
-}
-
-// loki.source.kubernetes tails logs from Kubernetes containers using the Kubernetes API.
-loki.source.kubernetes "pod_logs" {
-    targets    = discovery.relabel.pod_logs.output
-    forward_to = [loki.process.limit_time.receiver]
-    }
-
-    loki.process "limit_time" {
+loki.process "limit_time" {
     forward_to = [otelcol.receiver.loki.default.receiver]
+    // Loki would reject older lines (see maxLogAge in values.yaml), so drop them here
     stage.drop {
-        older_than          = "1h"
+        older_than          = {{ .Values.maxLogAge | quote }}
         drop_counter_reason = "too_old"
     }
 {{- /* logFilters: values-driven keep/drop by log line content. Selector = namespace matcher + LogQL line filter, each regex JSON-quoted twice (LogQL string, then Alloy string).
@@ -115,9 +56,9 @@ otelcol.processor.transform "default" {
         ]
     }
 
-		log_statements {
+    log_statements {
         context = "log"
-        
+
         // Skips this entire block if the log isn't JSON
         conditions = [
             `IsMatch(body, "^\\s*\\{")`,
@@ -130,17 +71,17 @@ otelcol.processor.transform "default" {
             `set(attributes, cache["Attributes"]) where IsMap(cache)`,
             `set(resource.attributes["_temp_resource"], cache["Resource"]) where IsMap(cache)`,
             `merge_maps(resource.attributes, resource.attributes["_temp_resource"], "upsert") where IsMap(resource.attributes["_temp_resource"])`,
-            `delete_key(resource.attributes, "_temp_resource")`,        
-            
+            `delete_key(resource.attributes, "_temp_resource")`,
+
             // Context and tracing extractions
             `set(trace_id.string, cache["TraceId"]) where IsMap(cache)`,
             `set(span_id.string, cache["SpanId"]) where IsMap(cache)`,
             `set(instrumentation_scope.name, cache["InstrumentationScope"]) where IsMap(cache)`,
-            
+
             // Explicit Int64 Casting for timestamps
             `set(time_unix_nano, Int(cache["Timestamp"])) where IsMap(cache)`,
             `set(body, cache["Body"]) where IsMap(cache)`,
-            
+
             // Normalizes the newly merged JSON attributes
             `replace_all_patterns(resource.attributes, "key","\\_", ".")`,
         ]
@@ -151,9 +92,6 @@ otelcol.processor.transform "default" {
     }
 }
 
-{{- if empty .Values.namespaces }}
-    {{- fail "At least one namespace must be specified in the values file." }}
-{{- end }}
 {{- $namespaces := .Values.namespaces }}
 {{- $lastIndex := sub (len $namespaces) 1 }}
 otelcol.receiver.otlp "default" {
@@ -218,7 +156,7 @@ otelcol.processor.filter "health_filter" {
     logs {
         log_record = [
         `attributes["url.path"] == "/health"`,
-        `attributes["url.path"] == "/liveness"`, 
+        `attributes["url.path"] == "/liveness"`,
         `attributes["url.path"] == "/metrics"`,
         ]
     }
@@ -242,11 +180,16 @@ otelcol.processor.batch "default" {
 otelcol.exporter.otlphttp "default" {
     client {
         endpoint = {{ .Values.exporter.endpoint | default "http://infra-loki-gateway/otlp" | quote }}
+        // How long one export attempt may take; the last retry can start just before
+        // retry_on_failure.max_elapsed_time ends and still run this long
+        timeout  = {{ .Values.exporter.timeout | default "30s" | quote }}
     }
     sending_queue {
         enabled      = true
         num_consumers = {{ .Values.exporter.sending_queue.num_consumers | default 4 }}
-        queue_size   = {{ .Values.exporter.sending_queue.queue_size | default 2000 }}
+        // Sized to the pod's memory limit; when full, new batches are dropped instead of blocking
+        queue_size   = {{ include "alloy-wrapper.queueSize" . }}
+        block_on_overflow = false
     }
     retry_on_failure {
         enabled         = true
@@ -257,7 +200,7 @@ otelcol.exporter.otlphttp "default" {
 }
 
 tracing {
-    sampling_fraction = 0.1 
+    sampling_fraction = 0.1
     write_to          = [otelcol.processor.batch.alloy_traces.input]
 }
 
@@ -273,7 +216,7 @@ otelcol.processor.batch "alloy_traces" {
 otelcol.exporter.otlp "tempo" {
     client {
         endpoint = "infra-otel.{{ .Values.namespaces | first }}.svc.cluster.local:4317"
-        
+
         tls {
             insecure = true
         }
