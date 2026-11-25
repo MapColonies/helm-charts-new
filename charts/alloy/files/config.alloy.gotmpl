@@ -67,6 +67,8 @@ otelcol.processor.transform "default" {
         statements = [
             `set(cache, ParseJSON(body))`,
             `set(severity_text, cache["SeverityText"]) where IsMap(cache)`,
+            // pino JSON without OTel (js-logger) carries the severity in "level"
+            `set(severity_text, cache["level"]) where IsMap(cache) and cache["SeverityText"] == nil and IsString(cache["level"])`,
             `set(severity_number, Int(cache["SeverityNumber"])) where IsMap(cache)`,
             `set(attributes, cache["Attributes"]) where IsMap(cache)`,
             `set(resource.attributes["_temp_resource"], cache["Resource"]) where IsMap(cache)`,
@@ -151,6 +153,40 @@ otelcol.processor.k8sattributes "add_k8s_attributes_{{ $namespace | snakecase }}
 }
 {{ end }}
 
+{{- /* sampling.log: keep rate per severity, matched case-insensitively against severity_text after OTel parsing. Unlisted severities are kept. */}}
+{{- $sampling := dict }}
+{{- $drop := list }}
+{{- $seen := dict }}
+{{- range $level, $rawVal := (.Values.sampling | default dict).log }}
+{{- $isNumber := or (kindIs "float64" $rawVal) (kindIs "int" $rawVal) (kindIs "int64" $rawVal) }}
+{{- /* --set keeps floats as strings */}}
+{{- $isNumericString := and (kindIs "string" $rawVal) (regexMatch "^[0-9]*\\.?[0-9]+$" (toString $rawVal)) }}
+{{- if not (or $isNumber $isNumericString) }}
+    {{- fail (printf "sampling.log.%s must be a number between 0 and 1, got '%v'" $level $rawVal) -}}
+{{- end }}
+{{- $val := $rawVal | float64 -}}
+{{- if or (lt $val 0.0) (gt $val 1.0) }}
+    {{- fail (printf "sampling.log.%s must be a number between 0 and 1, got '%v'" $level $rawVal) -}}
+{{- end }}
+{{- /* smaller rates would round to priority 0, which the sampler ignores (keeping everything) */}}
+{{- if and (gt $val 0.0) (lt $val 0.0001) }}
+    {{- fail (printf "sampling.log.%s must be 0 or at least 0.0001, got '%v'" $level $rawVal) -}}
+{{- end }}
+{{- $key := lower $level }}
+{{- if hasKey $seen $key }}
+    {{- fail (printf "sampling.log has the severity '%s' more than once (keys are case-insensitive)" $key) -}}
+{{- end }}
+{{- $_ := set $seen $key true }}
+{{- /* the sampler ignores a priority of 0, so rate 0 is a plain drop */}}
+{{- if eq $val 0.0 }}
+{{- $drop = append $drop $key }}
+{{- else if lt $val 1.0 }}
+{{- $_ := set $sampling $key $val }}
+{{- end }}
+{{- end }}
+{{- $afterDrop := ternary "otelcol.processor.transform.log_sampling_priority.input" "otelcol.processor.batch.default.input" (not (empty $sampling)) }}
+{{- $afterHealth := ternary "otelcol.processor.filter.log_sampling_drop.input" $afterDrop (not (empty $drop)) }}
+
 otelcol.processor.filter "health_filter" {
     error_mode = "ignore"
     logs {
@@ -162,9 +198,83 @@ otelcol.processor.filter "health_filter" {
     }
 
     output {
+        logs = [{{ $afterHealth }}]
+    }
+}
+{{- if $drop }}
+
+// Log sampling by severity: drop severities with rate 0
+otelcol.processor.filter "log_sampling_drop" {
+    error_mode = "ignore"
+    logs {
+        log_record = [
+{{- range $level := $drop }}
+            {{ printf "ToLowerCase(severity_text) == %s" ($level | toJson) | toJson }},
+{{- end }}
+        ]
+    }
+
+    output {
+        logs = [{{ $afterDrop }}]
+    }
+}
+{{- end }}
+{{- if $sampling }}
+
+// Log sampling by severity: tag each record with its keep percentage and a random key,
+// sample on them, then remove the sampling attributes.
+otelcol.processor.transform "log_sampling_priority" {
+    error_mode = "ignore"
+
+    log_statements {
+        context = "log"
+        statements = [
+            // an incoming sampling.priority from the app must not override the configured rates
+            `delete_key(attributes, "sampling.priority")`,
+            `set(attributes["sampling.key"], UUID())`,
+{{- range $level, $val := $sampling }}
+            {{ printf "set(attributes[\"sampling.priority\"], %v) where ToLowerCase(severity_text) == %s" (round (mulf $val 100) 6) ($level | toJson) | toJson }},
+{{- end }}
+        ]
+    }
+
+    output {
+        logs = [otelcol.processor.probabilistic_sampler.logs.input]
+    }
+}
+
+otelcol.processor.probabilistic_sampler "logs" {
+    // Records without sampling.priority (unlisted severities) are all kept
+    sampling_percentage = 100
+    mode                = "hash_seed"
+    attribute_source    = "record"
+    from_attribute      = "sampling.key"
+    sampling_priority   = "sampling.priority"
+
+    output {
+        logs = [otelcol.processor.transform.log_sampling_cleanup.input]
+    }
+}
+
+otelcol.processor.transform "log_sampling_cleanup" {
+    error_mode = "ignore"
+
+    log_statements {
+        context = "log"
+        statements = [
+            `delete_key(attributes, "sampling.key")`,
+            `delete_key(attributes, "sampling.priority")`,
+            // added by the sampler itself
+            `delete_key(attributes, "sampling.randomness")`,
+            `delete_key(attributes, "sampling.threshold")`,
+        ]
+    }
+
+    output {
         logs = [otelcol.processor.batch.default.input]
     }
 }
+{{- end }}
 
 otelcol.processor.batch "default" {
     timeout = {{ .Values.batching.timeout | default "5s" | quote }}
