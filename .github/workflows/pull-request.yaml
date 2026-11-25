@@ -152,7 +152,7 @@ jobs:
         if: steps.filter.outputs.chart == 'true'
         uses: azure/setup-helm@v4
 
-      # The test renders the dashboards template without the chart's dependencies, so no registry login is needed.
+      # The tests render the chart without its dependencies, so no registry login is needed.
       - name: Run chart tests
         if: steps.filter.outputs.chart == 'true'
-        run: charts/prometheus/tests/dashboards.sh
+        run: make -C charts/prometheus test
