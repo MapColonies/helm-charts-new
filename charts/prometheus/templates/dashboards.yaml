@@ -1,7 +1,7 @@
 {{- /* A missing dashboards map or key uses the defaults below; an explicit enabled: false is kept. */}}
 {{- $dashboards := .Values.dashboards | default dict }}
 {{- if ternary $dashboards.enabled true (hasKey $dashboards "enabled") }}
-{{- $dsUid := required "dashboards.datasourceUid is required" (ternary $dashboards.datasourceUid "prometheus" (hasKey $dashboards "datasourceUid")) }}
+{{- $dsUid := required "dashboards.prometheusDatasourceUid is required" (ternary $dashboards.prometheusDatasourceUid "prometheus" (hasKey $dashboards "prometheusDatasourceUid")) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:

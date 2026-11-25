@@ -140,4 +140,4 @@ dashboards:
   # Namespace for the ConfigMap. Must be one the Grafana sidecar watches. Empty = release namespace.
   namespace: ""
   # UID of the Grafana Prometheus datasource of this Prometheus
-  datasourceUid: prometheus
+  prometheusDatasourceUid: prometheus

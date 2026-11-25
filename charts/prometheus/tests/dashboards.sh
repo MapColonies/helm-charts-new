@@ -34,10 +34,10 @@ out=$(render --set dashboards.enabled=false)
 [ "$(dashboards_cm "$out")" = 0 ] || fail "dashboards.enabled=false must render no dashboards ConfigMap"
 
 # 4. folder, namespace and datasource uid are configurable; an empty uid fails
-out=$(render --set dashboards.folder=Monitoring/Prometheus --set dashboards.namespace=monitoring --set dashboards.datasourceUid=prom-x)
+out=$(render --set dashboards.folder=Monitoring/Prometheus --set dashboards.namespace=monitoring --set dashboards.prometheusDatasourceUid=prom-x)
 [ "$(folder "$out")" = "Monitoring/Prometheus" ] || fail "dashboards.folder must set the folder"
 grep -q '^  namespace: monitoring$' <<<"$out" || fail "dashboards.namespace must set the namespace"
-grep -q '"uid": "prom-x"' <<<"$out" || fail "dashboards.datasourceUid must be pinned"
-if render --set dashboards.datasourceUid= >/dev/null 2>&1; then fail "an empty dashboards.datasourceUid must fail"; fi
+grep -q '"uid": "prom-x"' <<<"$out" || fail "dashboards.prometheusDatasourceUid must be pinned"
+if render --set dashboards.prometheusDatasourceUid= >/dev/null 2>&1; then fail "an empty dashboards.prometheusDatasourceUid must fail"; fi
 
 echo "OK"
