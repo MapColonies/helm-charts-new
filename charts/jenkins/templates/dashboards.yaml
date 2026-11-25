@@ -1,5 +1,8 @@
 {{- if .Values.dashboards.enabled }}
-{{- $dsUid := required "dashboards.datasourceUid is required" .Values.dashboards.datasourceUid }}
+{{- if hasKey .Values.dashboards "datasourceUid" }}
+{{- fail "dashboards.datasourceUid was renamed to dashboards.prometheusDatasourceUid" }}
+{{- end }}
+{{- $dsUid := required "dashboards.prometheusDatasourceUid is required" .Values.dashboards.prometheusDatasourceUid }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
