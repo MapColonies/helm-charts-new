@@ -2193,8 +2193,7 @@
             ]
           },
           "unit": "percentunit",
-          "max": 1,
-          "noValue": "No size limit"
+          "max": 1
         },
         "overrides": []
       },
@@ -2236,7 +2235,8 @@
         }
       ],
       "title": "Storage - TSDB size, % of retention size limit",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "TSDB size (blocks + WAL + head chunks) as a percentage of the retention size limit (--storage.tsdb.retention.size). Shows data only when a size limit is configured: with time-only retention Prometheus reports a limit of 0, which is skipped instead of dividing by zero."
     },
     {
       "datasource": {
