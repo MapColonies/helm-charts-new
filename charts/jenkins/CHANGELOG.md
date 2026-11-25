@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/MapColonies/helm-charts-new/compare/jenkins-v1.4.0...jenkins-v1.4.1) (2026-11-25)
+
+
+### ♻️ Code Refactoring
+
+* **jenkins,sftpgo-stack:** rename dashboards.datasourceUid to dashboards.prometheusDatasourceUid ([#231](https://github.com/MapColonies/helm-charts-new/issues/231)) ([723955b](https://github.com/MapColonies/helm-charts-new/commit/723955bbc785c5fc6a03aba1d378e200c08048f1))
+
 ## [1.4.0](https://github.com/MapColonies/helm-charts-new/compare/jenkins-v1.3.0...jenkins-v1.4.0) (2026-11-24)
 
 
