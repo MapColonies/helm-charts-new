@@ -1,0 +1,117 @@
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: alloy_pod_logs
+    folder: "__FOLDER__"
+    interval: 1m
+    rules:
+      - uid: alloy-pod-logs-down
+        title: AlloyPodLogsDown
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              # The StatefulSet's name is filled in when the chart renders (templates/alerts.yaml)
+              expr: sum by (cluster, namespace, statefulset) (kube_statefulset_replicas{statefulset="__ALLOY_LOGS_STATEFULSET__"} - kube_statefulset_status_replicas_ready{statefulset="__ALLOY_LOGS_STATEFULSET__"}) > 0
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 1m
+        labels:
+          severity: critical
+          alert_team: "__ALERT_TEAM__"
+        annotations:
+          summary: Pod logs are not being collected.
+          description: "StatefulSet __ALLOY_LOGS_STATEFULSET__ has had a replica not ready for 1m, so pod logs aren't tailed, and lines older than maxLogAge by the time it's back are lost. If its pod is stuck Terminating on a failed node, fence the node or force-delete the pod (oc delete pod --force --grace-period=0) so it's recreated elsewhere."
+
+      - uid: alloy-pod-logs-too-old
+        title: AlloyPodLogsTooOld
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              # increase() misses the drop that creates the series, so a new series counts too. Gated on
+              # 5+ unready minutes (keep near maxLogAge): hourly reopens and rollouts drop only re-sends.
+              expr: '(sum by (cluster, namespace, job) (increase(loki_process_dropped_lines_total{component_id="loki.process.limit_time", reason="too_old"}[10m])) > 0 or sum by (cluster, namespace, job) (loki_process_dropped_lines_total{component_id="loki.process.limit_time", reason="too_old"} unless loki_process_dropped_lines_total{component_id="loki.process.limit_time", reason="too_old"} offset 10m) > 0) and on (namespace) (sum_over_time((sum by (namespace) (kube_statefulset_replicas{statefulset="__ALLOY_LOGS_STATEFULSET__"} - kube_statefulset_status_replicas_ready{statefulset="__ALLOY_LOGS_STATEFULSET__"}) > bool 0)[15m:1m]) >= 5)'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        labels:
+          severity: warning
+          alert_team: "__ALERT_TEAM__"
+        annotations:
+          summary: Pod log lines were lost after a collection outage.
+          description: "StatefulSet __ALLOY_LOGS_STATEFULSET__ was not ready for 5m or more in the last 15m, and pod log lines older than maxLogAge were dropped since: the oldest lines of the outage's backlog are lost."

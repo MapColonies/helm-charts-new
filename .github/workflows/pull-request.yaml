@@ -115,25 +115,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Check for alloy changes
+      # tests/loki-window.sh checks maxLogAge against the Loki chart's max_chunk_age
+      - name: Check for alloy or loki changes
         uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
             chart:
               - 'charts/alloy/**'
+              - 'charts/loki/**'
 
       - name: Set up Helm
         if: steps.filter.outputs.chart == 'true'
         uses: azure/setup-helm@v4
 
-      # The upstream alloy subchart is not committed, so fetch it before rendering.
       - name: Run chart tests
         if: steps.filter.outputs.chart == 'true'
-        run: |
-          helm dependency build charts/alloy
-          charts/alloy/tests/alerts.sh
-          charts/alloy/tests/log-filters.sh
+        run: make -C charts/alloy test
 
   test_prometheus:
     name: Test prometheus chart
