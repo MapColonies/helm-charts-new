@@ -4,7 +4,8 @@ The folder defaults to the alert rules' folder, <alerts.team>/<alerts.component>
 The files are upstream mixins, kept as published. Their `datasource` (Prometheus) and `loki_datasource` (Loki)
 variables are pinned here to dashboards.prometheusDatasourceUid and dashboards.lokiDatasourceUid, hidden, and excluded
 from the URL (skipUrlSync), so a Grafana with several Prometheus or Loki datasources can't show another environment's
-data, not even through a saved link.
+data, not even through a saved link. Every dashboard is also set to editable: false, like the other infra
+dashboards (jenkins, sftpgo-stack, opa-la): provisioned dashboards can't be saved, so the UI shouldn't offer editing.
 */}}
 {{- /* A missing dashboards map or key uses the defaults below; a key set to empty is an error. */}}
 {{- $dashboards := .Values.dashboards | default dict }}
@@ -28,6 +29,7 @@ data:
 {{- if hasKey $dashboard "Error" }}
 {{- fail (printf "%s: invalid JSON" $path) }}
 {{- end }}
+{{- $_ := set $dashboard "editable" false }}
 {{- $found := dict "datasource" 0 "loki_datasource" 0 }}
 {{- range $var := (($dashboard.templating | default dict).list | default list) }}
 {{- $name := toString $var.name }}

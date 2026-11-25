@@ -2,7 +2,7 @@
 # Asserts on the rendered dashboards ConfigMap: its folder (default: the alert rules' folder
 # <alerts.team>/<alerts.component>, dashboards.folder wins), namespace, enabled switch, and that
 # every dashboard is the upstream file with only its two datasource variables pinned, hidden and
-# excluded from the URL.
+# excluded from the URL, and editable: false.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -14,13 +14,13 @@ namespace() { sed -n 's/^  namespace: \(.*\)$/\1/p' <<<"$1"; }
 dashboard() {
   awk -v key="  $2: |-" '$0 == key { on = 1; next } on && /^  [^ ]/ { exit } on { print substr($0, 5) }' <<<"$1"
 }
-# The upstream file with only the two datasource variables pinned to $2 / $3, hidden and not URL-synced.
+# The upstream file with only the two datasource variables pinned to $2 / $3, hidden and not URL-synced, and editable: false.
 expected() {
   jq --arg prom "$2" --arg loki "$3" '
     .templating.list |= map(
       if .type == "datasource" and .name == "datasource" then .current = {selected: true, text: $prom, value: $prom} | .hide = 2 | .skipUrlSync = true
       elif .type == "datasource" and .name == "loki_datasource" then .current = {selected: true, text: $loki, value: $loki} | .hide = 2 | .skipUrlSync = true
-      else . end)' "$1"
+      else . end) | .editable = false' "$1"
 }
 # Canonical JSON for comparing: sorted keys, and every number re-encoded as a float. Helm writes
 # numbers as Go floats (0.10000000000000001 -> 0.1), and jq 1.7+ keeps an unmodified number as written.
@@ -35,7 +35,7 @@ out=$(render)
 for f in files/dashboards/*.json; do
   got=$(dashboard "$out" "$(basename "$f")" | canon) || fail "$(basename "$f") must render as valid JSON"
   [ "$got" = "$(expected "$f" prometheus loki | canon)" ] \
-    || fail "$(basename "$f") must equal the source with only datasource/loki_datasource pinned, hidden and not URL-synced"
+    || fail "$(basename "$f") must equal the source with only datasource/loki_datasource pinned, hidden and not URL-synced, and editable: false"
 done
 
 # 2. a missing dashboards map uses the defaults
