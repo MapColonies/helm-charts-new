@@ -1,14 +1,16 @@
-{{- if .Values.dashboards.enabled }}
-{{- $dsUid := required "dashboards.datasourceUid is required" .Values.dashboards.datasourceUid }}
+{{- /* A missing dashboards map or key uses the defaults below; an explicit enabled: false is kept. */}}
+{{- $dashboards := .Values.dashboards | default dict }}
+{{- if ternary $dashboards.enabled true (hasKey $dashboards "enabled") }}
+{{- $dsUid := required "dashboards.datasourceUid is required" (ternary $dashboards.datasourceUid "prometheus" (hasKey $dashboards "datasourceUid")) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-dashboards
-  namespace: {{ .Values.dashboards.namespace | default .Release.Namespace }}
+  namespace: {{ $dashboards.namespace | default .Release.Namespace }}
   labels:
     mapcolonies.io/grafana-dashboards: "true"
   annotations:
-    mapcolonies.io/grafana-dashboards-folder: {{ .Values.dashboards.folder | quote }}
+    mapcolonies.io/grafana-dashboards-folder: {{ $dashboards.folder | default "infra/Prometheus" | quote }}
 data:
 {{- range $path, $_ := .Files.Glob "files/dashboards/*.json" }}
 {{- $json := $.Files.Get $path | replace "__DATASOURCE_UID__" $dsUid }}

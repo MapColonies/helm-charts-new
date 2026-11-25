@@ -115,7 +115,6 @@
       "fieldConfig": {
         "defaults": {
           "mappings": [],
-          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -165,10 +164,11 @@
             "uid": "__DATASOURCE_UID__"
           },
           "editorMode": "code",
-          "expr": "count(up{job=\"prometheus\"} == 0)",
+          "expr": "sum(1 - up{job=\"prometheus\"})",
           "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
+          "range": false,
+          "refId": "A",
+          "instant": true
         }
       ],
       "title": "Instance Down",
@@ -875,14 +875,14 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(rate(prometheus_target_sync_length_seconds_sum{job=\"prometheus\"}[$__rate_interval])) by (instance, scrape_job) * 1000",
+          "expr": "sum by (instance, scrape_job) (rate(prometheus_target_sync_length_seconds_sum{job=\"prometheus\"}[$__rate_interval])) / sum by (instance, scrape_job) (rate(prometheus_target_sync_length_seconds_count{job=\"prometheus\"}[$__rate_interval])) * 1000",
           "interval": "",
           "legendFormat": "{{ instance }} - {{ scrape_job }}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Target Sync by scrape_job",
+      "title": "Average Target Sync Duration by scrape_job",
       "type": "timeseries"
     },
     {
@@ -981,7 +981,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "round(sum(rate(prometheus_target_interval_length_seconds_sum{job=\"prometheus\"}[$__rate_interval]) / rate(prometheus_target_interval_length_seconds_count{job=\"prometheus\"}[$__rate_interval])) by (instance))",
+          "expr": "sum by (instance) (rate(prometheus_target_interval_length_seconds_sum{job=\"prometheus\"}[$__rate_interval])) / sum by (instance) (rate(prometheus_target_interval_length_seconds_count{job=\"prometheus\"}[$__rate_interval]))",
           "interval": "",
           "legendFormat": "{{ instance }}",
           "range": true,
@@ -1314,7 +1314,7 @@
           "exemplar": true,
           "expr": "sum(prometheus_tsdb_blocks_loaded{job=\"prometheus\"}) by (instance)",
           "interval": "",
-          "legendFormat": "{{ instance }} - Head Series",
+          "legendFormat": "{{ instance }} - Blocks loaded",
           "range": true,
           "refId": "A"
         }
@@ -2193,7 +2193,8 @@
             ]
           },
           "unit": "percentunit",
-          "max": 1
+          "max": 1,
+          "noValue": "No size limit"
         },
         "overrides": []
       },
@@ -2228,7 +2229,7 @@
             "uid": "__DATASOURCE_UID__"
           },
           "editorMode": "code",
-          "expr": "(sum by (instance) (prometheus_tsdb_storage_blocks_bytes{job=\"prometheus\"}) + sum by (instance) (prometheus_tsdb_wal_storage_size_bytes{job=\"prometheus\"}) + sum by (instance) (prometheus_tsdb_head_chunks_storage_size_bytes{job=\"prometheus\"})) / sum by (instance) (prometheus_tsdb_retention_limit_bytes{job=\"prometheus\"})",
+          "expr": "(sum by (instance) (prometheus_tsdb_storage_blocks_bytes{job=\"prometheus\"}) + sum by (instance) (prometheus_tsdb_wal_storage_size_bytes{job=\"prometheus\"}) + sum by (instance) (prometheus_tsdb_head_chunks_storage_size_bytes{job=\"prometheus\"})) / (sum by (instance) (prometheus_tsdb_retention_limit_bytes{job=\"prometheus\"}) > 0)",
           "legendFormat": "{{ instance }}",
           "range": true,
           "refId": "A"
@@ -2339,7 +2340,7 @@
             "uid": "__DATASOURCE_UID__"
           },
           "editorMode": "code",
-          "expr": "sum by (instance) (prometheus_tsdb_retention_limit_bytes{job=\"prometheus\"})",
+          "expr": "(sum by (instance) (prometheus_tsdb_retention_limit_bytes{job=\"prometheus\"}) > 0)",
           "legendFormat": "{{ instance }} - Retention size limit",
           "range": true,
           "refId": "B"
@@ -2868,50 +2869,7 @@
     "Prometheus"
   ],
   "templating": {
-    "list": [
-      {
-        "current": {
-          "text": "30s",
-          "value": "30s"
-        },
-        "includeAll": false,
-        "name": "resolution",
-        "options": [
-          {
-            "selected": false,
-            "text": "1s",
-            "value": "1s"
-          },
-          {
-            "selected": false,
-            "text": "15s",
-            "value": "15s"
-          },
-          {
-            "selected": true,
-            "text": "30s",
-            "value": "30s"
-          },
-          {
-            "selected": false,
-            "text": "1m",
-            "value": "1m"
-          },
-          {
-            "selected": false,
-            "text": "3m",
-            "value": "3m"
-          },
-          {
-            "selected": false,
-            "text": "5m",
-            "value": "5m"
-          }
-        ],
-        "query": "1s, 15s, 30s, 1m, 3m, 5m",
-        "type": "custom"
-      }
-    ]
+    "list": []
   },
   "time": {
     "from": "now-15m",
