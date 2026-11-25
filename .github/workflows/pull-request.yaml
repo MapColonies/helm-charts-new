@@ -122,10 +122,19 @@ jobs:
           filters: |
             chart:
               - 'charts/alloy/**'
+              - '.github/workflows/pull-request.yaml'
 
       - name: Set up Helm
         if: steps.filter.outputs.chart == 'true'
         uses: azure/setup-helm@v4
+
+      - name: Login to Azure Container Registry (pull)
+        if: steps.filter.outputs.chart == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.ACR_URL }}
+          username: ${{ secrets.ACR_PULL_USER }}
+          password: ${{ secrets.ACR_PULL_TOKEN }}
 
       # The upstream alloy subchart is not committed, so fetch it before rendering.
       - name: Run chart tests
