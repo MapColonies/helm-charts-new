@@ -21,6 +21,7 @@ grep -q '^    mapcolonies.io/grafana-dashboards: "true"$' <<<"$out" || fail "the
 grep -q '^  namespace: infra-x$' <<<"$out" || fail "default namespace must be the release namespace"
 json=$(awk '/^  prometheus-overview.json: \|-$/ { on = 1; next } on { print substr($0, 5) }' <<<"$out")
 jq -e '.uid == "k8s_addons_prometheus"' <<<"$json" >/dev/null || fail "the dashboard must render as valid JSON with its uid"
+jq -e '.editable == false' <<<"$json" >/dev/null || fail "the dashboard must be editable: false, like the other infra dashboards"
 [ "$(jq '[.. | objects | select(.type? == "prometheus" and has("uid")) | .uid] | unique' -c <<<"$json")" = '["prometheus"]' ] \
   || fail "every Prometheus datasource must be pinned to prometheus"
 
