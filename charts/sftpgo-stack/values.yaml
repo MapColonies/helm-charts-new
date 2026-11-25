@@ -66,6 +66,6 @@ dashboards:
   # Namespace for the ConfigMap. Must be one the Grafana sidecar watches. Empty = release namespace.
   namespace: ""
   # UID of the Grafana Prometheus datasource that scrapes sftpgo and its node-exporter
-  datasourceUid: prometheus
+  prometheusDatasourceUid: prometheus
   # Mount path of the shared volume in the node-exporter container (node_filesystem_* mountpoint label)
   mountpoint: /mnt

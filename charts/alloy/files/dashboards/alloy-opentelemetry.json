@@ -28,72 +28,6 @@
       },
       {
          "datasource": "${datasource}",
-         "description": "Number of metric points successfully pushed into the pipeline.\n",
-         "fieldConfig": {
-            "defaults": {
-               "custom": {
-                  "fillOpacity": 20,
-                  "gradientMode": "hue",
-                  "stacking": {
-                     "mode": "normal"
-                  }
-               },
-               "unit": "cps"
-            }
-         },
-         "gridPos": {
-            "h": 10,
-            "w": 6,
-            "x": 0,
-            "y": 0
-         },
-         "targets": [
-            {
-               "datasource": "${datasource}",
-               "expr": "sum by(${groupby}) (rate(otelcol_receiver_accepted_metric_points_total{cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))\n",
-               "instant": false,
-               "legendFormat": "__auto",
-               "range": true
-            }
-         ],
-         "title": "Accepted metric points",
-         "type": "timeseries"
-      },
-      {
-         "datasource": "${datasource}",
-         "description": "Number of metric points that could not be pushed into the pipeline.\n",
-         "fieldConfig": {
-            "defaults": {
-               "custom": {
-                  "fillOpacity": 20,
-                  "gradientMode": "hue",
-                  "stacking": {
-                     "mode": "normal"
-                  }
-               },
-               "unit": "cps"
-            }
-         },
-         "gridPos": {
-            "h": 10,
-            "w": 6,
-            "x": 6,
-            "y": 0
-         },
-         "targets": [
-            {
-               "datasource": "${datasource}",
-               "expr": "sum by(${groupby}) (rate(otelcol_receiver_refused_metric_points_total{cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))\n",
-               "instant": false,
-               "legendFormat": "__auto",
-               "range": true
-            }
-         ],
-         "title": "Refused metric points",
-         "type": "timeseries"
-      },
-      {
-         "datasource": "${datasource}",
          "description": "Number of log records successfully pushed into the pipeline.\n",
          "fieldConfig": {
             "defaults": {
@@ -109,9 +43,9 @@
          },
          "gridPos": {
             "h": 10,
-            "w": 6,
-            "x": 12,
-            "y": 0
+            "w": 8,
+            "x": 0,
+            "y": 1
          },
          "targets": [
             {
@@ -142,9 +76,9 @@
          },
          "gridPos": {
             "h": 10,
-            "w": 6,
-            "x": 18,
-            "y": 0
+            "w": 8,
+            "x": 8,
+            "y": 1
          },
          "targets": [
             {
@@ -160,78 +94,12 @@
       },
       {
          "datasource": "${datasource}",
-         "description": "Number of spans successfully pushed into the pipeline.\n",
-         "fieldConfig": {
-            "defaults": {
-               "custom": {
-                  "fillOpacity": 20,
-                  "gradientMode": "hue",
-                  "stacking": {
-                     "mode": "normal"
-                  }
-               },
-               "unit": "cps"
-            }
-         },
-         "gridPos": {
-            "h": 10,
-            "w": 6,
-            "x": 0,
-            "y": 10
-         },
-         "targets": [
-            {
-               "datasource": "${datasource}",
-               "expr": "sum by(${groupby}) (rate(otelcol_receiver_accepted_spans_total{cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))\n",
-               "instant": false,
-               "legendFormat": "__auto",
-               "range": true
-            }
-         ],
-         "title": "Accepted spans",
-         "type": "timeseries"
-      },
-      {
-         "datasource": "${datasource}",
-         "description": "Number of spans that could not be pushed into the pipeline.\n",
-         "fieldConfig": {
-            "defaults": {
-               "custom": {
-                  "fillOpacity": 20,
-                  "gradientMode": "hue",
-                  "stacking": {
-                     "mode": "normal"
-                  }
-               },
-               "unit": "cps"
-            }
-         },
-         "gridPos": {
-            "h": 10,
-            "w": 6,
-            "x": 6,
-            "y": 10
-         },
-         "targets": [
-            {
-               "datasource": "${datasource}",
-               "expr": "sum by(${groupby}) (rate(otelcol_receiver_refused_spans_total{cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))\n",
-               "instant": false,
-               "legendFormat": "__auto",
-               "range": true
-            }
-         ],
-         "title": "Refused spans",
-         "type": "timeseries"
-      },
-      {
-         "datasource": "${datasource}",
          "description": "The duration of inbound RPCs for otelcol.receiver.* components.\n",
          "gridPos": {
             "h": 10,
-            "w": 6,
-            "x": 12,
-            "y": 10
+            "w": 8,
+            "x": 16,
+            "y": 1
          },
          "maxDataPoints": 30,
          "options": {
@@ -248,21 +116,21 @@
                "color": "rgba(255,0,255,0.7)"
             },
             "filterValues": {
-               "le": 1.0000000000000001e-09
+               "le": 1e-09
             },
             "tooltip": {
                "show": true,
                "yHistogram": true
             },
             "yAxis": {
-               "unit": "ms"
+               "unit": "s"
             }
          },
          "pluginVersion": "9.0.6",
          "targets": [
             {
                "datasource": "${datasource}",
-               "expr": "sum by (le) (increase(rpc_server_duration_milliseconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\", component_id=~\"otelcol.receiver.*\"}[$__rate_interval]))\n",
+               "expr": "sum by (le) (increase({__name__=\"rpc.server.call.duration_seconds_bucket\", cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\", component_id=~\"otelcol.receiver.*\"}[$__rate_interval]))\n",
                "format": "heatmap",
                "instant": false,
                "legendFormat": "{{le}}",
@@ -274,66 +142,18 @@
       },
       {
          "datasource": "${datasource}",
-         "description": "The duration of inbound HTTP requests for otelcol.receiver.* components.\n",
-         "gridPos": {
-            "h": 10,
-            "w": 6,
-            "x": 18,
-            "y": 10
-         },
-         "maxDataPoints": 30,
-         "options": {
-            "calculate": false,
-            "color": {
-               "exponent": 0.5,
-               "fill": "dark-orange",
-               "mode": "scheme",
-               "scale": "exponential",
-               "scheme": "Oranges",
-               "steps": 65
-            },
-            "exemplars": {
-               "color": "rgba(255,0,255,0.7)"
-            },
-            "filterValues": {
-               "le": 1.0000000000000001e-09
-            },
-            "tooltip": {
-               "show": true,
-               "yHistogram": true
-            },
-            "yAxis": {
-               "unit": "ms"
-            }
-         },
-         "pluginVersion": "9.0.6",
-         "targets": [
-            {
-               "datasource": "${datasource}",
-               "expr": "sum by (le) (increase(http_server_duration_milliseconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\", component_id=~\"otelcol.receiver.*\"}[$__rate_interval]))\n",
-               "format": "heatmap",
-               "instant": false,
-               "legendFormat": "{{le}}",
-               "range": true
-            }
-         ],
-         "title": "HTTP server duration",
-         "type": "heatmap"
-      },
-      {
-         "datasource": "${datasource}",
          "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 20
+            "y": 11
          },
          "title": "Batching [otelcol.processor.batch]",
          "type": "row"
       },
       {
          "datasource": "${datasource}",
-         "description": "Number of spans, metric datapoints, or log lines in a batch\n",
+         "description": "Average number of spans, metric datapoints, or log lines in a batch (sum / count; the histogram buckets are not scraped).\n",
          "fieldConfig": {
             "defaults": {
                "unit": "short"
@@ -343,46 +163,19 @@
             "h": 10,
             "w": 8,
             "x": 0,
-            "y": 20
+            "y": 12
          },
-         "maxDataPoints": 30,
-         "options": {
-            "calculate": false,
-            "color": {
-               "exponent": 0.5,
-               "fill": "dark-orange",
-               "mode": "scheme",
-               "scale": "exponential",
-               "scheme": "Oranges",
-               "steps": 65
-            },
-            "exemplars": {
-               "color": "rgba(255,0,255,0.7)"
-            },
-            "filterValues": {
-               "le": 1.0000000000000001e-09
-            },
-            "tooltip": {
-               "show": true,
-               "yHistogram": true
-            },
-            "yAxis": {
-               "unit": "short"
-            }
-         },
-         "pluginVersion": "9.0.6",
          "targets": [
             {
                "datasource": "${datasource}",
-               "expr": "sum by (le) (increase(otelcol_processor_batch_batch_send_size_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))\n",
-               "format": "heatmap",
+               "expr": "sum by(${groupby}) (rate(otelcol_processor_batch_batch_send_size_sum{cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))\n/\nsum by(${groupby}) (rate(otelcol_processor_batch_batch_send_size_count{cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))\n",
                "instant": false,
-               "legendFormat": "{{le}}",
+               "legendFormat": "__auto",
                "range": true
             }
          ],
-         "title": "Number of units in the batch",
-         "type": "heatmap"
+         "title": "Average number of units in the batch",
+         "type": "timeseries"
       },
       {
          "datasource": "${datasource}",
@@ -396,7 +189,7 @@
             "h": 10,
             "w": 8,
             "x": 8,
-            "y": 20
+            "y": 12
          },
          "targets": [
             {
@@ -422,7 +215,7 @@
             "h": 10,
             "w": 8,
             "x": 16,
-            "y": 20
+            "y": 12
          },
          "targets": [
             {
@@ -442,76 +235,10 @@
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 30
+            "y": 22
          },
          "title": "Exporters [otelcol.exporter.*]",
          "type": "row"
-      },
-      {
-         "datasource": "${datasource}",
-         "description": "Number of metric points successfully sent to destination.\n",
-         "fieldConfig": {
-            "defaults": {
-               "custom": {
-                  "fillOpacity": 20,
-                  "gradientMode": "hue",
-                  "stacking": {
-                     "mode": "normal"
-                  }
-               },
-               "unit": "cps"
-            }
-         },
-         "gridPos": {
-            "h": 10,
-            "w": 6,
-            "x": 0,
-            "y": 30
-         },
-         "targets": [
-            {
-               "datasource": "${datasource}",
-               "expr": "sum by(${groupby}) (rate(otelcol_exporter_sent_metric_points_total{cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))\n",
-               "instant": false,
-               "legendFormat": "__auto",
-               "range": true
-            }
-         ],
-         "title": "Exported metric points",
-         "type": "timeseries"
-      },
-      {
-         "datasource": "${datasource}",
-         "description": "Number of metric points that failed to be sent to destination.\n",
-         "fieldConfig": {
-            "defaults": {
-               "custom": {
-                  "fillOpacity": 20,
-                  "gradientMode": "hue",
-                  "stacking": {
-                     "mode": "normal"
-                  }
-               },
-               "unit": "cps"
-            }
-         },
-         "gridPos": {
-            "h": 10,
-            "w": 6,
-            "x": 6,
-            "y": 30
-         },
-         "targets": [
-            {
-               "datasource": "${datasource}",
-               "expr": "sum by(${groupby}) (rate(otelcol_exporter_send_failed_metric_points_total{cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))\n",
-               "instant": false,
-               "legendFormat": "__auto",
-               "range": true
-            }
-         ],
-         "title": "Failed metric points",
-         "type": "timeseries"
       },
       {
          "datasource": "${datasource}",
@@ -530,9 +257,9 @@
          },
          "gridPos": {
             "h": 10,
-            "w": 6,
-            "x": 12,
-            "y": 30
+            "w": 8,
+            "x": 0,
+            "y": 23
          },
          "targets": [
             {
@@ -563,9 +290,9 @@
          },
          "gridPos": {
             "h": 10,
-            "w": 6,
-            "x": 18,
-            "y": 30
+            "w": 8,
+            "x": 8,
+            "y": 23
          },
          "targets": [
             {
@@ -596,9 +323,9 @@
          },
          "gridPos": {
             "h": 10,
-            "w": 6,
-            "x": 0,
-            "y": 40
+            "w": 8,
+            "x": 16,
+            "y": 23
          },
          "targets": [
             {
@@ -629,9 +356,9 @@
          },
          "gridPos": {
             "h": 10,
-            "w": 6,
-            "x": 6,
-            "y": 40
+            "w": 8,
+            "x": 0,
+            "y": 33
          },
          "targets": [
             {
@@ -650,9 +377,9 @@
          "description": "The duration of outbound RPCs for otelcol.exporter.* components.\n",
          "gridPos": {
             "h": 10,
-            "w": 6,
-            "x": 12,
-            "y": 40
+            "w": 8,
+            "x": 8,
+            "y": 33
          },
          "maxDataPoints": 30,
          "options": {
@@ -669,21 +396,21 @@
                "color": "rgba(255,0,255,0.7)"
             },
             "filterValues": {
-               "le": 1.0000000000000001e-09
+               "le": 1e-09
             },
             "tooltip": {
                "show": true,
                "yHistogram": true
             },
             "yAxis": {
-               "unit": "ms"
+               "unit": "s"
             }
          },
          "pluginVersion": "9.0.6",
          "targets": [
             {
                "datasource": "${datasource}",
-               "expr": "sum by (le) (increase(rpc_client_duration_milliseconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\", component_id=~\"otelcol.exporter.*\"}[$__rate_interval]))\n",
+               "expr": "sum by (le) (increase({__name__=\"rpc.client.call.duration_seconds_bucket\", cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\", component_id=~\"otelcol.exporter.*\"}[$__rate_interval]))\n",
                "format": "heatmap",
                "instant": false,
                "legendFormat": "{{le}}",
@@ -698,9 +425,9 @@
          "description": "The duration of outbound HTTP requests for otelcol.exporter.* components.\n",
          "gridPos": {
             "h": 10,
-            "w": 6,
-            "x": 18,
-            "y": 40
+            "w": 8,
+            "x": 16,
+            "y": 33
          },
          "maxDataPoints": 30,
          "options": {
@@ -717,21 +444,21 @@
                "color": "rgba(255,0,255,0.7)"
             },
             "filterValues": {
-               "le": 1.0000000000000001e-09
+               "le": 1e-09
             },
             "tooltip": {
                "show": true,
                "yHistogram": true
             },
             "yAxis": {
-               "unit": "ms"
+               "unit": "s"
             }
          },
          "pluginVersion": "9.0.6",
          "targets": [
             {
                "datasource": "${datasource}",
-               "expr": "sum by (le) (increase(http_client_duration_milliseconds_bucket{cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\", component_id=~\"otelcol.exporter.*\"}[$__rate_interval]))\n",
+               "expr": "sum by (le) (increase({__name__=\"http.client.request.duration_seconds_bucket\", cluster=~\"$cluster\", namespace=~\"$namespace\", job=~\"$job\", instance=~\"$instance\", component_id=~\"otelcol.exporter.*\"}[$__rate_interval]))\n",
                "format": "heatmap",
                "instant": false,
                "legendFormat": "{{le}}",

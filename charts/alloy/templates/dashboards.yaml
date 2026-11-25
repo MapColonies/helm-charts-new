@@ -1,11 +1,53 @@
+{{- /*
+Grafana dashboards for Alloy, loaded by Grafana's dashboards sidecar (label mapcolonies.io/grafana-dashboards).
+The folder defaults to the alert rules' folder, <alerts.team>/<alerts.component>, so dashboards and rules share one folder.
+The files are upstream mixins, kept as published. Their `datasource` (Prometheus) and `loki_datasource` (Loki)
+variables are pinned here to dashboards.prometheusDatasourceUid and dashboards.lokiDatasourceUid, hidden, and excluded
+from the URL (skipUrlSync), so a Grafana with several Prometheus or Loki datasources can't show another environment's
+data, not even through a saved link. Every dashboard is also set to editable: false, like the other infra
+dashboards (jenkins, sftpgo-stack, opa-la): provisioned dashboards can't be saved, so the UI shouldn't offer editing.
+*/}}
+{{- /* A missing dashboards map or key uses the defaults below; a key set to empty is an error. */}}
+{{- $dashboards := .Values.dashboards | default dict }}
+{{- if ternary $dashboards.enabled true (hasKey $dashboards "enabled") }}
+{{- $folder := $dashboards.folder | default (printf "%s/%s" (toString .Values.alerts.team) (toString .Values.alerts.component)) }}
+{{- $pinned := dict
+  "datasource" (required "dashboards.prometheusDatasourceUid is required" (ternary $dashboards.prometheusDatasourceUid "prometheus" (hasKey $dashboards "prometheusDatasourceUid")))
+  "loki_datasource" (required "dashboards.lokiDatasourceUid is required" (ternary $dashboards.lokiDatasourceUid "loki" (hasKey $dashboards "lokiDatasourceUid"))) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-dashboards
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ $dashboards.namespace | default .Release.Namespace }}
   labels:
     mapcolonies.io/grafana-dashboards: "true"
   annotations:
-    mapcolonies.io/grafana-dashboards-folder: Alloy
+    mapcolonies.io/grafana-dashboards-folder: {{ $folder | quote }}
 data:
-{{ (.Files.Glob "files/dashboards/*.json").AsConfig | indent 2 }}
+{{- range $path, $_ := .Files.Glob "files/dashboards/*.json" }}
+{{- $dashboard := fromJson ($.Files.Get $path) }}
+{{- if hasKey $dashboard "Error" }}
+{{- fail (printf "%s: invalid JSON" $path) }}
+{{- end }}
+{{- $_ := set $dashboard "editable" false }}
+{{- $found := dict "datasource" 0 "loki_datasource" 0 }}
+{{- range $var := (($dashboard.templating | default dict).list | default list) }}
+{{- $name := toString $var.name }}
+{{- if and (eq (toString $var.type) "datasource") (hasKey $pinned $name) }}
+{{- $uid := get $pinned $name }}
+{{- $_ := set $var "current" (dict "selected" true "text" $uid "value" $uid) }}
+{{- /* hidden, and not read from or written to the URL, so a saved link can't select another datasource */}}
+{{- $_ := set $var "hide" 2 }}
+{{- $_ := set $var "skipUrlSync" true }}
+{{- $_ := set $found $name (add1 (get $found $name)) }}
+{{- end }}
+{{- end }}
+{{- range $name, $n := $found }}
+{{- if ne (int $n) 1 }}
+{{- fail (printf "%s: expected exactly one datasource variable %q, found %d" $path $name (int $n)) }}
+{{- end }}
+{{- end }}
+  {{ base $path }}: |-
+{{ toPrettyJson $dashboard | indent 4 }}
+{{- end }}
+{{- end }}
