@@ -73,7 +73,7 @@ for args in "--set dashboards.prometheusDatasourceUid=" "--set dashboards.lokiDa
   if render $args >/dev/null 2>&1; then fail "render must fail with $args"; fi
 done
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
-cp -r . "$tmp/alloy"
+mkdir "$tmp/alloy" && cp -r Chart.yaml values.yaml templates files charts "$tmp/alloy/"
 printf '{ "title": ' > "$tmp/alloy/files/dashboards/alloy-logs.json"
 if helm template infra-alloy "$tmp/alloy" --show-only templates/dashboards.yaml >/dev/null 2>"$tmp/err"; then
   fail "an invalid dashboard JSON must fail the render"

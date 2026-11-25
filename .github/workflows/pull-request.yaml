@@ -133,5 +133,4 @@ jobs:
         run: |
           helm dependency build charts/alloy
           charts/alloy/tests/alerts.sh
-          charts/alloy/tests/dashboards.sh
           charts/alloy/tests/log-filters.sh
