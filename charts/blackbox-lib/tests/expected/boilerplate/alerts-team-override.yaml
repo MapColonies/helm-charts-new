@@ -16,7 +16,7 @@ data:
     - orgId: 1
       uid: bb-a84c00511dbf374d38bca063b59e1239e2779
     groups:
-    - folder: raster
+    - folder: raster/t-ts-server-boilerplate
       interval: 1m
       name: blackbox-team-dev-t-ts-server-boilerplate
       orgId: 1

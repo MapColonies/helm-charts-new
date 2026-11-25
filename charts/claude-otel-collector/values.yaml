@@ -8,6 +8,12 @@ otel:
 
   mode: deployment
 
+  podLabels:
+    mapcolonies.io/component: "infrastructure"
+    mapcolonies.io/part-of: "monitoring"
+    mapcolonies.io/owner: "infra"
+    mapcolonies.io/criticality: "internal"
+
   # single replica by design: the prometheus exporter accumulates counters in
   # pod memory, and multiple replicas would split them across pods
   replicaCount: 1

@@ -2,7 +2,7 @@ apiVersion: 1
 groups:
   - orgId: 1
     name: alloy_controller
-    folder: Alloy
+    folder: "__FOLDER__"
     interval: 1m
     rules:
       - uid: mx-slow-ev
@@ -54,7 +54,7 @@ groups:
         for: 15m
         labels:
           severity: warning
-          alert_team: infra
+          alert_team: "__ALERT_TEAM__"
         annotations:
           summary: Component evaluations are taking too long.
           description: "Component evaluations are taking too long under job {{ $labels.job }}, component_path {{ $labels.component_path }}, component_id {{ $labels.component_id }}."
@@ -108,7 +108,7 @@ groups:
         for: 15m
         labels:
           severity: warning
-          alert_team: infra
+          alert_team: "__ALERT_TEAM__"
         annotations:
           summary: Unhealthy components detected.
           description: "Unhealthy components detected under job {{ $labels.job }}"

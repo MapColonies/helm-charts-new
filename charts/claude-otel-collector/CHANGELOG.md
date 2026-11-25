@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/MapColonies/helm-charts-new/compare/claude-otel-collector-v1.2.0...claude-otel-collector-v1.2.1) (2026-11-24)
+
+
+### 🐛 Bug Fixes
+
+* **loki,keycloak,hoppscotch,claude-otel-collector:** CPU limit 4x the request and Pod mclabels ([#208](https://github.com/MapColonies/helm-charts-new/issues/208)) ([6a39a9e](https://github.com/MapColonies/helm-charts-new/commit/6a39a9ee4bc2775161a0f26d1d09a09023b047de))
+
 ## [1.2.0](https://github.com/MapColonies/helm-charts-new/compare/claude-otel-collector-v1.1.0...claude-otel-collector-v1.2.0) (2026-11-17)
 
 
