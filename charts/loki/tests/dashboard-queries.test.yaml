@@ -1,0 +1,74 @@
+# promtool unit tests for dashboard queries; tests/dashboard-queries.sh fills __FAILURES__ and
+# __RESTARTS__ with the queries from files/dashboards/loki-overview.json.
+rule_files: []
+evaluation_interval: 1m
+
+tests:
+  # Healthy distributor: appends are reported, the failure counter was never created -> 0
+  - interval: 1m
+    input_series:
+      - series: 'loki_distributor_ingester_appends_total{namespace="loki-ns", instance="loki-write-0"}'
+        values: '0+60x20'
+    promql_expr_test:
+      - expr: __FAILURES__
+        eval_time: 10m
+        exp_samples:
+          - labels: '{}'
+            value: 0
+
+  # Missing distributor: no Loki series in the namespace (only another namespace's) -> no data, not 0
+  - interval: 1m
+    input_series:
+      - series: 'loki_distributor_ingester_appends_total{namespace="other-ns", instance="loki-write-0"}'
+        values: '0+60x20'
+    promql_expr_test:
+      - expr: __FAILURES__
+        eval_time: 10m
+        exp_samples: []
+
+  # Failing distributor: 6 failures per minute -> 0.1/s
+  - interval: 1m
+    input_series:
+      - series: 'loki_distributor_ingester_appends_total{namespace="loki-ns", instance="loki-write-0"}'
+        values: '0+60x20'
+      - series: 'loki_distributor_ingester_append_failures_total{namespace="loki-ns", instance="loki-write-0"}'
+        values: '0+6x20'
+    promql_expr_test:
+      - expr: __FAILURES__
+        eval_time: 10m
+        exp_samples:
+          - labels: '{}'
+            value: 0.1
+
+  # Restarts: one write restart seen by two scrape jobs counts once; a sidecar restart, another
+  # namespace's restart and another app's "backend" container in the same namespace are ignored
+  - interval: 1m
+    input_series:
+      - series: 'kube_pod_container_status_restarts_total{namespace="loki-ns", pod="loki-write-0", container="write", job="k8s-svc-scrape"}'
+        values: '0x4 1x15'
+      - series: 'kube_pod_container_status_restarts_total{namespace="loki-ns", pod="loki-write-0", container="write", job="kube-state-metrics"}'
+        values: '0x4 1x15'
+      - series: 'kube_pod_container_status_restarts_total{namespace="loki-ns", pod="loki-backend-0", container="loki-sc-rules", job="k8s-svc-scrape"}'
+        values: '0x4 3x15'
+      - series: 'kube_pod_container_status_restarts_total{namespace="other-ns", pod="loki-read-0", container="read", job="k8s-svc-scrape"}'
+        values: '0x4 2x15'
+      - series: 'kube_pod_container_status_restarts_total{namespace="loki-ns", pod="ltp-789f8678bc-zw2m9", container="backend", job="k8s-svc-scrape"}'
+        values: '0x4 5x15'
+    promql_expr_test:
+      - expr: __RESTARTS__
+        eval_time: 10m
+        exp_samples:
+          - labels: '{}'
+            value: 1
+
+  # No restarts -> 0
+  - interval: 1m
+    input_series:
+      - series: 'kube_pod_container_status_restarts_total{namespace="loki-ns", pod="loki-read-0", container="read", job="k8s-svc-scrape"}'
+        values: '0x20'
+    promql_expr_test:
+      - expr: __RESTARTS__
+        eval_time: 10m
+        exp_samples:
+          - labels: '{}'
+            value: 0
