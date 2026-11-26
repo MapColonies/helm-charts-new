@@ -172,7 +172,8 @@
         }
       ],
       "title": "Instance Down",
-      "type": "stat"
+      "type": "stat",
+      "description": "Self-scrape only: Prometheus checking its own scrape (up{job=\"prometheus\"}), so it is 0 or no data. It doesn't count the other targets. No data = Prometheus unreachable (the query fails) or its self-scrape is missing."
     },
     {
       "datasource": {
@@ -1846,15 +1847,16 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "max(prometheus_engine_query_duration_seconds{job=\"prometheus\"}) by (instance, slice) * 1000",
+          "expr": "max by (instance, slice) (prometheus_engine_query_duration_seconds{job=\"prometheus\", quantile=\"0.99\"}) * 1000",
           "interval": "",
           "legendFormat": "{{ instance }} - {{ slice }}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Engine Query Duration by slice",
-      "type": "timeseries"
+      "title": "Engine Query Duration by slice (p99)",
+      "type": "timeseries",
+      "description": "p99 duration of each query evaluation stage. prometheus_engine_query_duration_seconds is a summary (quantiles 0.5, 0.9, 0.99) that Prometheus computes itself over a sliding window, so the panel selects quantile=\"0.99\"."
     },
     {
       "collapsed": false,
