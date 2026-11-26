@@ -300,14 +300,15 @@
             "uid": "__DATASOURCE_UID__"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.99, sum by (le, route) (rate(loki_request_duration_seconds_bucket{namespace=~\"$namespace\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le, route) (rate(loki_request_duration_seconds_bucket{namespace=~\"$namespace\", route!~\"/.*|ready|metrics|loki_api_v1_status_buildinfo\"}[$__rate_interval])))",
           "legendFormat": "{{ route }}",
           "range": true,
           "refId": "A"
         }
       ],
       "title": "API Request Latency (p99)",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "p99 latency of Loki's HTTP API routes (push, OTLP, queries, labels, series, rules). Internal gRPC calls between Loki components, and the ready, metrics and build info endpoints, are left out."
     },
     {
       "datasource": {
