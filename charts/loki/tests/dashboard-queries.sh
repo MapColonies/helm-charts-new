@@ -18,7 +18,7 @@ expr() {
     | sed -e 's/\$namespace/loki-ns/g' -e 's/\$__rate_interval/2m/g' -e 's/\$__range/10m/g'
 }
 failures=$(expr "Batch appends to ingesters / sec" "Failures") || fail "no Failures query"
-restarts=$(expr "Container restarts" "Restarts") || fail "no Container restarts query"
+restarts=$(expr "Restarts" "Restarts") || fail "no Container restarts query"
 
 # Fill the test file's placeholders; the expressions go in as YAML single-quoted strings
 quote() { printf "'%s'" "${1//\'/\'\'}"; }

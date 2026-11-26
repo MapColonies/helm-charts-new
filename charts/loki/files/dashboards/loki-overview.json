@@ -139,8 +139,9 @@
           "refId": "A"
         }
       ],
-      "title": "Active Streams (Memory)",
-      "type": "stat"
+      "title": "Active streams",
+      "type": "stat",
+      "description": "Streams held in the ingesters' memory."
     },
     {
       "datasource": {
@@ -274,7 +275,7 @@
           "instant": true
         }
       ],
-      "title": "Container restarts",
+      "title": "Restarts",
       "type": "stat",
       "description": "Restarts of the Loki read, write and backend containers (pods loki-read-*, loki-write-*, loki-backend-*, named by the upstream chart) in the selected time range (kube_pod_container_status_restarts_total from kube-state-metrics): crashes, panics that weren't recovered, OOM kills, failed probes. Deduplicated per container, since kube-state-metrics can be scraped by more than one job. A replaced pod (new name) starts a new series, so restarts of a pod that no longer exists aren't counted."
     },
