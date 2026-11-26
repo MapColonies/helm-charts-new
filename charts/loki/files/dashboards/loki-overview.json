@@ -140,8 +140,7 @@
         }
       ],
       "title": "Active streams",
-      "type": "stat",
-      "description": "Streams held in the ingesters' memory."
+      "type": "stat"
     },
     {
       "datasource": {
