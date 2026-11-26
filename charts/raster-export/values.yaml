@@ -5,7 +5,7 @@
 exporter-gpkg-merger:
   image:
     repository: raster/tiles-merger-service
-    tag: "v2.2.3"
+    tag: "v2.2.4"
   isExporter: true
   mclabels:
     partOf: export
@@ -26,7 +26,7 @@ exporter-gpkg-merger:
 exporter-trigger:
   image:
     repository: raster/exporter-trigger
-    tag: v3.3.0
+    tag: v3.3.1
   imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
@@ -37,7 +37,7 @@ exporter-trigger:
 exporter-overseer:
   image:
     repository: raster/overseer
-    tag: v3.0.2
+    tag: v3.0.3
     pullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
@@ -51,7 +51,7 @@ exporter-overseer:
 exporter-polygon-parts-worker:
   image:
     repository: raster/polygon-parts-worker
-    tag: v3.0.1
+    tag: v3.0.2
   instanceType: export
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
