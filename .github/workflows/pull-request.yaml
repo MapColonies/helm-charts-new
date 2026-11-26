@@ -108,6 +108,30 @@ jobs:
         if: steps.filter.outputs.chart == 'true'
         run: make -C charts/blackbox-exporter test
 
+  test_loki:
+    name: Test loki chart
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Check for loki changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            chart:
+              - 'charts/loki/**'
+
+      - name: Set up Helm
+        if: steps.filter.outputs.chart == 'true'
+        uses: azure/setup-helm@v4
+
+      # The tests render the chart without its dependencies, so no registry access is needed.
+      - name: Run chart tests
+        if: steps.filter.outputs.chart == 'true'
+        run: make -C charts/loki test
+
   test_alloy:
     name: Test alloy chart
     runs-on: ubuntu-latest
