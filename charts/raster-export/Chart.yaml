@@ -7,24 +7,24 @@ type: application
 version: 1.2.2
 dependencies:
   - name: gpkg-merger
-    version: 2.2.3
+    version: 2.2.4
     condition: exporter-gpkg-merger.enabled
     alias: exporter-gpkg-merger
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: exporter-trigger
-    version: 3.3.0
+    version: 3.3.1
     condition: exporter-trigger.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: overseer
-    version: 3.0.2
+    version: 3.0.3
     condition: exporter-overseer.enabled
     alias: exporter-overseer
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: polygon-parts-worker
-    version: 3.0.1
+    version: 3.0.2
     condition: exporter-polygon-parts-worker.enabled
     alias: exporter-polygon-parts-worker
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
