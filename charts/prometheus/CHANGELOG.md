@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/MapColonies/helm-charts-new/compare/prometheus-v1.2.0...prometheus-v1.3.0) (2026-11-26)
+
+
+### 🎉 Features
+
+* **prometheus:** provision grafana dashboards (MAPCO-12779) ([#230](https://github.com/MapColonies/helm-charts-new/issues/230)) ([e77aa6a](https://github.com/MapColonies/helm-charts-new/commit/e77aa6a4c182fe916768805ae018f6e4d759c3d3))
+
 ## [1.2.0](https://github.com/MapColonies/helm-charts-new/compare/prometheus-v1.1.0...prometheus-v1.2.0) (2026-10-22)
 
 
