@@ -5,7 +5,7 @@
 gpkg-merger:
   image:
     repository: raster/tiles-merger-service
-    tag: "v2.2.3"
+    tag: "v2.2.4"
   isExporter: false
   mclabels:
     prometheus:
@@ -32,7 +32,7 @@ gpkg-merger:
 mapproxy-api:
   image:
     repository: raster/mapproxy-api
-    tag: "v1.15.0"
+    tag: "v1.15.1"
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
   db:
@@ -61,7 +61,7 @@ ingestion-trigger:
 overseer:
   image:
     repository: raster/overseer
-    tag: v3.0.2
+    tag: v3.0.3
     pullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
@@ -73,7 +73,7 @@ overseer:
 geoserver-api:
   image:
     repository: raster/geoserver-api
-    tag: v2.1.0
+    tag: v2.1.1
   imagePullPolicy: IfNotPresent # TODO: remove after set this as the default value within service
   configManagement:
     offlineMode: true # TODO: remove after set this as the default value within service
@@ -87,7 +87,7 @@ geoserver-api:
 polygon-parts-worker:
   image:
     repository: raster/polygon-parts-worker
-    tag: v3.0.1
+    tag: v3.0.2
   instanceType: ingestion
   mclabels:
     partOf: ingestion # TODO: remove after set this as the default value within service
