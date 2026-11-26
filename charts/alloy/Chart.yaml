@@ -15,3 +15,6 @@ dependencies:
     alias: alloy-logs
     repository: https://grafana.github.io/helm-charts
     version: 1.10.0
+  - name: openshift-routes
+    version: 1.0.2
+    repository: oci://acrarolibotnonprod.azurecr.io/helm/common
