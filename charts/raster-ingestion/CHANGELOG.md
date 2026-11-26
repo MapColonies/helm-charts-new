@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/MapColonies/helm-charts-new/compare/raster-ingestion-v1.4.0...raster-ingestion-v1.4.1) (2026-11-26)
+
+
+### 🐛 Bug Fixes
+
+* **raster-ingestion:** upgrade services to releases with gatekeeper mclabels fix ([#238](https://github.com/MapColonies/helm-charts-new/issues/238)) ([8f82737](https://github.com/MapColonies/helm-charts-new/commit/8f827376cf0f31fdcc1da9d5593f744a7c7f5789))
+
 ## [1.4.0](https://github.com/MapColonies/helm-charts-new/compare/raster-ingestion-v1.3.2...raster-ingestion-v1.4.0) (2026-11-22)
 
 
