@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0](https://github.com/MapColonies/helm-charts-new/compare/blackbox-lib-v0.1.0...blackbox-lib-v0.2.0) (2026-11-25)
+
+
+### 🎉 Features
+
+* **alloy,blackbox-lib:** nested alert folders &lt;team&gt;/&lt;component&gt; (MAPCO-10859) ([#215](https://github.com/MapColonies/helm-charts-new/issues/215)) ([7108c3c](https://github.com/MapColonies/helm-charts-new/commit/7108c3cc2bb1dd475c249559a6a64a47036ef2af))
+
+
+### 🔧 Miscellaneous Chores
+
+* **master:** release blackbox-lib 0.1.0 ([#179](https://github.com/MapColonies/helm-charts-new/issues/179)) ([c40041e](https://github.com/MapColonies/helm-charts-new/commit/c40041e090f75043eb5b7c459c1f87a4af30a635))
+
 ## [0.1.0](https://github.com/MapColonies/helm-charts-new/compare/blackbox-lib-v0.0.1...blackbox-lib-v0.1.0) (2026-10-22)
 
 
