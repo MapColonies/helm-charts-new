@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
-# Evaluates dashboard queries with promtool against synthetic series (tests/dashboard-queries.test.yaml):
-# the append failures fallback (0 only while the distributor reports appends, no data without Loki
-# telemetry) and the container restarts count (deduplicated across scrape jobs, Loki containers only).
-# The queries are read from the dashboard file, with $namespace, $__rate_interval and $__range
-# replaced by fixed values.
+# Evaluates the Failures and Restarts queries against the cases in tests/dashboard-queries.test.yaml.
 # Usage: PROMTOOL=/path/to/promtool tests/dashboard-queries.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -18,9 +14,8 @@ expr() {
     | sed -e 's/\$namespace/loki-ns/g' -e 's/\$__rate_interval/2m/g' -e 's/\$__range/10m/g'
 }
 failures=$(expr "Batch appends to ingesters / sec" "Failures") || fail "no Failures query"
-restarts=$(expr "Restarts" "Restarts") || fail "no Container restarts query"
+restarts=$(expr "Restarts" "Restarts") || fail "no Restarts query"
 
-# Fill the test file's placeholders; the expressions go in as YAML single-quoted strings
 quote() { printf "'%s'" "${1//\'/\'\'}"; }
 F=$(quote "$failures") R=$(quote "$restarts") \
   awk '{ gsub(/__FAILURES__/, ENVIRON["F"]); gsub(/__RESTARTS__/, ENVIRON["R"]); print }' \

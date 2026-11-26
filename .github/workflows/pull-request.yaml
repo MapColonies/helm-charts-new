@@ -127,7 +127,6 @@ jobs:
         if: steps.filter.outputs.chart == 'true'
         uses: azure/setup-helm@v4
 
-      # The tests render the chart without its dependencies, so no registry access is needed.
       - name: Run chart tests
         if: steps.filter.outputs.chart == 'true'
         run: make -C charts/loki test

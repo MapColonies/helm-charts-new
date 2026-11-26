@@ -134,12 +134,13 @@
           },
           "editorMode": "code",
           "expr": "sum(loki_ingester_memory_streams{namespace=~\"$namespace\"})",
-          "legendFormat": "Streams",
+          "legendFormat": "Stream replicas",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Active streams",
+      "title": "In-memory stream replicas",
+      "description": "Each ingester counts the streams it holds in memory. Summing across ingesters counts each stream once per replica.",
       "type": "stat"
     },
     {
@@ -208,7 +209,7 @@
       ],
       "title": "Panics",
       "type": "stat",
-      "description": "Panics that Loki recovered from (loki_panic_total, HTTP and gRPC handlers) in the selected time range. A panic that crashes the process isn't counted here: the container restarts with a new counter, see Container restarts. increase() needs two samples of a series, so a panic just before its pod is replaced can also be missed."
+      "description": "Panics that Loki recovered from (loki_panic_total, HTTP and gRPC handlers) in the selected time range. A panic that crashes the process isn't counted here: the container restarts with a new counter, see Restarts. increase() needs two samples of a series, so a panic just before its pod is replaced can also be missed."
     },
     {
       "datasource": {
@@ -908,7 +909,7 @@
           },
           "editorMode": "code",
           "expr": "sum(loki_ingester_memory_streams{namespace=~\"$namespace\"})",
-          "legendFormat": "Streams",
+          "legendFormat": "Stream replicas",
           "range": true,
           "refId": "A"
         },
