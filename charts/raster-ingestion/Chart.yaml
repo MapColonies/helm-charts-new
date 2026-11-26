@@ -7,12 +7,12 @@ type: application
 version: 1.4.0
 dependencies:
   - name: gpkg-merger
-    version: 2.2.3
+    version: 2.2.4
     condition: gpkg-merger.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: mapproxy-api
-    version: 1.15.0
+    version: 1.15.1
     condition: mapproxy-api.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
@@ -22,17 +22,17 @@ dependencies:
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: overseer
-    version: 3.0.2
+    version: 3.0.3
     condition: overseer.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: geoserver-api
-    version: 2.1.0
+    version: 2.1.1
     condition: geoserver-api.enabled
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
 
   - name: polygon-parts-worker
-    version: 3.0.1
+    version: 3.0.2
     condition: polygon-parts-worker.enabled
     alias: polygon-parts-worker
     repository: oci://acrarolibotnonprod.azurecr.io/helm/raster
