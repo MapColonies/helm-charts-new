@@ -41,7 +41,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
+        "w": 3,
         "x": 0,
         "y": 0
       },
@@ -103,8 +103,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 4,
+        "w": 3,
+        "x": 3,
         "y": 0
       },
       "id": 4,
@@ -169,8 +169,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 8,
+        "w": 3,
+        "x": 6,
         "y": 0
       },
       "id": 6,
@@ -237,8 +237,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 10,
+        "w": 3,
+        "x": 9,
         "y": 0
       },
       "id": 7,
@@ -861,7 +861,9 @@
         }
       ],
       "title": "Flushed chunk size (p95)",
-      "type": "timeseries"
+      "type": "timeseries",
+      "interval": "10m",
+      "description": "p95 size of the chunks the ingesters flush. Flushes are sporadic, so the panel's minimum interval is 10m: with shorter rate windows the dev line keeps breaking."
     },
     {
       "datasource": {
