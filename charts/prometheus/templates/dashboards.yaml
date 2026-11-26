@@ -1,0 +1,26 @@
+{{- /* A missing dashboards map or key uses the defaults below; an explicit enabled: false is kept. */}}
+{{- $dashboards := .Values.dashboards | default dict }}
+{{- if ternary $dashboards.enabled true (hasKey $dashboards "enabled") }}
+{{- $dsUid := required "dashboards.prometheusDatasourceUid is required" (ternary $dashboards.prometheusDatasourceUid "prometheus" (hasKey $dashboards "prometheusDatasourceUid")) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-dashboards
+  namespace: {{ $dashboards.namespace | default .Release.Namespace }}
+  labels:
+    mapcolonies.io/grafana-dashboards: "true"
+  annotations:
+    mapcolonies.io/grafana-dashboards-folder: {{ $dashboards.folder | default "infra/Prometheus" | quote }}
+data:
+{{- range $path, $_ := .Files.Glob "files/dashboards/*.json" }}
+{{- $json := $.Files.Get $path | replace "__DATASOURCE_UID__" $dsUid }}
+{{- if hasKey (fromJson $json) "Error" }}
+{{- fail (printf "%s: invalid JSON" $path) }}
+{{- end }}
+{{- if regexMatch "__[A-Z][A-Z_]*__" $json }}
+{{- fail (printf "%s: placeholder %s left after rendering" $path (regexFind "__[A-Z][A-Z_]*__" $json)) }}
+{{- end }}
+  {{ base $path }}: |-
+{{ $json | indent 4 }}
+{{- end }}
+{{- end }}

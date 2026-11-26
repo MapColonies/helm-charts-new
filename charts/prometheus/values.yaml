@@ -131,3 +131,13 @@ prometheus:
 
     service:
       servicePort: 9090
+
+# Grafana dashboards, loaded by the Grafana dashboards sidecar.
+dashboards:
+  enabled: true
+  # Grafana folder (sidecar folder annotation). "/" nests folders: infra/Prometheus = Prometheus inside infra
+  folder: infra/Prometheus
+  # Namespace for the ConfigMap. Must be one the Grafana sidecar watches. Empty = release namespace.
+  namespace: ""
+  # UID of the Grafana Prometheus datasource of this Prometheus
+  prometheusDatasourceUid: prometheus

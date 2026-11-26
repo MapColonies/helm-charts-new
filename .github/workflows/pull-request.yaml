@@ -132,3 +132,27 @@ jobs:
       - name: Run chart tests
         if: steps.filter.outputs.chart == 'true'
         run: make -C charts/alloy test
+
+  test_prometheus:
+    name: Test prometheus chart
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Check for prometheus changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            chart:
+              - 'charts/prometheus/**'
+
+      - name: Set up Helm
+        if: steps.filter.outputs.chart == 'true'
+        uses: azure/setup-helm@v4
+
+      # The tests render the chart without its dependencies, so no registry login is needed.
+      - name: Run chart tests
+        if: steps.filter.outputs.chart == 'true'
+        run: make -C charts/prometheus test
