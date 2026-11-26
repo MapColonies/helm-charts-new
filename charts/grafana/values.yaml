@@ -25,8 +25,12 @@ grafana:
     name: monitoring
 
   sidecar:
+    # k8s-sidecar 2.8.1+ fixes the multi-namespace initial sync, which logged
+    # "Error when updating from '<file>' into 'None'" at every start (kiwigrid/k8s-sidecar#573).
+    # Mirror a new tag (linux/amd64) to our registry before bumping it here.
     image:
       repository: infra/kiwigrid/k8s-sidecar
+      tag: 2.14.3
     resources:
       limits:
         cpu: 50m
@@ -41,14 +45,26 @@ grafana:
       folderAnnotation: "mapcolonies.io/grafana-dashboards-folder"
       provider:
         foldersFromFilesStructure: true
+      env:
+        HEALTH_PORT: "8080"
     alerts:
       enabled: true
       label: "mapcolonies.io/grafana-alerts"
       searchNamespace: null
+      # Each sidecar needs its own health port. The upstream chart sets HEALTH_PORT only on the
+      # init containers, so all three sidecars would use 8080: only the first one starts its health
+      # server and the others log "OSError: [Errno 98] Address in use" (kiwigrid/k8s-sidecar#661).
+      # Ports: dashboards 8080, alerts 8081, datasources 8082.
+      # Don't enable initDashboards, initAlerts or initDatasources without removing these: upstream
+      # also renders sidecar.<name>.env into the init containers, which would get HEALTH_PORT twice.
+      env:
+        HEALTH_PORT: "8081"
     datasources:
       enabled: true
       label: "mapcolonies.io/grafana-datasources"
       searchNamespace: null
+      env:
+        HEALTH_PORT: "8082"
 
   # Alerting Teams Webhooks
   # List of teams that get a contact point `<team>-alerts` (receiver type: alertingReceiverType).

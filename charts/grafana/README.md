@@ -31,6 +31,21 @@ alerts (`gatekeeper-constraints`, `alert_group=gatekeeper-deploy`).
 Alertmanager resends the whole group when alerts join it: a digest that comes after the first
 one lists the alerts already sent too.
 
+## Provisioning sidecars
+
+Three kiwigrid `k8s-sidecar` containers load Grafana resources from labelled ConfigMaps and Secrets:
+alerts (`mapcolonies.io/grafana-alerts`), dashboards (`mapcolonies.io/grafana-dashboards`) and
+datasources (`mapcolonies.io/grafana-datasources`).
+
+- **Image:** `grafana.sidecar.image.tag`, pulled from our registry (`infra/kiwigrid/k8s-sidecar`). To
+  bump it, first mirror the new tag from `quay.io/kiwigrid/k8s-sidecar`, as `linux/amd64` because the
+  cluster nodes are amd64:
+  `docker pull --platform linux/amd64 quay.io/kiwigrid/k8s-sidecar:<tag>`, then `docker tag` and
+  `docker push` to `<registry>/infra/kiwigrid/k8s-sidecar:<tag>`.
+- **Health ports:** each sidecar has its own `HEALTH_PORT`: dashboards 8080, alerts 8081, datasources
+  8082. The upstream chart sets it only on the init containers. If two sidecars share a port, every
+  start logs `OSError: [Errno 98] Address in use` from the one that loses.
+
 ## Tests
 
 No CI; run by hand from `charts/grafana` (after `helm dependency build`):
